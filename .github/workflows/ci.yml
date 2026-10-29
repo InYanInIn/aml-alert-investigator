@@ -11,6 +11,25 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.7-pg16
+        env:
+          POSTGRES_USER: aml
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: aml
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aml -d aml"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      AML_OWNER_DSN: postgresql://aml:ci-only-password@127.0.0.1:5432/aml
+      AML_MCP_DSN: postgresql://aml_mcp_reader:ci-only-mcp@127.0.0.1:5432/aml
+      AML_APP_DSN: postgresql://aml_app:ci-only-app@127.0.0.1:5432/aml
+      AML_EVALUATOR_DSN: postgresql://aml_evaluator:ci-only-evaluator@127.0.0.1:5432/aml
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0

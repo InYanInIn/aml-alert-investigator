@@ -67,6 +67,12 @@ SCATTER-GATHER 44, STACK 43.
    the agent's advantage must be measured against it.
 8. **Self-transfers are 12% of rows.** → Exclude them from fan-in, fan-out and pass-through rules.
 
+## Observed during M1
+
+- Activity is extremely bursty: the first 100,000 transactions by time span only 2022-09-01 00:00–00:09
+  (1.1M rows fall on 2022-09-01). On that slice R2 (≥ 5 receivers in 2 days) raises 15 alerts, 2 of which
+  contain a laundering transaction in their evidence. Thresholds must be calibrated on the full train window (M2).
+
 ## Open checks
 
 - Whether bank ID order or bank country predicts the label (M2, before deciding what the profile exposes).

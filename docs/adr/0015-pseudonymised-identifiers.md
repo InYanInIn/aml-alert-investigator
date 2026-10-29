@@ -9,8 +9,10 @@ Entity names also carry sequence numbers. An LLM is unlikely to exploit hex magn
 baseline could, and an honest evaluation should not depend on that guess.
 
 ## Decision
-- At ingest, replace `(bank_id, account_number)` with `account_id = 'A' + first 10 hex chars of
-  sha256(salt || bank_id || account_number)`, and entity IDs the same way with prefix `E`.
+- At ingest, replace `(bank_id, account_number)` with `account_id = 'A' + first 12 hex chars of
+  sha256(f"{salt}|{bank_id}|{account_number}")`, with `bank_id` as an integer, and entity IDs the same way
+  with prefix `E` (`sha256(f"{salt}|{entity_id}")`). 12 hex chars (48 bits), not 10: with ~520K accounts,
+  40 bits gives about an 11% chance of a birthday collision, 48 bits under 0.1%.
 - Keep only the entity type from the entity name, not its number.
 - The salt is a fixed project constant: the goal is removing ordinal information, not secrecy.
 - Ingest fails if two source keys map to the same pseudonym.
