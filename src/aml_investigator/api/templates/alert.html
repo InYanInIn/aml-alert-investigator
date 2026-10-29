@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Alert {{ alert.alert_id }}{% endblock %}
+{% block content %}
+<h1>Alert {{ alert.alert_id }}</h1>
+
+<section>
+<dl>
+<dt>Account</dt><dd>{{ alert.account_id }}</dd>
+<dt>Alert date</dt><dd>{{ alert.alert_date }}</dd>
+<dt>Window</dt><dd>{{ alert.window_start }} to {{ alert.window_end }}</dd>
+</dl>
+</section>
+
+<h2>Rule hits</h2>
+<table>
+<thead><tr><th>Rule</th><th>Score</th><th>Evidence transactions</th></tr></thead>
+<tbody>
+{% for hit in rule_hits %}
+<tr>
+<td>{{ hit.rule_id }}</td>
+<td class="num">{{ hit.score }}</td>
+<td>{% for txn_id in hit.evidence_txn_ids %}<a href="#txn-{{ txn_id }}">{{ txn_id }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<h2>Investigation</h2>
+{% if investigation %}
+<section>
+<dl>
+<dt>Recommendation</dt><dd><span class="badge {{ investigation.recommendation }}">{{ investigation.recommendation }}</span></dd>
+<dt>Verification</dt><dd><span class="badge {{ investigation.verification.status }}">{{ investigation.verification.status }}</span></dd>
+{% if investigation.verification.errors %}
+<dt>Errors</dt>
+<dd><ul>{% for error in investigation.verification.errors %}<li>{{ error }}</li>{% endfor %}</ul></dd>
+{% endif %}
+<dt>Created</dt><dd>{{ investigation.created_at }}</dd>
+</dl>
+
+{% for field in ["who", "what", "when", "where", "why", "how"] %}
+<h2>{{ field|capitalize }}</h2>
+{% if investigation.decision[field] %}
+<ul class="claims">
+{% for claim in investigation.decision[field] %}
+<li>{{ claim.text }}
+{% if claim.txn_ids %}<span class="muted">(transactions:
+{% for txn_id in claim.txn_ids %}<a href="#txn-{{ txn_id }}">{{ txn_id }}</a>{% if not loop.last %}, {% endif %}{% endfor %})</span>{% endif %}
+</li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="muted">No claims.</p>
+{% endif %}
+{% endfor %}
+</section>
+
+{% if investigation.final_decision %}
+<h2>Decision</h2>
+<section>
+<dl>
+<dt>Final decision</dt><dd><span class="badge {{ investigation.final_decision }}">{{ investigation.final_decision }}</span></dd>
+<dt>Analyst</dt><dd>{{ investigation.analyst }}</dd>
+<dt>Comment</dt><dd>{{ investigation.comment }}</dd>
+<dt>Decided</dt><dd>{{ investigation.decided_at }}</dd>
+</dl>
+</section>
+{% else %}
+<h2>Review</h2>
+<section>
+<form method="post" action="/investigations/{{ investigation.investigation_id }}/decision">
+<label for="final_decision">Final decision</label>
+<select id="final_decision" name="final_decision">
+<option value="close" {% if investigation.recommendation == "close" %}selected{% endif %}>Close</option>
+<option value="escalate" {% if investigation.recommendation == "escalate" %}selected{% endif %}>Escalate</option>
+</select>
+<label for="comment">Comment</label>
+<textarea id="comment" name="comment" rows="3"></textarea>
+<button type="submit">Confirm or override recommendation</button>
+</form>
+</section>
+{% endif %}
+{% else %}
+<p class="muted">Not investigated yet.</p>
+{% endif %}
+
+<form method="post" action="/alerts/{{ alert.alert_id }}/investigate">
+<button type="submit">{% if investigation %}Investigate again{% else %}Investigate{% endif %}</button>
+</form>
+
+<h2>Evidence transactions</h2>
+{% if evidence.truncated %}<p class="muted">More transactions matched than are shown.</p>{% endif %}
+<table>
+<thead>
+<tr><th>Txn</th><th>Time</th><th>From</th><th>To</th><th>Paid</th><th>Received</th><th>Format</th></tr>
+</thead>
+<tbody>
+{% for txn in evidence.transactions %}
+<tr id="txn-{{ txn.txn_id }}">
+<td>{{ txn.txn_id }}</td>
+<td>{{ txn.ts }}</td>
+<td>{{ txn.from_account }}</td>
+<td>{{ txn.to_account }}</td>
+<td class="num">{{ "{:,.2f}".format(txn.amount_paid) }} {{ txn.paid_currency }}</td>
+<td class="num">{{ "{:,.2f}".format(txn.amount_received) }} {{ txn.received_currency }}</td>
+<td>{{ txn.payment_format }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endblock %}

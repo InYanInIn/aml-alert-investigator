@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Alert queue{% endblock %}
+{% block content %}
+<h1>Alert queue</h1>
+{% if alerts %}
+<table>
+<thead>
+<tr><th>Alert</th><th>Account</th><th>Alert date</th><th>Rules (score)</th><th>Investigation</th></tr>
+</thead>
+<tbody>
+{% for alert in alerts %}
+<tr>
+<td><a href="/alerts/{{ alert.alert_id }}">{{ alert.alert_id }}</a></td>
+<td>{{ alert.account_id }}</td>
+<td>{{ alert.alert_date }}</td>
+<td>{{ alert.rule_hits }}</td>
+<td>{{ alert.status }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p class="muted">No alerts.</p>
+{% endif %}
+{% endblock %}

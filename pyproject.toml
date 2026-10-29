@@ -5,13 +5,25 @@ description = "LLM agent that prepares AML alert investigations for analyst revi
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "fastapi>=0.115,<1",
     "fastmcp>=4.0,<5",
+    "jinja2>=3.1,<4",
     "langchain[mcp]>=1.4,<2",
     "langgraph>=1.2,<2",
+    "langgraph-checkpoint-postgres>=3,<4",
+    "polars>=1,<2",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic>=2.7,<3",
+    "python-multipart>=0.0.9,<1",
+    "uvicorn>=0.30,<1",
 ]
+
+[project.scripts]
+aml = "aml_investigator.cli:main"
 
 [dependency-groups]
 dev = [
+    "httpx>=0.27,<1",
     "mypy>=2,<3",
     "pytest>=9,<10",
     "ruff>=0.17,<0.18",

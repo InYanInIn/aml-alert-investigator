@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}AML Alert Investigator{% endblock %}</title>
+<style>
+:root { --fg: #1c2430; --muted: #5d6877; --line: #d9dee5; --bg: #f6f7f9; --card: #fff; --accent: #1f4e8c; --warn: #a33a2b; --ok: #1f7a4d; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { background: var(--card); border-bottom: 1px solid var(--line); padding: 12px 24px; }
+header a { color: var(--fg); font-weight: 600; text-decoration: none; }
+main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+h1 { font-size: 22px; margin: 0 0 16px; }
+h2 { font-size: 17px; margin: 28px 0 8px; }
+section { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 16px; margin-bottom: 16px; }
+table { width: 100%; border-collapse: collapse; background: var(--card); }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+a { color: var(--accent); }
+tr:target td { background: #fff4c2; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; background: #e9edf2; }
+.badge.passed, .badge.close { background: #dff3e8; color: var(--ok); }
+.badge.failed, .badge.escalate { background: #f8e1dd; color: var(--warn); }
+.muted { color: var(--muted); }
+dl { display: grid; grid-template-columns: 160px 1fr; gap: 4px 12px; margin: 0; }
+dt { color: var(--muted); }
+dd { margin: 0; }
+form label { display: block; margin: 10px 0 4px; font-weight: 600; }
+form textarea, form select { width: 100%; max-width: 520px; padding: 6px 8px; font: inherit; border: 1px solid var(--line); border-radius: 4px; }
+button { margin-top: 12px; padding: 7px 16px; font: inherit; color: #fff; background: var(--accent); border: 0; border-radius: 4px; cursor: pointer; }
+ul.claims { margin: 4px 0 12px; padding-left: 20px; }
+</style>
+</head>
+<body>
+<header><a href="/">AML Alert Investigator</a></header>
+<main>
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>
