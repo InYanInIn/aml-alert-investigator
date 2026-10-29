@@ -6,6 +6,14 @@ from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict
 
 
+def ensure_database(admin_dsn: str, name: str) -> bool:
+    with psycopg.connect(admin_dsn, autocommit=True) as conn:
+        if conn.execute("SELECT 1 FROM pg_database WHERE datname = %s", (name,)).fetchone():
+            return False
+        conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
+    return True
+
+
 def migrate(owner_dsn: str, role_dsns: Iterable[str]) -> list[str]:
     applied: list[str] = []
     with psycopg.connect(owner_dsn, autocommit=True) as conn:

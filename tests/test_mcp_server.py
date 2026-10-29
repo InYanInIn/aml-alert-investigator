@@ -23,8 +23,8 @@ def add_transaction(
 ) -> None:
     with db.owner() as conn:
         conn.execute(
-            "INSERT INTO core.transactions VALUES (%s, %s, %s, %s, %s, 'Euro', %s, 'Euro', %s)",
-            (txn_id, ts, sender, receiver, amount, amount, fmt),
+            "INSERT INTO core.transactions VALUES (%s, %s, %s, %s, %s, 'Euro', %s, 'Euro', %s, %s)",
+            (txn_id, ts, sender, receiver, amount, amount, fmt, amount),
         )
 
 

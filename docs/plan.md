@@ -49,6 +49,7 @@ recorded on whether 10 days of history are enough for R6 (else open HI-Medium qu
 ### M3 — Evaluation harness and non-LLM baselines
 - Chronological 60/20/20 split; frozen stratified samples committed as alert-ID lists.
 - Metrics from design §8 with bootstrap intervals; B0, B1, B3.
+- Make the alert-to-label join fast: on LI-Small the feasibility query takes 3+ minutes per run (M2).
 
 Check: `eval run --system b3 --split val` prints the metrics table with intervals and writes a JSON result;
 re-running produces identical numbers; the test split cannot be opened without an explicit flag that is logged.
@@ -71,7 +72,9 @@ reference independence test passes; corpus contains N passages; `AMLR art. 77(1)
 - Architecture C: evidence pack, bounded loop (`k`, token budget), regulation retrieval, structured
   decision, verifier rules 1–5, one repair, forced escalation on second failure.
 - `PostgresSaver` checkpoints; interrupt/resume.
-- UI: alert queue, detail with clickable citations, confirm/override.
+- Decision policy (ADR-0017): verified `close` → auto-closed (`analyst = 'auto-close'`); `escalate` and a seeded
+  3% QA sample of auto-closed alerts → analyst queue.
+- UI: alert queue (escalations and QA samples), detail with clickable citations, confirm/override.
 - Tracing hook wired, inactive without keys.
 
 Check: graph tests with scripted fake model cover: valid path; invalid citation → repair → pass; two failures
@@ -99,6 +102,8 @@ traces visible; CI replay evaluation passes on the recorded responses.
 ### M8 — Evaluation and results
 - Iterate on validation (prompt, `k`, budget) with the 3-repeat stability check.
 - Open test once: C, A (`k = 0`), B0–B3 on HI-Small and LI-Small; injection pairs on C.
+- Auto-close cost (ADR-0017): share auto-closed, false-close rate among auto-closed, attack success on the
+  auto-close path, and the agent + B3 agreement variant.
 - Error analysis of 20 wrong decisions; manual grading of 30 regulation citations.
 
 Check: `docs/results.md` is generated from committed JSON, lists every test-split opening, and reports every
