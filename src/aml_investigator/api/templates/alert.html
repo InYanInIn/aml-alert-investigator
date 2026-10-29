@@ -30,7 +30,7 @@
 <section>
 <dl>
 <dt>Recommendation</dt><dd><span class="badge {{ investigation.recommendation }}">{{ investigation.recommendation }}</span></dd>
-<dt>Verification</dt><dd><span class="badge {{ investigation.verification.status }}">{{ investigation.verification.status }}</span></dd>
+<dt>Verification <span class="hint" title="Checks that the agent made nothing up: every transaction it cites was really returned by the tools, and every amount, currency and date it states matches the data. It does not say whether the alert is suspicious; that is the recommendation above.">(?)</span></dt><dd><span class="badge {{ investigation.verification.status }}">{{ investigation.verification.status }}</span></dd>
 {% if investigation.verification.errors %}
 <dt>Errors</dt>
 <dd><ul>{% for error in investigation.verification.errors %}<li>{{ error }}</li>{% endfor %}</ul></dd>
