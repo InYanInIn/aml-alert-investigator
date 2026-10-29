@@ -54,7 +54,9 @@ Check: `eval run --system b3 --split val` prints the metrics table with interval
 re-running produces identical numbers; the test split cannot be opened without an explicit flag that is logged.
 
 ### M4 — MCP server, corpus, references and injection set
-- All tools from design §6 with limits and server-side `as_of`.
+- All tools from design §6 with limits and server-side `as_of`, plus `get_transactions(alert_id, txn_ids)` so the
+  evidence pack always contains every rule-hit transaction: `list_transactions` caps at 50 rows and M1 fan-out
+  alerts already reach 56 receivers.
 - Synthetic `reference` field; `reference_injections` for ~40 pairs; `REFERENCE_VARIANT` switch.
 - AMLR (EUR-Lex) and Polish AML Act (Dz.U. 2025 poz. 644, Sejm ELI PDF) committed with source and version;
   passages split by article/paragraph; loader without embeddings yet.
