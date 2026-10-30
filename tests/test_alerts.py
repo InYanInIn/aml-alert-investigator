@@ -5,7 +5,7 @@ from typing import Any
 import psycopg
 import pytest
 
-from aml_investigator.monitor.alerts import build_alerts
+from aml_investigator.monitoring.alerts import build_alerts
 from tests.conftest import Database
 
 BASE = date(2022, 9, 5)

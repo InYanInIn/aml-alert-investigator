@@ -4,7 +4,7 @@ from types import ModuleType
 import psycopg
 import pytest
 
-from aml_investigator.monitor import r1_fan_in, r2_fan_out, r5_structuring
+from aml_investigator.monitoring.rules import r1_fan_in, r2_fan_out, r5_structuring
 from tests.conftest import Database
 
 DAY = datetime(2022, 9, 5)

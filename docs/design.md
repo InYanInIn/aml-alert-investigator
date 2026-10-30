@@ -78,13 +78,13 @@ Components (one Python package, `aml_investigator`, managed with uv):
 
 | Module | Responsibility |
 |---|---|
-| `ingest` | Load transactions, accounts, patterns; assign stable IDs; truncate the post-period tail; split labels into `truth`. |
-| `monitor` | Rules R1–R6 as SQL; emit one alert per (account, day) with all rule hits. |
-| `truth` | Derive alert-level ground truth from `truth.*`. Never imported by `mcp_server` or `agent`. |
+| `data` | Load transactions, accounts, patterns; assign stable IDs; truncate the post-period tail; split labels into `truth`. |
+| `monitoring` | Rules R1–R6 as SQL; emit one alert per (account, day) with all rule hits. |
+| `truth` | Derive alert-level ground truth from `truth.*`. Never imported by `mcp_server` or `investigation`. |
 | `corpus` | Parse the committed AMLR (EUR-Lex) and Polish AML Act (Sejm ELI) texts into article/paragraph passages; embed into pgvector. |
 | `mcp_server` | Read-only MCP tools (section 6). The only path by which data reaches the model. |
-| `agent` | LangGraph graph (section 5), structured decision schema, citation verifier. |
-| `api` | FastAPI app: alert queue, alert detail, investigate, confirm/override. Server-rendered Jinja2. |
+| `investigation` | LangGraph graph (section 5), structured decision schema, citation verifier. |
+| `web` | FastAPI app: alert queue, alert detail, investigate, confirm/override. Server-rendered Jinja2. |
 | `eval` | Splits, frozen samples, baselines B0–B3, metrics, reports. |
 
 The model provider is reached through LangChain's chat-model interface. Production code uses

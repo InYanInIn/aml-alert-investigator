@@ -8,7 +8,7 @@ __pycache__/
 dist/
 
 # Data and secrets
-data/
+/data/
 .env
 
 # Infrastructure state

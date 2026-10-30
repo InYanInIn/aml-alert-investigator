@@ -3,7 +3,7 @@ from datetime import datetime
 import psycopg
 import pytest
 
-from aml_investigator.truth import TruthReport, compute_alert_truth
+from aml_investigator.truth.alert_truth import TruthReport, compute_alert_truth
 from tests.conftest import Database
 
 ACCOUNTS = ["A1", "A2", "A3", "A4", "A5"]

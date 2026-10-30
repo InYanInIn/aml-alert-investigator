@@ -6,7 +6,7 @@ from pathlib import Path
 import psycopg
 import pytest
 
-from aml_investigator.ingest import SALT, IngestReport, ingest
+from aml_investigator.data.ingest import SALT, IngestReport, ingest
 from tests.conftest import Database
 
 PREFIX = "TEST"

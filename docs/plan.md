@@ -82,6 +82,8 @@ Check: graph tests with scripted fake model cover: valid path; invalid citation 
 thread. Verifier has unit tests for each rule.
 
 ### M6 — Containers and Kubernetes locally
+- Health checks (`/healthz`, `/readyz`) and a 503 page when the MCP server is unreachable (today the alert
+  page returns 500 until it is back; the API itself starts and recovers without restart).
 - Dockerfiles for `api` and `mcp`; Helm chart; deploy to kind against the compose Postgres.
 
 Check: `helm install` on kind; a smoke test through port-forward loads the queue, runs one fake-model

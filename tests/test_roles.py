@@ -1,7 +1,7 @@
 import psycopg
 import pytest
 
-from aml_investigator.migrate import migrate
+from aml_investigator.core.migrate import migrate
 from tests.conftest import Database
 
 TRUTH_TABLES = ("truth.transaction_labels", "truth.pattern_attempts")

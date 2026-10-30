@@ -5,7 +5,9 @@ from pathlib import Path
 import psycopg
 import pytest
 
-from aml_investigator.calibrate import (
+from aml_investigator.data.splits import DayRange, day_splits
+from aml_investigator.monitoring.alerts import build_alerts
+from aml_investigator.monitoring.calibration import (
     CurvePoint,
     Feasibility,
     choose_thresholds,
@@ -14,9 +16,7 @@ from aml_investigator.calibrate import (
     train_split,
     write_thresholds,
 )
-from aml_investigator.monitor import rules
-from aml_investigator.monitor.alerts import build_alerts
-from aml_investigator.splits import DayRange, day_splits
+from aml_investigator.monitoring.rules import rules
 from tests.conftest import Database
 
 BASE = date(2022, 9, 1)
