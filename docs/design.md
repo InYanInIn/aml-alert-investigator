@@ -30,7 +30,8 @@ Goals
    relevant regulation, and propose `close` or `escalate` with a structured rationale.
 2. Every factual claim in the rationale cites a transaction ID or a regulation passage ID, and every citation
    is verified deterministically before an analyst sees it.
-3. The analyst confirms or overrides; both the proposal and the decision are stored append-only.
+3. A verified `close` is final without a human; every `escalate` and a random 3% of auto-closures go to the
+   analyst, who confirms or overrides (ADR-0017). Proposals and decisions are stored append-only.
 4. An evaluation, designed before the agent, measures the agent against labels it never sees and against
    baselines including a non-LLM classifier — and reports the result as measured, including if a baseline wins.
 5. Total cloud spend stays within the free Azure credit plus a $5 personal budget.
@@ -103,7 +104,7 @@ core.alert_rule_hits   (alert_id, rule_id, score, evidence_txn_ids bigint[])
 
 truth.transaction_labels (txn_id PK, is_laundering)
 truth.pattern_attempts   (attempt_id, typology, txn_id)
-truth.alert_truth        (alert_id PK, escalate_truth, escalate_truth_account_level, typology_truth)
+truth.alert_truth        (alert_id PK, escalate_truth, escalate_truth_account_level, typologies text[])
 
 corpus.documents       (doc_id PK, celex, title, version_date, source_url)
 corpus.passages        (passage_id PK e.g. 'AMLR art. 77(1)(b)', 'PL-AML art. 74 ust. 1', doc_id, article, paragraph,
@@ -252,7 +253,10 @@ instance, which overlays `core.reference_injections`.
 
 ## 7. Alert generation and ground truth
 
-Rules (SQL; thresholds calibrated on the train window to a target alert volume, never on test):
+Rules write scored candidates per (rule, account, day) into `core.rule_candidates`; `build_alerts` applies
+thresholds and suppression and merges hits per (account, day) into one alert (ADR-0016). Thresholds are
+calibrated on the train window to a target alert volume, never on test. Amounts are compared in EUR using
+rates derived from the dataset's own cross-currency transactions.
 
 | Rule | Logic | Typologies covered |
 |---|---|---|
@@ -267,8 +271,8 @@ Ground truth (in `truth.alert_truth`, never visible to the agent):
 
 - `escalate_truth` = 1 if any transaction of the account inside the alert window is labelled laundering.
 - `escalate_truth_account_level` = 1 if the account is ever involved; reported as a sensitivity check.
-- `typology_truth` = the pattern type if the alert's laundering transactions intersect a `Patterns.txt`
-  attempt, otherwise `none`. Typology accuracy is computed only on alerts with a pattern.
+- `typologies` = the pattern types of all `Patterns.txt` attempts that the alert's in-window laundering
+  transactions belong to (empty when none). Typology accuracy is computed only on alerts with a pattern.
 
 Because laundering labels propagate through commingled funds, most labelled transactions do not belong to a
 pattern. Recall is therefore reported separately for pattern-based and other laundering.

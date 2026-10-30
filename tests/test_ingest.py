@@ -1,5 +1,6 @@
 import hashlib
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 import psycopg
@@ -20,7 +21,8 @@ CARD = "2022/09/01 08:00,001,8000F5340,010,8000EBD30,12.50,US Dollar,12.50,US Do
 FAN_OUT_LEG = "2022/09/02 10:00,001,8000F5340,0220,80020C5B0,500.00,Euro,500.00,Euro,ACH,1"
 GATHER_LEG = "2022/09/03 11:00,0220,80020C5B0,010,8000EBD30,490.00,Euro,490.00,Euro,ACH,1"
 TAIL_LEG = "2022/09/11 09:00,0220,80020C5B0,001,8000F5340,480.00,Euro,480.00,Euro,ACH,1"
-TRANSACTIONS = [SELF_TRANSFER, CHEQUE, CHEQUE, CARD, FAN_OUT_LEG, GATHER_LEG, TAIL_LEG]
+DOLLARS_TO_EUROS = "2022/09/04 09:00,001,8000F5340,010,8000EBD30,50.00,Euro,100.00,US Dollar,Wire,0"
+TRANSACTIONS = [SELF_TRANSFER, CHEQUE, CHEQUE, CARD, FAN_OUT_LEG, GATHER_LEG, TAIL_LEG, DOLLARS_TO_EUROS]
 ACCOUNTS = [
     "Bank Name,Bank ID,Account Number,Entity ID,Entity Name",
     "First Bank #1,10,8000EBD30,80062E240,Corporation #33520",
@@ -46,6 +48,22 @@ TRANSACTION_CONTENT = (
 )
 
 
+def cross_currency(received: str, received_currency: str, paid: str, paid_currency: str) -> str:
+    return f"2022/09/05 12:00,010,8000EBD30,001,8000F5340,{received},{received_currency},{paid},{paid_currency},Wire,0"
+
+
+RATE_FIXTURE = [
+    cross_currency("50", "Euro", "100", "US Dollar"),
+    cross_currency("60", "Euro", "100", "US Dollar"),
+    cross_currency("5", "Euro", "10", "US Dollar"),
+    cross_currency("200", "US Dollar", "100", "Euro"),
+    cross_currency("1.25", "US Dollar", "10", "Yuan"),
+    cross_currency("10", "Euro", "10", "Swiss Franc"),
+    cross_currency("25", "Swiss Franc", "100", "US Dollar"),
+    cross_currency("5", "US Dollar", "1", "Swiss Franc"),
+]
+
+
 def write_raw(raw_dir: Path, transactions: list[str] = TRANSACTIONS) -> Path:
     raw_dir.mkdir(exist_ok=True)
     (raw_dir / f"{PREFIX}_Trans.csv").write_text("\n".join([TRANS_HEADER, *transactions]) + "\n")
@@ -67,7 +85,8 @@ def fetch(db: Database, query: str) -> list[tuple[object, ...]]:
 def clear(db: Database) -> None:
     with db.owner() as conn:
         conn.execute(
-            "TRUNCATE truth.pattern_attempts, truth.transaction_labels, core.transactions, core.accounts CASCADE"
+            "TRUNCATE truth.pattern_attempts, truth.transaction_labels, core.transactions, core.fx_rates, "
+            "core.accounts CASCADE"
         )
 
 
@@ -78,9 +97,17 @@ def expected_account_id(bank_id: int, account_number: str) -> str:
 def test_loads_in_period_rows_and_drops_tail(db: Database, tmp_path: Path) -> None:
     report = run_ingest(db, write_raw(tmp_path))
 
-    assert report == IngestReport(transactions=6, accounts=3, laundering=2, pattern_rows=2, dropped_tail=1)
+    assert report == IngestReport(
+        transactions=7,
+        accounts=3,
+        laundering=2,
+        pattern_rows=2,
+        dropped_tail=1,
+        currencies=2,
+        fx_round_trip_error=0.0,
+    )
     assert fetch(db, "SELECT max(ts) < '2022-09-11' FROM core.transactions") == [(True,)]
-    assert "transactions: 6" in str(report)
+    assert "transactions: 7" in str(report)
 
 
 def test_leading_zero_bank_ids_join_to_accounts(db: Database, tmp_path: Path) -> None:
@@ -107,11 +134,11 @@ def test_ids_do_not_depend_on_file_order(db: Database, tmp_path: Path) -> None:
     run_ingest(db, write_raw(tmp_path / "ordered"))
     ordered = fetch(db, TRANSACTION_CONTENT)
     clear(db)
-    shuffled = [TRANSACTIONS[position] for position in (5, 2, 6, 0, 4, 1, 3)]
+    shuffled = [TRANSACTIONS[position] for position in (5, 2, 7, 6, 0, 4, 1, 3)]
     run_ingest(db, write_raw(tmp_path / "shuffled", shuffled))
 
     assert fetch(db, TRANSACTION_CONTENT) == ordered
-    assert [row[0] for row in ordered] == [1, 2, 3, 4, 5, 6]
+    assert [row[0] for row in ordered] == [1, 2, 3, 4, 5, 6, 7]
 
 
 def test_limit_keeps_the_same_ids(db: Database, tmp_path: Path) -> None:
@@ -166,7 +193,7 @@ def test_labels_land_only_in_truth(db: Database, tmp_path: Path) -> None:
         (5,),
         (6,),
     ]
-    assert fetch(db, "SELECT count(*) FROM truth.transaction_labels") == [(6,)]
+    assert fetch(db, "SELECT count(*) FROM truth.transaction_labels") == [(7,)]
     label_columns = fetch(
         db,
         "SELECT table_schema, table_name FROM information_schema.columns "
@@ -181,5 +208,41 @@ def test_refuses_to_load_into_non_empty_database(db: Database, tmp_path: Path) -
 
     with pytest.raises(RuntimeError, match="not empty"):
         run_ingest(db, raw_dir)
-    assert fetch(db, "SELECT count(*) FROM core.transactions") == [(6,)]
+    assert fetch(db, "SELECT count(*) FROM core.transactions") == [(7,)]
     assert fetch(db, "SELECT count(*) FROM core.accounts") == [(3,)]
+
+
+def test_fx_rates_come_from_median_cross_currency_ratios(db: Database, tmp_path: Path) -> None:
+    report = run_ingest(db, write_raw(tmp_path, TRANSACTIONS + RATE_FIXTURE))
+
+    rates = fetch(db, "SELECT currency, eur_per_unit::float FROM core.fx_rates ORDER BY currency")
+    assert rates == [("Euro", 1.0), ("Swiss Franc", 1.0), ("US Dollar", 0.5), ("Yuan", 0.0625)]
+    assert report.currencies == 4
+    assert report.fx_round_trip_error == pytest.approx(0.25)
+
+
+def test_unreachable_currency_raises(db: Database, tmp_path: Path) -> None:
+    yen = "2022/09/04 10:00,001,8000F5340,010,8000EBD30,1000,Yen,1000,Yen,Cash,0"
+
+    with pytest.raises(ValueError, match="Yen"):
+        run_ingest(db, write_raw(tmp_path, [*TRANSACTIONS, yen]))
+    assert fetch(db, "SELECT count(*) FROM core.transactions") == [(0,)]
+
+
+def test_amount_paid_eur_converts_the_paid_currency(db: Database, tmp_path: Path) -> None:
+    run_ingest(db, write_raw(tmp_path))
+
+    assert fetch(
+        db,
+        "SELECT count(*) FROM core.transactions t JOIN core.fx_rates f ON f.currency = t.paid_currency "
+        "WHERE t.amount_paid_eur <> t.amount_paid * f.eur_per_unit",
+    ) == [(0,)]
+    assert fetch(db, "SELECT paid_currency, amount_paid, amount_paid_eur FROM core.transactions ORDER BY txn_id") == [
+        ("US Dollar", Decimal("0.01"), Decimal("0.005")),
+        ("US Dollar", Decimal("0.01"), Decimal("0.005")),
+        ("US Dollar", Decimal("3697.34"), Decimal("1848.67")),
+        ("US Dollar", Decimal("12.50"), Decimal("6.25")),
+        ("Euro", Decimal("500.00"), Decimal("500.0")),
+        ("Euro", Decimal("490.00"), Decimal("490.0")),
+        ("US Dollar", Decimal("100.00"), Decimal("50.0")),
+    ]

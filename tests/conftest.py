@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import psycopg
 import pytest
 from psycopg import sql
-from psycopg.conninfo import make_conninfo
 
 from aml_investigator.migrate import migrate
 from aml_investigator.settings import Settings, load_settings
@@ -23,12 +22,8 @@ class Database:
 
 
 def retarget(settings: Settings, dbname: str) -> Database:
-    return Database(
-        owner_dsn=make_conninfo(settings.owner_dsn, dbname=dbname),
-        mcp_dsn=make_conninfo(settings.mcp_dsn, dbname=dbname),
-        app_dsn=make_conninfo(settings.app_dsn, dbname=dbname),
-        evaluator_dsn=make_conninfo(settings.evaluator_dsn, dbname=dbname),
-    )
+    test = settings.with_database(dbname)
+    return Database(test.owner_dsn, test.mcp_dsn, test.app_dsn, test.evaluator_dsn)
 
 
 @pytest.fixture(scope="session")
@@ -50,7 +45,8 @@ def database() -> Iterator[Database]:
 def db(database: Database) -> Database:
     with database.owner() as conn:
         conn.execute(
-            "TRUNCATE review.decisions, review.investigations, truth.pattern_attempts, truth.transaction_labels, "
-            "core.alert_rule_hits, core.alerts, core.transactions, core.accounts RESTART IDENTITY CASCADE"
+            "TRUNCATE review.decisions, review.investigations, truth.alert_truth, truth.pattern_attempts, "
+            "truth.transaction_labels, core.alert_rule_hits, core.alerts, core.rule_candidates, core.transactions, "
+            "core.fx_rates, core.accounts RESTART IDENTITY CASCADE"
         )
     return database

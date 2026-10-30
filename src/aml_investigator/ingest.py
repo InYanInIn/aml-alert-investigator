@@ -30,6 +30,7 @@ ACCOUNT_KEY = ["bank_id", "account_number"]
 PATTERN_HEADER = re.compile(r"^BEGIN LAUNDERING ATTEMPT - ([A-Z-]+)(?::.*)?$")
 PATTERN_FOOTER = "END LAUNDERING ATTEMPT"
 COPY_BATCH_ROWS = 200_000
+EURO = "Euro"
 
 
 @dataclass(frozen=True)
@@ -39,11 +40,14 @@ class IngestReport:
     laundering: int
     pattern_rows: int
     dropped_tail: int
+    currencies: int
+    fx_round_trip_error: float
 
     def __str__(self) -> str:
         return (
             f"transactions: {self.transactions}, accounts: {self.accounts}, laundering: {self.laundering}, "
-            f"pattern rows: {self.pattern_rows}, dropped tail: {self.dropped_tail}"
+            f"pattern rows: {self.pattern_rows}, dropped tail: {self.dropped_tail}, currencies: {self.currencies}, "
+            f"fx round-trip error: {self.fx_round_trip_error:.6f}"
         )
 
 
@@ -56,12 +60,15 @@ def ingest(
     loaded = numbered if limit is None else numbered.filter(pl.col("txn_id") <= limit)
     accounts = referenced_accounts(read_raw_accounts(raw_dir / f"{prefix}_accounts.csv"), loaded)
     attempts = match_pattern_rows(read_pattern_rows(raw_dir / f"{prefix}_Patterns.txt"), raw, loaded)
+    rates = pair_rates(in_period)
+    fx_rates = eur_per_unit(rates, used_currencies(loaded))
     with conn.transaction():
         refuse_non_empty(conn)
         copy_frame(
             conn, "core", "accounts", accounts.select("account_id", "bank_id", "bank_name", "entity_id", "entity_type")
         )
-        copy_frame(conn, "core", "transactions", core_transactions(loaded, accounts))
+        copy_frame(conn, "core", "fx_rates", fx_rates)
+        copy_frame(conn, "core", "transactions", core_transactions(loaded, accounts, fx_rates))
         copy_frame(
             conn,
             "truth",
@@ -75,6 +82,8 @@ def ingest(
         laundering=loaded.filter(pl.col("is_laundering") == "1").height,
         pattern_rows=attempts.height,
         dropped_tail=raw.height - in_period.height,
+        currencies=fx_rates.height,
+        fx_round_trip_error=round_trip_error(rates),
     )
 
 
@@ -149,7 +158,61 @@ def require_injective(frame: pl.DataFrame, pseudonym_column: str, source_columns
         raise ValueError(f"{pseudonym_column} pseudonym collision: two source keys map to one pseudonym")
 
 
-def core_transactions(transactions: pl.DataFrame, accounts: pl.DataFrame) -> pl.DataFrame:
+def pair_rates(transactions: pl.DataFrame) -> dict[tuple[str, str], float]:
+    amounts = transactions.select(
+        "payment_currency",
+        "receiving_currency",
+        pl.col("amount_paid").cast(pl.Float64),
+        pl.col("amount_received").cast(pl.Float64),
+    )
+    medians = (
+        amounts.filter(
+            (pl.col("payment_currency") != pl.col("receiving_currency"))
+            & (pl.col("amount_paid") > 0)
+            & (pl.col("amount_received") > 0)
+        )
+        .group_by("payment_currency", "receiving_currency")
+        .agg((pl.col("amount_received") / pl.col("amount_paid")).median().alias("rate"))
+    )
+    return {(paid, received): rate for paid, received, rate in medians.iter_rows()}
+
+
+def used_currencies(transactions: pl.DataFrame) -> set[str]:
+    return set(transactions["payment_currency"]) | set(transactions["receiving_currency"])
+
+
+def eur_per_unit(rates: dict[tuple[str, str], float], required: set[str]) -> pl.DataFrame:
+    edges = {(received, paid): 1 / rate for (paid, received), rate in rates.items()} | rates
+    eur = {EURO: 1.0}
+    frontier = [EURO]
+    while frontier:
+        reached = [
+            (received, eur[paid] / rate)
+            for (paid, received), rate in sorted(edges.items())
+            if paid in frontier and received not in eur
+        ]
+        for currency, value in reached:
+            eur.setdefault(currency, value)
+        frontier = [currency for currency, _ in reached]
+    unreachable = required - eur.keys()
+    if unreachable:
+        raise ValueError(f"no exchange-rate path to {EURO} for: {', '.join(sorted(unreachable))}")
+    return pl.DataFrame(sorted(eur.items()), schema={"currency": pl.String, "eur_per_unit": pl.Float64}, orient="row")
+
+
+def round_trip_error(rates: dict[tuple[str, str], float]) -> float:
+    return max(
+        (
+            abs(rate * rates[(received, paid)] - 1)
+            for (paid, received), rate in rates.items()
+            if (received, paid) in rates
+        ),
+        default=0.0,
+    )
+
+
+def core_transactions(transactions: pl.DataFrame, accounts: pl.DataFrame, fx_rates: pl.DataFrame) -> pl.DataFrame:
+    transactions = transactions.join(fx_rates, left_on="payment_currency", right_on="currency")
     keyed = accounts.select("account_id", *ACCOUNT_KEY)
     for side in ("from", "to"):
         transactions = transactions.join(
@@ -167,6 +230,7 @@ def core_transactions(transactions: pl.DataFrame, accounts: pl.DataFrame) -> pl.
         "amount_received",
         pl.col("receiving_currency").alias("received_currency"),
         "payment_format",
+        (pl.col("amount_paid").cast(pl.Float64) * pl.col("eur_per_unit")).alias("amount_paid_eur"),
     ).sort("txn_id")
 
 

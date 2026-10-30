@@ -1,6 +1,6 @@
 # ADR-0013: Human confirmation and an append-only decision record
 
-Status: accepted · 2026-10-28
+Status: accepted · 2026-10-28 · partly superseded by ADR-0017 (auto-close of verified closures)
 
 ## Context
 AMLR Art. 77(1)(b) requires a record of every assessment, including those without an STR; Art. 77(2) allows

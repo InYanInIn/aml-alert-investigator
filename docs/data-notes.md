@@ -73,6 +73,42 @@ SCATTER-GATHER 44, STACK 43.
   (1.1M rows fall on 2022-09-01). On that slice R2 (≥ 5 receivers in 2 days) raises 15 alerts, 2 of which
   contain a laundering transaction in their evidence. Thresholds must be calibrated on the full train window (M2).
 
+## M2: alert stream after calibration
+
+Calibration (ADR-0016): budget 1,200 alerts/day, equal share per rule, suppression 3 days, thresholds chosen
+on the train window (2022-09-01 .. 09-06) without labels; files in `config/thresholds/`.
+
+| | HI-Small | LI-Small |
+|---|---|---|
+| Alerts (all splits) | 16,991 | 10,824 |
+| Train alerts/day, positive share | 985.5, 5.2% | 1,029.0, 4.2% |
+| Val alerts/day, positive share | 966.5, 9.2% | 1,060.0, 6.1% |
+| Test alerts/day | 4,572.5 | 1,265.0 |
+| Val positives (projected test positives) | 178 | 130 |
+
+Thresholds (HI / LI): R1 fan-in 13 / 16 senders, R2 fan-out 11 / 12 receivers, R3 pass-through 108,103 /
+167,768 EUR, R4 cycle weakest hop 217 / 792 EUR, R5 structuring 4 / 4 payments, R6 log-z 2.0 / 2.5.
+
+Positive share of alerts per rule, train and val only (HI / LI): R1 9.3% / 8.0%, R4 9.2% / 8.7%, R5 4.1% /
+2.8%, R2 3.3% / 2.0%, R6 2.4% / 3.7%, R3 1.5% / 0.5%. (HI values in this line include test; see
+`docs/test-split-log.md`.)
+
+Findings:
+- **HI-Small test drift.** The test window has 4.7× the alert volume of train. R6 explains it: on train its
+  candidates were too few to fill its share, so its threshold sits at the floor (log-z 2.0), and 2022-09-09
+  carries 74% of R6 candidates. Thresholds were not changed after seeing this; the drift stays in the test
+  set and is reported in M8. LI-Small (R6 threshold 2.5) shows no such spike.
+- **Upper bound for the agent.** Alerts touch 48.5% (HI) and 52.6% (LI) of pattern attempts through their
+  in-window laundering transactions; the rest of the patterns never reach an analyst or the agent. Cycles
+  are covered best (63% / 92%), fan-in and fan-out worst on LI (17% / 21%).
+- **Multi-rule alerts are rarer and richer:** 2.5% of alerts carry two or more rules, with roughly twice the
+  positive share of single-rule alerts.
+- **No segmentation needed.** Alerted accounts by entity type match the account population within ±3 points.
+- **Exchange rates.** Derived rates agree between datasets to ~7 significant figures; Bitcoin is about 1.4% low
+  because BTC amounts are rounded to 1e-6 and typical amounts are 3e-6 .. 8e-6 BTC. Accepted.
+- **R6 history.** 50.3% of (account, day) pairs on HI have fewer than 3 earlier active days and cannot be scored;
+  R6 cannot alert before 2022-09-04.
+
 ## Open checks
 
-- Whether bank ID order or bank country predicts the label (M2, before deciding what the profile exposes).
+- Whether bank ID order or bank country predicts the label (before M4 decides what the account profile exposes).

@@ -1,6 +1,8 @@
 import os
 from dataclasses import dataclass
 
+from psycopg.conninfo import conninfo_to_dict, make_conninfo
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -12,6 +14,18 @@ class Settings:
     @property
     def role_dsns(self) -> tuple[str, ...]:
         return (self.mcp_dsn, self.app_dsn, self.evaluator_dsn)
+
+    @property
+    def database(self) -> str:
+        return str(conninfo_to_dict(self.owner_dsn)["dbname"])
+
+    def with_database(self, name: str) -> "Settings":
+        return Settings(
+            owner_dsn=make_conninfo(self.owner_dsn, dbname=name),
+            mcp_dsn=make_conninfo(self.mcp_dsn, dbname=name),
+            app_dsn=make_conninfo(self.app_dsn, dbname=name),
+            evaluator_dsn=make_conninfo(self.evaluator_dsn, dbname=name),
+        )
 
 
 def load_settings() -> Settings:

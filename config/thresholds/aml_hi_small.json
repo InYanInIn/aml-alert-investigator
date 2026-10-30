@@ -1,0 +1,16 @@
+{
+  "budget_per_day": 1200.0,
+  "suppression_days": 3,
+  "calibrated_on": {
+    "first": "2022-09-01",
+    "last": "2022-09-06"
+  },
+  "thresholds": {
+    "R1_fan_in": 13.0,
+    "R2_fan_out": 11.0,
+    "R3_pass_through": 108103.34302675597,
+    "R4_cycle": 217.16,
+    "R5_structuring": 4.0,
+    "R6_profile_deviation": 2.0016485795043564
+  }
+}
