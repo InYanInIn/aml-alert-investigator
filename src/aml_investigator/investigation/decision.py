@@ -50,3 +50,9 @@ class Decision(BaseModel):
     @property
     def claims(self) -> list[Claim]:
         return [*self.who, *self.what, *self.when, *self.where, *self.why, *self.how]
+
+
+class AnalystReview(BaseModel):
+    analyst: str
+    final_decision: Literal["close", "escalate"]
+    comment: str = ""

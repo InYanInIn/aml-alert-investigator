@@ -40,8 +40,8 @@ speculative.
   lifespan; batch commands open one connection per command.
 - **Logging**: stdlib `logging`, one JSON line per event, context fields (`alert_id`, `thread_id`,
   `investigation_id`) bound through `contextvars`. CLI keeps `print` for its user-facing output.
-- **Errors**: domain exceptions derive from `core.errors.DomainError` (`AlertNotFound`,
-  `InvestigationNotFound`, `ToolCallError`, …); one web exception handler maps "not found" errors to 404.
+- **Errors**: domain exceptions derive from `core.errors.DomainError` (`AlertNotFoundError`,
+  `InvestigationNotFoundError`, `ToolCallError`, …); one web exception handler maps "not found" errors to 404.
 - **SQL files**: statements longer than a few lines live in `sql/<name>.sql` and are loaded by name with
   `core.sql.load(__package__, name)`; parameters stay `%(name)s` psycopg placeholders.
 

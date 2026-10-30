@@ -50,6 +50,7 @@ select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF", "N", "S", "PT", "ARG", "C
 
 [tool.mypy]
 strict = true
+plugins = ["pydantic.mypy"]
 files = ["src", "tests"]
 
 [tool.pytest.ini_options]

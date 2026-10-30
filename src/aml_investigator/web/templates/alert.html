@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Alert {{ alert.alert_id }}{% endblock %}
+{% block title %}Alert {{ page.alert.alert_id }}{% endblock %}
 {% block content %}
-<h1>Alert {{ alert.alert_id }}</h1>
+<h1>Alert {{ page.alert.alert_id }}</h1>
 
 <section>
 <dl>
-<dt>Account</dt><dd>{{ alert.account_id }}</dd>
-<dt>Alert date</dt><dd>{{ alert.alert_date }}</dd>
-<dt>Window</dt><dd>{{ alert.window_start }} to {{ alert.window_end }}</dd>
+<dt>Account</dt><dd>{{ page.alert.account_id }}</dd>
+<dt>Alert date</dt><dd>{{ page.alert.alert_date }}</dd>
+<dt>Window</dt><dd>{{ page.alert.window_start }} to {{ page.alert.window_end }}</dd>
 </dl>
 </section>
 
@@ -15,7 +15,7 @@
 <table>
 <thead><tr><th>Rule</th><th>Score</th><th>Evidence transactions</th></tr></thead>
 <tbody>
-{% for hit in rule_hits %}
+{% for hit in page.rule_hits %}
 <tr>
 <td>{{ hit.rule_id }}</td>
 <td class="num">{{ hit.score }}</td>
@@ -26,23 +26,23 @@
 </table>
 
 <h2>Investigation</h2>
-{% if investigation %}
+{% if page.investigation %}
 <section>
 <dl>
-<dt>Recommendation</dt><dd><span class="badge {{ investigation.recommendation }}">{{ investigation.recommendation }}</span></dd>
-<dt>Verification <span class="hint" title="Checks that the agent made nothing up: every transaction it cites was really returned by the tools, and every amount, currency and date it states matches the data. It does not say whether the alert is suspicious; that is the recommendation above.">(?)</span></dt><dd><span class="badge {{ investigation.verification.status }}">{{ investigation.verification.status }}</span></dd>
-{% if investigation.verification.errors %}
+<dt>Recommendation</dt><dd><span class="badge {{ page.investigation.recommendation }}">{{ page.investigation.recommendation }}</span></dd>
+<dt>Verification <span class="hint" title="Checks that the agent made nothing up: every transaction it cites was really returned by the tools, and every amount, currency and date it states matches the data. It does not say whether the alert is suspicious; that is the recommendation above.">(?)</span></dt><dd><span class="badge {{ page.investigation.verification.status }}">{{ page.investigation.verification.status }}</span></dd>
+{% if page.investigation.verification.errors %}
 <dt>Errors</dt>
-<dd><ul>{% for error in investigation.verification.errors %}<li>{{ error }}</li>{% endfor %}</ul></dd>
+<dd><ul>{% for error in page.investigation.verification.errors %}<li>{{ error }}</li>{% endfor %}</ul></dd>
 {% endif %}
-<dt>Created</dt><dd>{{ investigation.created_at }}</dd>
+<dt>Created</dt><dd>{{ page.investigation.created_at }}</dd>
 </dl>
 
 {% for field in ["who", "what", "when", "where", "why", "how"] %}
 <h2>{{ field|capitalize }}</h2>
-{% if investigation.decision[field] %}
+{% if page.investigation.decision|attr(field) %}
 <ul class="claims">
-{% for claim in investigation.decision[field] %}
+{% for claim in page.investigation.decision|attr(field) %}
 <li>{{ claim.text }}
 {% if claim.txn_ids %}<span class="muted">(transactions:
 {% for txn_id in claim.txn_ids %}<a href="#txn-{{ txn_id }}">{{ txn_id }}</a>{% if not loop.last %}, {% endif %}{% endfor %})</span>{% endif %}
@@ -55,24 +55,24 @@
 {% endfor %}
 </section>
 
-{% if investigation.final_decision %}
+{% if page.investigation.review %}
 <h2>Decision</h2>
 <section>
 <dl>
-<dt>Final decision</dt><dd><span class="badge {{ investigation.final_decision }}">{{ investigation.final_decision }}</span></dd>
-<dt>Analyst</dt><dd>{{ investigation.analyst }}</dd>
-<dt>Comment</dt><dd>{{ investigation.comment }}</dd>
-<dt>Decided</dt><dd>{{ investigation.decided_at }}</dd>
+<dt>Final decision</dt><dd><span class="badge {{ page.investigation.review.final_decision }}">{{ page.investigation.review.final_decision }}</span></dd>
+<dt>Analyst</dt><dd>{{ page.investigation.review.analyst }}</dd>
+<dt>Comment</dt><dd>{{ page.investigation.review.comment }}</dd>
+<dt>Decided</dt><dd>{{ page.investigation.review.decided_at }}</dd>
 </dl>
 </section>
 {% else %}
 <h2>Review</h2>
 <section>
-<form method="post" action="/investigations/{{ investigation.investigation_id }}/decision">
+<form method="post" action="/investigations/{{ page.investigation.investigation_id }}/decision">
 <label for="final_decision">Final decision</label>
 <select id="final_decision" name="final_decision">
-<option value="close" {% if investigation.recommendation == "close" %}selected{% endif %}>Close</option>
-<option value="escalate" {% if investigation.recommendation == "escalate" %}selected{% endif %}>Escalate</option>
+<option value="close" {% if page.investigation.recommendation == "close" %}selected{% endif %}>Close</option>
+<option value="escalate" {% if page.investigation.recommendation == "escalate" %}selected{% endif %}>Escalate</option>
 </select>
 <label for="comment">Comment</label>
 <textarea id="comment" name="comment" rows="3"></textarea>
@@ -84,18 +84,18 @@
 <p class="muted">Not investigated yet.</p>
 {% endif %}
 
-<form method="post" action="/alerts/{{ alert.alert_id }}/investigate">
-<button type="submit">{% if investigation %}Investigate again{% else %}Investigate{% endif %}</button>
+<form method="post" action="/alerts/{{ page.alert.alert_id }}/investigate">
+<button type="submit">{% if page.investigation %}Investigate again{% else %}Investigate{% endif %}</button>
 </form>
 
 <h2>Evidence transactions</h2>
-{% if evidence.truncated %}<p class="muted">More transactions matched than are shown.</p>{% endif %}
+{% if page.evidence.truncated %}<p class="muted">More transactions matched than are shown.</p>{% endif %}
 <table>
 <thead>
 <tr><th>Txn</th><th>Time</th><th>From</th><th>To</th><th>Paid</th><th>Received</th><th>Format</th></tr>
 </thead>
 <tbody>
-{% for txn in evidence.transactions %}
+{% for txn in page.evidence.transactions %}
 <tr id="txn-{{ txn.txn_id }}">
 <td>{{ txn.txn_id }}</td>
 <td>{{ txn.ts }}</td>
