@@ -1,187 +1,353 @@
 from datetime import date, datetime, timedelta
+from types import ModuleType
 
 import psycopg
+import pytest
 
-from aml_investigator.monitor import FAN_OUT, run_fan_out
+from aml_investigator.monitor import r1_fan_in, r2_fan_out, r5_structuring
 from tests.conftest import Database
 
 DAY = datetime(2022, 9, 5)
 
+Transaction = tuple[int, datetime, str, str, float]
+Candidate = tuple[str, date, datetime, datetime, int, list[int]]
 
-def seed(db: Database, accounts: list[str], transactions: list[tuple[int, datetime, str, str]]) -> None:
+
+def seed(db: Database, accounts: list[str], transactions: list[Transaction]) -> None:
     with db.owner() as conn:
         for account in accounts:
             conn.execute("INSERT INTO core.accounts VALUES (%s, 1, 'Bank', %s, 'Corporation')", (account, account))
-        for txn_id, ts, sender, receiver in transactions:
+        for txn_id, ts, sender, receiver, amount_eur in transactions:
             conn.execute(
-                "INSERT INTO core.transactions VALUES (%s, %s, %s, %s, 10, 'USD', 10, 'USD', 'ACH')",
-                (txn_id, ts, sender, receiver),
+                "INSERT INTO core.transactions VALUES (%s, %s, %s, %s, 1, 'USD', 1, 'USD', 'ACH', %s)",
+                (txn_id, ts, sender, receiver, amount_eur),
             )
 
 
-def run(db: Database, *, min_receivers: int = 3, window_days: int = 1) -> int:
+def generate(db: Database, rule: ModuleType) -> int:
     with psycopg.connect(db.owner_dsn) as conn:
-        return run_fan_out(conn, min_receivers=min_receivers, window_days=window_days)
+        return int(rule.generate(conn))
 
 
-def alerts(db: Database) -> list[tuple[str, date, datetime, datetime]]:
+def candidates(db: Database, rule: ModuleType) -> list[Candidate]:
     with db.owner() as conn:
-        return conn.execute(
-            "SELECT account_id, alert_date, window_start, window_end FROM core.alerts ORDER BY account_id, alert_date"
-        ).fetchall()  # type: ignore[return-value]
+        return conn.execute(  # type: ignore[return-value]
+            "SELECT account_id, alert_date, window_start, window_end, score::int, evidence_txn_ids "
+            "FROM core.rule_candidates WHERE rule_id = %s ORDER BY account_id, alert_date",
+            (rule.RULE_ID,),
+        ).fetchall()
 
 
-def hits(db: Database) -> list[tuple[str, str, int, list[int]]]:
-    with db.owner() as conn:
-        return conn.execute(
-            "SELECT a.account_id, h.rule_id, h.score::int, h.evidence_txn_ids "
-            "FROM core.alert_rule_hits h JOIN core.alerts a USING (alert_id) ORDER BY a.account_id, a.alert_date"
-        ).fetchall()  # type: ignore[return-value]
+def midnight(day: int, hour: int = 0, minute: int = 0, second: int = 0) -> datetime:
+    return datetime(2022, 9, day, hour, minute, second)
 
 
-def fan_out_from_s(
-    receivers: list[str], first_txn_id: int = 1, ts: datetime = DAY
-) -> list[tuple[int, datetime, str, str]]:
-    return [(first_txn_id + i, ts + timedelta(hours=i), "S", r) for i, r in enumerate(receivers)]
+@pytest.fixture(params=[r1_fan_in, r2_fan_out], ids=lambda rule: rule.RULE_ID)
+def fan_rule(request: pytest.FixtureRequest) -> ModuleType:
+    return request.param  # type: ignore[no-any-return]
 
 
-def test_alert_at_threshold_but_not_below(db: Database) -> None:
+def fan_txn(rule: ModuleType, txn_id: int, ts: datetime, counterparty: str, subject: str = "S") -> Transaction:
+    sender, receiver = (counterparty, subject) if rule is r1_fan_in else (subject, counterparty)
+    return (txn_id, ts, sender, receiver, 10)
+
+
+def opposite_fan_txn(rule: ModuleType, txn_id: int, ts: datetime, counterparty: str) -> Transaction:
+    other = r2_fan_out if rule is r1_fan_in else r1_fan_in
+    return fan_txn(other, txn_id, ts, counterparty)
+
+
+def test_fan_rule_constants(fan_rule: ModuleType) -> None:
+    assert (fan_rule.WINDOW_DAYS, fan_rule.FLOOR) == (2, 2)
+
+
+def test_fan_candidate_at_floor_but_not_below(db: Database, fan_rule: ModuleType) -> None:
     seed(
         db,
-        ["S", "R1", "R2", "R3", "Q", "Q1", "Q2"],
-        [*fan_out_from_s(["R1", "R2", "R3"]), (10, DAY, "Q", "Q1"), (11, DAY, "Q", "Q2")],
-    )
-
-    assert run(db, min_receivers=3) == 1
-    assert [(a[0], a[1]) for a in alerts(db)] == [("S", date(2022, 9, 5))]
-    assert hits(db) == [("S", FAN_OUT, 3, [1, 2, 3])]
-
-
-def test_repeat_payments_to_one_receiver_count_once(db: Database) -> None:
-    seed(db, ["S", "R1", "R2"], fan_out_from_s(["R1", "R1", "R1", "R2"]))
-
-    assert run(db, min_receivers=3) == 0
-    assert run(db, min_receivers=2) == 1
-    assert hits(db) == [("S", FAN_OUT, 2, [1, 2, 3, 4])]
-
-
-def test_self_transfers_are_ignored(db: Database) -> None:
-    seed(db, ["S", "R1", "R2"], fan_out_from_s(["R1", "R2", "S", "S"]))
-
-    assert run(db, min_receivers=3) == 0
-    assert run(db, min_receivers=2) == 1
-    assert hits(db) == [("S", FAN_OUT, 2, [1, 2])]
-
-
-def test_account_with_only_self_transfers_gets_no_alert(db: Database) -> None:
-    seed(db, ["S"], fan_out_from_s(["S", "S", "S"]))
-
-    assert run(db, min_receivers=1) == 0
-    assert alerts(db) == []
-
-
-def test_incoming_transactions_are_irrelevant(db: Database) -> None:
-    seed(db, ["S", "R1", "R2", "R3"], [(1, DAY, "R1", "S"), (2, DAY, "R2", "S"), (3, DAY, "R3", "S")])
-
-    assert run(db, min_receivers=2) == 0
-    assert alerts(db) == []
-
-
-def test_window_aggregates_across_days_with_exact_bounds(db: Database) -> None:
-    seed(
-        db,
-        ["S", "R1", "R2", "R3", "R4"],
+        ["S", "C1", "C2", "Q", "Q1"],
         [
-            (1, datetime(2022, 9, 2, 23, 59, 59), "S", "R1"),
-            (2, datetime(2022, 9, 3, 0, 0, 0), "S", "R2"),
-            (3, datetime(2022, 9, 4, 12, 0, 0), "S", "R3"),
-            (4, datetime(2022, 9, 5, 23, 59, 59), "S", "R4"),
-            (5, datetime(2022, 9, 6, 0, 0, 0), "S", "R1"),
+            fan_txn(fan_rule, 1, DAY, "C1"),
+            fan_txn(fan_rule, 2, DAY + timedelta(hours=1), "C2"),
+            fan_txn(fan_rule, 10, DAY, "Q1", subject="Q"),
         ],
     )
 
-    assert run(db, min_receivers=4, window_days=3) == 0
-    assert run(db, min_receivers=3, window_days=3) == 3
+    assert generate(db, fan_rule) == 1
+    assert candidates(db, fan_rule) == [("S", date(2022, 9, 5), midnight(4), midnight(6), 2, [1, 2])]
 
-    assert alerts(db) == [
-        ("S", date(2022, 9, 4), datetime(2022, 9, 2), datetime(2022, 9, 5)),
-        ("S", date(2022, 9, 5), datetime(2022, 9, 3), datetime(2022, 9, 6)),
-        ("S", date(2022, 9, 6), datetime(2022, 9, 4), datetime(2022, 9, 7)),
+
+def test_fan_repeat_counterparty_counts_once(db: Database, fan_rule: ModuleType) -> None:
+    seed(
+        db,
+        ["S", "C1", "C2"],
+        [fan_txn(fan_rule, i + 1, DAY + timedelta(hours=i), c) for i, c in enumerate(["C1", "C1", "C1"])],
+    )
+    assert generate(db, fan_rule) == 0
+
+    seed(db, [], [fan_txn(fan_rule, 4, DAY + timedelta(hours=3), "C2")])
+
+    assert generate(db, fan_rule) == 1
+    assert candidates(db, fan_rule) == [("S", date(2022, 9, 5), midnight(4), midnight(6), 2, [1, 2, 3, 4])]
+
+
+def test_fan_self_transfers_are_ignored(db: Database, fan_rule: ModuleType) -> None:
+    seed(
+        db,
+        ["S", "C1", "C2"],
+        [
+            fan_txn(fan_rule, 1, DAY, "C1"),
+            fan_txn(fan_rule, 2, DAY, "S"),
+            fan_txn(fan_rule, 3, DAY, "S"),
+        ],
+    )
+    assert generate(db, fan_rule) == 0
+
+    seed(db, [], [fan_txn(fan_rule, 4, DAY, "C2")])
+
+    assert generate(db, fan_rule) == 1
+    assert candidates(db, fan_rule) == [("S", date(2022, 9, 5), midnight(4), midnight(6), 2, [1, 4])]
+
+
+def test_fan_account_with_only_self_transfers_has_no_candidate(db: Database, fan_rule: ModuleType) -> None:
+    seed(db, ["S"], [fan_txn(fan_rule, i, DAY, "S") for i in (1, 2, 3)])
+
+    assert generate(db, fan_rule) == 0
+    assert candidates(db, fan_rule) == []
+
+
+def test_fan_opposite_direction_is_irrelevant(db: Database, fan_rule: ModuleType) -> None:
+    seed(
+        db,
+        ["S", "C1", "C2", "C3"],
+        [opposite_fan_txn(fan_rule, i, DAY, c) for i, c in enumerate(["C1", "C2", "C3"], start=1)],
+    )
+
+    assert generate(db, fan_rule) == 0
+    assert candidates(db, fan_rule) == []
+
+
+def test_fan_window_bounds_are_exact(db: Database, fan_rule: ModuleType) -> None:
+    seed(
+        db,
+        ["S", "C1", "C2", "C3", "C4"],
+        [
+            fan_txn(fan_rule, 1, midnight(4, 23, 59, 59), "C1"),
+            fan_txn(fan_rule, 2, midnight(5), "C2"),
+            fan_txn(fan_rule, 3, midnight(6, 23, 59, 59), "C3"),
+            fan_txn(fan_rule, 4, midnight(7), "C4"),
+        ],
+    )
+
+    assert generate(db, fan_rule) == 3
+    assert candidates(db, fan_rule) == [
+        ("S", date(2022, 9, 5), midnight(4), midnight(6), 2, [1, 2]),
+        ("S", date(2022, 9, 6), midnight(5), midnight(7), 2, [2, 3]),
+        ("S", date(2022, 9, 7), midnight(6), midnight(8), 2, [3, 4]),
     ]
-    assert hits(db) == [("S", FAN_OUT, 3, [1, 2, 3]), ("S", FAN_OUT, 3, [2, 3, 4]), ("S", FAN_OUT, 3, [3, 4, 5])]
 
 
-def test_window_end_is_exclusive_of_next_day(db: Database) -> None:
+def test_fan_evidence_is_sorted_and_complete(db: Database, fan_rule: ModuleType) -> None:
     seed(
         db,
-        ["S", "R1", "R2", "R3"],
+        ["S", "C1", "C2", "C3"],
         [
-            (1, datetime(2022, 9, 5, 0, 0, 0), "S", "R1"),
-            (2, datetime(2022, 9, 5, 12, 0, 0), "S", "R2"),
-            (3, datetime(2022, 9, 6, 0, 0, 0), "S", "R3"),
+            fan_txn(fan_rule, 30, DAY + timedelta(hours=1), "C1"),
+            fan_txn(fan_rule, 10, DAY + timedelta(hours=5), "C2"),
+            fan_txn(fan_rule, 20, DAY + timedelta(hours=3), "C3"),
+            fan_txn(fan_rule, 25, DAY + timedelta(hours=4), "C3"),
+            fan_txn(fan_rule, 40, DAY + timedelta(hours=4), "S"),
+            opposite_fan_txn(fan_rule, 99, DAY + timedelta(hours=6), "C1"),
         ],
     )
 
-    assert run(db, min_receivers=3, window_days=1) == 0
-    assert run(db, min_receivers=3, window_days=2) == 1
-    assert alerts(db) == [("S", date(2022, 9, 6), datetime(2022, 9, 5), datetime(2022, 9, 7))]
+    generate(db, fan_rule)
+
+    assert candidates(db, fan_rule) == [("S", date(2022, 9, 5), midnight(4), midnight(6), 3, [10, 20, 25, 30])]
 
 
-def test_multi_day_window_creates_alert_per_active_day(db: Database) -> None:
-    seed(
-        db,
-        ["S", "R1", "R2", "R3"],
-        [
-            (1, datetime(2022, 9, 5, 10), "S", "R1"),
-            (2, datetime(2022, 9, 6, 10), "S", "R2"),
-            (3, datetime(2022, 9, 7, 10), "S", "R3"),
-        ],
-    )
-
-    assert run(db, min_receivers=2, window_days=2) == 2
-    assert [(a[1]) for a in alerts(db)] == [date(2022, 9, 6), date(2022, 9, 7)]
-    assert hits(db) == [("S", FAN_OUT, 2, [1, 2]), ("S", FAN_OUT, 2, [2, 3])]
-
-
-def test_evidence_ids_are_sorted_and_complete(db: Database) -> None:
-    seed(
-        db,
-        ["S", "R1", "R2", "R3"],
-        [
-            (30, DAY + timedelta(hours=1), "S", "R1"),
-            (10, DAY + timedelta(hours=5), "S", "R2"),
-            (20, DAY + timedelta(hours=3), "S", "R3"),
-            (25, DAY + timedelta(hours=4), "S", "R3"),
-            (99, DAY + timedelta(hours=6), "R1", "S"),
-        ],
-    )
-
-    run(db, min_receivers=3)
-
-    assert hits(db) == [("S", FAN_OUT, 3, [10, 20, 25, 30])]
-
-
-def test_second_run_creates_nothing(db: Database) -> None:
-    seed(db, ["S", "R1", "R2", "R3"], fan_out_from_s(["R1", "R2", "R3"]))
-
-    assert run(db, min_receivers=3) == 1
-    assert run(db, min_receivers=3) == 0
-    assert len(alerts(db)) == 1
-    assert len(hits(db)) == 1
-
-
-def test_existing_alert_is_reused_and_gets_the_hit(db: Database) -> None:
-    seed(db, ["S", "R1", "R2", "R3"], fan_out_from_s(["R1", "R2", "R3"]))
+def test_fan_rerun_replaces_instead_of_duplicating(db: Database, fan_rule: ModuleType) -> None:
+    seed(db, ["S", "C1", "C2"], [fan_txn(fan_rule, 1, DAY, "C1"), fan_txn(fan_rule, 2, DAY, "C2")])
     with db.owner() as conn:
         conn.execute(
-            "INSERT INTO core.alerts (account_id, alert_date, window_start, window_end) "
-            "VALUES ('S', '2022-09-05', '2022-09-05', '2022-09-06')"
+            "INSERT INTO core.rule_candidates VALUES (%s, 'S', '2022-01-01', '2022-01-01', '2022-01-02', 9, '{}')",
+            (fan_rule.RULE_ID,),
         )
-        conn.execute("INSERT INTO core.alert_rule_hits VALUES (1, 'R1_fan_in', 4, '{}')")
+        conn.execute(
+            "INSERT INTO core.rule_candidates VALUES ('other_rule', 'S', '2022-01-01', "
+            "'2022-01-01', '2022-01-02', 9, '{}')"
+        )
 
-    assert run(db, min_receivers=3) == 0
+    assert generate(db, fan_rule) == 1
+    assert generate(db, fan_rule) == 1
 
-    assert len(alerts(db)) == 1
+    assert candidates(db, fan_rule) == [("S", date(2022, 9, 5), midnight(4), midnight(6), 2, [1, 2])]
     with db.owner() as conn:
-        rules = conn.execute("SELECT rule_id FROM core.alert_rule_hits ORDER BY rule_id").fetchall()
-    assert rules == [("R1_fan_in",), (FAN_OUT,)]
+        assert conn.execute("SELECT count(*) FROM core.rule_candidates WHERE rule_id = 'other_rule'").fetchone() == (1,)
+
+
+def test_fan_rules_do_not_see_each_others_candidates(db: Database) -> None:
+    seed(
+        db,
+        ["S", "C1", "C2"],
+        [fan_txn(r2_fan_out, 1, DAY, "C1"), fan_txn(r2_fan_out, 2, DAY, "C2")],
+    )
+
+    assert generate(db, r2_fan_out) == 1
+    assert generate(db, r1_fan_in) == 0
+    assert len(candidates(db, r2_fan_out)) == 1
+
+
+def structuring_txn(
+    txn_id: int, ts: datetime, amount_eur: float, receiver: str = "R", sender: str = "S"
+) -> Transaction:
+    return (txn_id, ts, sender, receiver, amount_eur)
+
+
+def test_structuring_constants() -> None:
+    assert r5_structuring.RULE_ID == "R5_structuring"
+    assert (r5_structuring.WINDOW_DAYS, r5_structuring.FLOOR) == (3, 2)
+    assert r5_structuring.REPORTING_THRESHOLD_EUR == 15000
+    assert r5_structuring.BAND_LOWER == 0.85
+
+
+def test_structuring_band_boundaries(db: Database) -> None:
+    seed(
+        db,
+        ["S", "R"],
+        [
+            structuring_txn(1, DAY, 12749.99),
+            structuring_txn(2, DAY + timedelta(hours=1), 12750),
+            structuring_txn(3, DAY + timedelta(hours=2), 14999.99),
+            structuring_txn(4, DAY + timedelta(hours=3), 15000),
+        ],
+    )
+
+    assert generate(db, r5_structuring) == 1
+    assert candidates(db, r5_structuring) == [("S", date(2022, 9, 5), midnight(3), midnight(6), 2, [2, 3])]
+
+
+@pytest.mark.parametrize("amount_eur", [12749.99, 15000])
+def test_structuring_amounts_outside_band_never_count(db: Database, amount_eur: float) -> None:
+    seed(db, ["S", "R"], [structuring_txn(1, DAY, amount_eur), structuring_txn(2, DAY, amount_eur)])
+
+    assert generate(db, r5_structuring) == 0
+
+
+def test_structuring_candidate_at_floor_but_not_below(db: Database) -> None:
+    seed(db, ["S", "R", "Q"], [structuring_txn(1, DAY, 14000), structuring_txn(2, DAY, 14000, sender="Q")])
+    assert generate(db, r5_structuring) == 0
+
+    seed(db, [], [structuring_txn(3, DAY + timedelta(hours=1), 14000)])
+
+    assert generate(db, r5_structuring) == 1
+    assert candidates(db, r5_structuring) == [("S", date(2022, 9, 5), midnight(3), midnight(6), 2, [1, 3])]
+
+
+def test_structuring_repeat_receiver_counts_every_payment(db: Database) -> None:
+    seed(
+        db,
+        ["S", "R"],
+        [structuring_txn(i, DAY + timedelta(hours=i), 14000) for i in (1, 2, 3)],
+    )
+
+    generate(db, r5_structuring)
+
+    assert candidates(db, r5_structuring) == [("S", date(2022, 9, 5), midnight(3), midnight(6), 3, [1, 2, 3])]
+
+
+def test_structuring_uses_eur_amount_not_paid_amount(db: Database) -> None:
+    seed(db, ["S", "R"], [structuring_txn(1, DAY, 14000), structuring_txn(2, DAY, 14000)])
+    with db.owner() as conn:
+        conn.execute("UPDATE core.transactions SET amount_paid = 20000, paid_currency = 'PLN'")
+
+    assert generate(db, r5_structuring) == 1
+
+
+def test_structuring_self_transfers_are_ignored(db: Database) -> None:
+    seed(
+        db,
+        ["S", "R"],
+        [structuring_txn(1, DAY, 14000), structuring_txn(2, DAY, 14000, receiver="S")],
+    )
+
+    assert generate(db, r5_structuring) == 0
+
+
+def test_structuring_incoming_payments_are_irrelevant(db: Database) -> None:
+    seed(
+        db,
+        ["S", "R"],
+        [
+            structuring_txn(1, DAY, 14000, sender="R", receiver="S"),
+            structuring_txn(2, DAY, 14000, sender="R", receiver="S"),
+        ],
+    )
+
+    assert generate(db, r5_structuring) == 1
+    assert [c[0] for c in candidates(db, r5_structuring)] == ["R"]
+
+
+def test_structuring_window_bounds_are_exact(db: Database) -> None:
+    seed(
+        db,
+        ["S", "R"],
+        [
+            structuring_txn(1, midnight(4, 23, 59, 59), 14000),
+            structuring_txn(2, midnight(5), 14000),
+            structuring_txn(3, midnight(7, 23, 59, 59), 14000),
+            structuring_txn(4, midnight(8), 14000),
+        ],
+    )
+
+    assert generate(db, r5_structuring) == 3
+    assert candidates(db, r5_structuring) == [
+        ("S", date(2022, 9, 5), midnight(3), midnight(6), 2, [1, 2]),
+        ("S", date(2022, 9, 7), midnight(5), midnight(8), 2, [2, 3]),
+        ("S", date(2022, 9, 8), midnight(6), midnight(9), 2, [3, 4]),
+    ]
+
+
+def test_structuring_active_day_requires_an_in_band_payment(db: Database) -> None:
+    seed(
+        db,
+        ["S", "R"],
+        [
+            structuring_txn(1, midnight(5, 1), 14000),
+            structuring_txn(2, midnight(5, 2), 14000),
+            structuring_txn(3, midnight(6), 500),
+        ],
+    )
+
+    assert generate(db, r5_structuring) == 1
+    assert [c[1] for c in candidates(db, r5_structuring)] == [date(2022, 9, 5)]
+
+
+def test_structuring_evidence_is_sorted_and_only_in_band(db: Database) -> None:
+    seed(
+        db,
+        ["S", "R"],
+        [
+            structuring_txn(30, DAY + timedelta(hours=1), 14000),
+            structuring_txn(10, DAY + timedelta(hours=5), 13000),
+            structuring_txn(20, DAY + timedelta(hours=3), 14999),
+            structuring_txn(25, DAY + timedelta(hours=4), 100),
+        ],
+    )
+
+    generate(db, r5_structuring)
+
+    assert candidates(db, r5_structuring) == [("S", date(2022, 9, 5), midnight(3), midnight(6), 3, [10, 20, 30])]
+
+
+def test_structuring_rerun_replaces_instead_of_duplicating(db: Database) -> None:
+    seed(db, ["S", "R"], [structuring_txn(1, DAY, 14000), structuring_txn(2, DAY, 14000)])
+    with db.owner() as conn:
+        conn.execute(
+            "INSERT INTO core.rule_candidates VALUES ('R5_structuring', 'S', '2022-01-01', "
+            "'2022-01-01', '2022-01-02', 9, '{}')"
+        )
+
+    assert generate(db, r5_structuring) == 1
+    assert generate(db, r5_structuring) == 1
+
+    assert candidates(db, r5_structuring) == [("S", date(2022, 9, 5), midnight(3), midnight(6), 2, [1, 2])]

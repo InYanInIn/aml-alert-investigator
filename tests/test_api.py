@@ -8,7 +8,8 @@ from fastapi.testclient import TestClient
 
 from aml_investigator.api import create_app
 from aml_investigator.mcp_server import build_server
-from aml_investigator.monitor import run_fan_out
+from aml_investigator.monitor import r2_fan_out
+from aml_investigator.monitor.alerts import build_alerts
 from aml_investigator.settings import Settings
 from tests.conftest import Database
 from tests.test_ingest import run_ingest, write_raw
@@ -20,7 +21,8 @@ SCRIPT = "<script>alert(1)</script>"
 def seeded(db: Database, tmp_path: Path) -> Database:
     run_ingest(db, write_raw(tmp_path))
     with psycopg.connect(db.owner_dsn) as conn:
-        assert run_fan_out(conn, min_receivers=1, window_days=2) > 0
+        assert r2_fan_out.generate(conn) > 0
+        assert build_alerts(conn, {"R2_fan_out": 1}, suppression_days=0) > 0
     return db
 
 

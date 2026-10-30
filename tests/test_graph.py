@@ -31,8 +31,8 @@ def alert_id(db: Database) -> int:
             (12, datetime(2022, 9, 2, 11, 0), "A3", 1500.0),
         ):
             conn.execute(
-                "INSERT INTO core.transactions VALUES (%s, %s, 'A1', %s, %s, 'Euro', %s, 'Euro', 'ACH')",
-                (txn_id, ts, receiver, amount, amount),
+                "INSERT INTO core.transactions VALUES (%s, %s, 'A1', %s, %s, 'Euro', %s, 'Euro', 'ACH', %s)",
+                (txn_id, ts, receiver, amount, amount, amount),
             )
         row = conn.execute(
             "INSERT INTO core.alerts (account_id, alert_date, window_start, window_end) "

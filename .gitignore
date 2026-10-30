@@ -18,6 +18,7 @@ data/
 
 # Editors and OS
 .idea/
+*.iml
 .vscode/
 .DS_Store
 
