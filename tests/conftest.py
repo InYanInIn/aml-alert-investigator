@@ -6,8 +6,8 @@ import psycopg
 import pytest
 from psycopg import sql
 
-from aml_investigator.migrate import migrate
-from aml_investigator.settings import Settings, load_settings
+from aml_investigator.core.migrate import migrate
+from aml_investigator.core.settings import Settings, load_settings
 
 
 @dataclass(frozen=True)

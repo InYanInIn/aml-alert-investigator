@@ -6,11 +6,11 @@ import psycopg
 import pytest
 from fastapi.testclient import TestClient
 
-from aml_investigator.api import create_app
-from aml_investigator.mcp_server import build_server
-from aml_investigator.monitor import r2_fan_out
-from aml_investigator.monitor.alerts import build_alerts
-from aml_investigator.settings import Settings
+from aml_investigator.core.settings import Settings
+from aml_investigator.mcp_server.server import build_server
+from aml_investigator.monitoring.alerts import build_alerts
+from aml_investigator.monitoring.rules import r2_fan_out
+from aml_investigator.web.app import create_app
 from tests.conftest import Database
 from tests.test_ingest import run_ingest, write_raw
 

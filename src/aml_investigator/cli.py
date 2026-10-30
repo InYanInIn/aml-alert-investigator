@@ -5,7 +5,7 @@ from pathlib import Path
 
 import psycopg
 
-from aml_investigator.settings import Settings, load_settings
+from aml_investigator.core.settings import Settings, load_settings
 
 THRESHOLDS_DIR = Path("config/thresholds")
 
@@ -16,7 +16,7 @@ def settings_for(args: argparse.Namespace) -> Settings:
 
 
 def run_migrate(args: argparse.Namespace) -> None:
-    from aml_investigator.migrate import ensure_database, migrate
+    from aml_investigator.core.migrate import ensure_database, migrate
 
     settings = settings_for(args)
     if ensure_database(load_settings().owner_dsn, settings.database):
@@ -26,7 +26,7 @@ def run_migrate(args: argparse.Namespace) -> None:
 
 
 def run_ingest(args: argparse.Namespace) -> None:
-    from aml_investigator.ingest import ingest
+    from aml_investigator.data.ingest import ingest
 
     with psycopg.connect(settings_for(args).owner_dsn) as conn:
         report = ingest(conn, args.raw_dir, args.prefix, period_end=args.period_end, limit=args.limit)
@@ -34,7 +34,7 @@ def run_ingest(args: argparse.Namespace) -> None:
 
 
 def run_candidates(args: argparse.Namespace) -> None:
-    from aml_investigator.monitor import generate_candidates
+    from aml_investigator.monitoring.rules import generate_candidates
 
     with psycopg.connect(settings_for(args).owner_dsn) as conn:
         for rule_id, count in generate_candidates(conn).items():
@@ -42,7 +42,7 @@ def run_candidates(args: argparse.Namespace) -> None:
 
 
 def run_alerts(args: argparse.Namespace) -> None:
-    from aml_investigator.monitor.alerts import build_alerts
+    from aml_investigator.monitoring.alerts import build_alerts
 
     settings = settings_for(args)
     config = json.loads((THRESHOLDS_DIR / f"{settings.database}.json").read_text())
@@ -52,14 +52,14 @@ def run_alerts(args: argparse.Namespace) -> None:
 
 
 def run_truth(args: argparse.Namespace) -> None:
-    from aml_investigator.truth import compute_alert_truth
+    from aml_investigator.truth.alert_truth import compute_alert_truth
 
     with psycopg.connect(settings_for(args).owner_dsn) as conn:
         print(compute_alert_truth(conn))
 
 
 def run_curves(args: argparse.Namespace) -> None:
-    from aml_investigator.calibrate import rule_curves, train_split
+    from aml_investigator.monitoring.calibration import rule_curves, train_split
 
     with psycopg.connect(settings_for(args).owner_dsn) as conn:
         train = train_split(conn)["train"]
@@ -73,7 +73,7 @@ def run_curves(args: argparse.Namespace) -> None:
 
 
 def run_thresholds(args: argparse.Namespace) -> None:
-    from aml_investigator.calibrate import choose_thresholds, feasibility, train_split, write_thresholds
+    from aml_investigator.monitoring.calibration import choose_thresholds, feasibility, train_split, write_thresholds
 
     settings = settings_for(args)
     with psycopg.connect(settings.owner_dsn) as conn:
@@ -98,7 +98,7 @@ def run_thresholds(args: argparse.Namespace) -> None:
 
 
 def run_mcp(args: argparse.Namespace) -> None:
-    from aml_investigator.mcp_server import build_server
+    from aml_investigator.mcp_server.server import build_server
 
     build_server(settings_for(args).mcp_dsn).run(transport="http", host=args.host, port=args.port)
 
@@ -106,7 +106,7 @@ def run_mcp(args: argparse.Namespace) -> None:
 def run_api(args: argparse.Namespace) -> None:
     import uvicorn
 
-    from aml_investigator.api import create_app
+    from aml_investigator.web.app import create_app
 
     uvicorn.run(create_app(settings_for(args), mcp=args.mcp_url), host=args.host, port=args.port)
 

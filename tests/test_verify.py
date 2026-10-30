@@ -4,8 +4,8 @@ from typing import Any
 
 import pytest
 
-from aml_investigator.agent.decision import Claim, Decision, Fact, FactField, TypologyVerdict
-from aml_investigator.agent.verify import Provenance, numbers_in, verify
+from aml_investigator.investigation.decision import Claim, Decision, Fact, FactField, TypologyVerdict
+from aml_investigator.investigation.verify import Provenance, numbers_in, verify
 
 AS_OF = datetime(2022, 9, 3)
 TXN: dict[str, Any] = {

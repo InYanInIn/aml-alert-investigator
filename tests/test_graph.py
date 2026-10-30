@@ -7,10 +7,10 @@ from langchain.mcp import MCPAdapter
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
-from aml_investigator.agent.decision import Decision
-from aml_investigator.agent.drafters import Drafter, EvidencePack, scripted_drafter
-from aml_investigator.agent.graph import InvestigationGraph, build_graph, open_checkpointer
-from aml_investigator.mcp_server import build_server
+from aml_investigator.investigation.decision import Decision
+from aml_investigator.investigation.drafters import Drafter, EvidencePack, scripted_drafter
+from aml_investigator.investigation.graph import InvestigationGraph, build_graph, open_checkpointer
+from aml_investigator.mcp_server.server import build_server
 from tests.conftest import Database
 
 REVIEW = {"analyst": "jan", "final_decision": "close", "comment": "known payroll pattern"}
