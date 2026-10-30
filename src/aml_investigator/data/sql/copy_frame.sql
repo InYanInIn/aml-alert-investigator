@@ -1,0 +1,1 @@
+COPY {} ({}) FROM STDIN (FORMAT csv)

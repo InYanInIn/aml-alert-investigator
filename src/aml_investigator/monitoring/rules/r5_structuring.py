@@ -10,7 +10,7 @@ FLOOR = 2
 REPORTING_THRESHOLD_EUR = 15000
 BAND_LOWER = 0.85
 
-DELETE_SQL = "DELETE FROM core.rule_candidates WHERE rule_id = %(rule_id)s"
+DELETE_SQL = load(__package__, "delete_rule_candidates")
 
 INSERT_SQL = load(__package__, "r5_structuring")
 

@@ -16,22 +16,17 @@ from aml_investigator.monitoring.rules import rules
 
 CURVE_QUANTILES = (0.5, 0.75, 0.9, 0.95, 0.98, 0.99, 0.995, 0.999)
 
-DATA_DAYS_SQL = "SELECT min(ts)::date, max(ts)::date FROM core.transactions"
+DATA_DAYS_SQL = load(__package__, "data_days")
 
 LOWEST_THRESHOLDS_SQL = load(__package__, "lowest_thresholds")
 
-SCORE_QUANTILES_SQL = """
-SELECT rule_id, percentile_disc(%(quantiles)s::float8[]) WITHIN GROUP (ORDER BY score)
-FROM core.rule_candidates
-WHERE rule_id = ANY (%(rule_ids)s::text[]) AND alert_date BETWEEN %(first_day)s::date AND %(last_day)s::date
-GROUP BY rule_id
-"""
+SCORE_QUANTILES_SQL = load(__package__, "score_quantiles")
 
 LAUNDERING_SIDES_CTE = load(__package__, "laundering_sides_cte")
 
-RULE_CURVE_SQL = f"WITH {FIRST_DAYS_CTES},\n{LAUNDERING_SIDES_CTE},\n{load(__package__, 'rule_curve')}"
+RULE_CURVE_SQL = f"{FIRST_DAYS_CTES}\n{LAUNDERING_SIDES_CTE}\n{load(__package__, 'rule_curve')}"
 
-FEASIBILITY_SQL = f"WITH {FIRST_DAYS_CTES},\n{LAUNDERING_SIDES_CTE}\n{load(__package__, 'feasibility')}"
+FEASIBILITY_SQL = f"{FIRST_DAYS_CTES}\n{LAUNDERING_SIDES_CTE}\n{load(__package__, 'feasibility')}"
 
 
 @dataclass(frozen=True)

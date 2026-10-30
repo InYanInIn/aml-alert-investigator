@@ -9,6 +9,8 @@ FILL_ALERT_TRUTH = load(__package__, "fill_alert_truth")
 
 SUMMARISE_ALERT_TRUTH = load(__package__, "summarise_alert_truth")
 
+ALERT_TRUTH_EXISTS = load(__package__, "alert_truth_exists")
+
 
 @dataclass(frozen=True)
 class TruthReport:
@@ -33,5 +35,5 @@ def compute_alert_truth(conn: psycopg.Connection[Any]) -> TruthReport:
 
 
 def refuse_non_empty(conn: psycopg.Connection[Any]) -> None:
-    if conn.execute("SELECT EXISTS (SELECT FROM truth.alert_truth)").fetchone() == (True,):
+    if conn.execute(ALERT_TRUTH_EXISTS).fetchone() == (True,):
         raise RuntimeError("truth.alert_truth is not empty; alert truth is computed once per alert set")

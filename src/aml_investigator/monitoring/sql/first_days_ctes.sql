@@ -1,4 +1,4 @@
-thresholds AS (
+WITH thresholds AS (
     SELECT rule_id, threshold
     FROM unnest(%(rule_ids)s::text[], %(limits)s::numeric[]) AS t(rule_id, threshold)
 ),
@@ -24,4 +24,4 @@ account_days AS (
     SELECT account_id, alert_date, min(window_start) AS window_start, max(window_end) AS window_end
     FROM first_days
     GROUP BY account_id, alert_date
-)
+),

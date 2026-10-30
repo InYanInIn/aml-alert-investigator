@@ -26,14 +26,11 @@ EDGE_SCHEMA = pl.Schema(
     }
 )
 
-DELETE_SQL = "DELETE FROM core.rule_candidates WHERE rule_id = %(rule_id)s"
+DELETE_SQL = load(__package__, "delete_rule_candidates")
 
 EDGES_SQL = load(__package__, "r4_cycle_edges")
 
-CANDIDATES_COPY = (
-    "COPY core.rule_candidates (rule_id, account_id, alert_date, window_start, window_end, score, evidence_txn_ids) "
-    "FROM STDIN"
-)
+CANDIDATES_COPY = load(__package__, "copy_rule_candidates")
 
 
 def generate(conn: psycopg.Connection[Any]) -> int:

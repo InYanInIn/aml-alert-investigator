@@ -15,21 +15,10 @@ QUEUE_SQL = load(__package__, "alert_queue")
 LATEST_INVESTIGATION_SQL = load(__package__, "latest_investigation")
 SAVE_INVESTIGATION_SQL = load(__package__, "save_investigation")
 
-ALERT_SQL = "SELECT alert_id, account_id, alert_date, window_start, window_end FROM core.alerts WHERE alert_id = %s"
-
-RULE_HITS_SQL = "SELECT rule_id, score, evidence_txn_ids FROM core.alert_rule_hits WHERE alert_id = %s ORDER BY rule_id"
-
-INVESTIGATION_REFERENCE_SQL = """
-SELECT i.alert_id, i.thread_id, d.decision_id IS NOT NULL AS decided
-FROM review.investigations i
-LEFT JOIN review.decisions d ON d.investigation_id = i.investigation_id
-WHERE i.investigation_id = %s
-"""
-
-SAVE_DECISION_SQL = (
-    "INSERT INTO review.decisions (investigation_id, analyst, final_decision, comment) "
-    "VALUES (%s, %s, %s, %s) ON CONFLICT (investigation_id) DO NOTHING"
-)
+ALERT_SQL = load(__package__, "alert")
+RULE_HITS_SQL = load(__package__, "alert_rule_hits")
+INVESTIGATION_REFERENCE_SQL = load(__package__, "investigation_reference")
+SAVE_DECISION_SQL = load(__package__, "save_decision")
 
 
 @dataclass(frozen=True)

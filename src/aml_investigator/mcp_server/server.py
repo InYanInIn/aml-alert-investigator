@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 MAX_TRANSACTIONS = 50
 LIST_TRANSACTIONS_SQL = load(__package__, "list_transactions")
+ALERT_SQL = load(__package__, "alert")
+RULE_HITS_SQL = load(__package__, "alert_rule_hits")
 
 
 class RuleHit(BaseModel):
@@ -55,19 +57,12 @@ class TransactionPage(BaseModel):
 
 
 async def load_alert(conn: AsyncConnection[DictRow], alert_id: int) -> Alert:
-    cursor = await conn.execute(
-        "SELECT alert_id, account_id, alert_date, window_start, window_end, window_end AS as_of "
-        "FROM core.alerts WHERE alert_id = %s",
-        (alert_id,),
-    )
+    cursor = await conn.execute(ALERT_SQL, (alert_id,))
     alert = await cursor.fetchone()
     if alert is None:
         raise ToolError(f"Alert {alert_id} does not exist.")
     async with conn.cursor(row_factory=class_row(RuleHit)) as hits:
-        await hits.execute(
-            "SELECT rule_id, score, evidence_txn_ids FROM core.alert_rule_hits WHERE alert_id = %s ORDER BY rule_id",
-            (alert_id,),
-        )
+        await hits.execute(RULE_HITS_SQL, (alert_id,))
         return Alert(**alert, rule_hits=await hits.fetchall())
 
 

@@ -11,7 +11,7 @@ FLOOR = 1000
 RATIO_LOWER = Decimal("0.8")
 RATIO_UPPER = Decimal("1.2")
 
-DELETE_SQL = "DELETE FROM core.rule_candidates WHERE rule_id = %(rule_id)s"
+DELETE_SQL = load(__package__, "delete_rule_candidates")
 
 INSERT_SQL = load(__package__, "r3_pass_through")
 

@@ -42,8 +42,12 @@ speculative.
   `investigation_id`) bound through `contextvars`. CLI keeps `print` for its user-facing output.
 - **Errors**: domain exceptions derive from `core.errors.DomainError` (`AlertNotFoundError`,
   `InvestigationNotFoundError`, `ToolCallError`, …); one web exception handler maps "not found" errors to 404.
-- **SQL files**: statements longer than a few lines live in `sql/<name>.sql` and are loaded by name with
-  `core.sql.load(__package__, name)`; parameters stay `%(name)s` psycopg placeholders.
+- **SQL files**: every SQL statement lives in a `sql/<name>.sql` file next to its module and is loaded by name
+  with `core.sql.load(__package__, name)` (no SQL in Python strings); parameters stay `%(name)s` psycopg
+  placeholders, dynamic identifiers go through psycopg `sql.Identifier` on `{}` templates.
+- **Engines**: Postgres SQL is the default for anything on stored data; polars is used in exactly two places —
+  parsing and transforming the source files before they are loaded (`data/ingest.py`, `data/fx.py`) and the R4
+  cycle search, whose iterative pruning SQL cannot express efficiently (`monitoring/rules/r4_cycle.py`).
 
 ## Consequences
 - Behaviour does not change: the refactor is verified by the existing test suite, whose assertions stay as

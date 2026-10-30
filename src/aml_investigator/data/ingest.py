@@ -11,6 +11,7 @@ import polars as pl
 import psycopg
 from psycopg import sql
 
+from aml_investigator.core.sql import load
 from aml_investigator.data.fx import eur_per_unit, pair_rates, round_trip_error, used_currencies
 
 SALT = "aml-investigator-v1"
@@ -32,6 +33,7 @@ ACCOUNT_KEY = ["bank_id", "account_number"]
 PATTERN_HEADER = re.compile(r"^BEGIN LAUNDERING ATTEMPT - ([A-Z-]+)(?::.*)?$")
 PATTERN_FOOTER = "END LAUNDERING ATTEMPT"
 COPY_BATCH_ROWS = 200_000
+TRANSACTIONS_EXIST_SQL = load(__package__, "transactions_exist")
 
 
 @dataclass(frozen=True)
@@ -211,12 +213,12 @@ def match_pattern_rows(patterns: pl.DataFrame, raw: pl.DataFrame, loaded: pl.Dat
 
 
 def refuse_non_empty(conn: psycopg.Connection[Any]) -> None:
-    if conn.execute("SELECT EXISTS (SELECT FROM core.transactions)").fetchone() == (True,):
+    if conn.execute(TRANSACTIONS_EXIST_SQL).fetchone() == (True,):
         raise RuntimeError("core.transactions is not empty; ingest loads into an empty database only")
 
 
 def copy_frame(conn: psycopg.Connection[Any], schema: str, table: str, frame: pl.DataFrame) -> None:
-    statement = sql.SQL("COPY {} ({}) FROM STDIN (FORMAT csv)").format(
+    statement = sql.SQL(load(__package__, "copy_frame")).format(
         sql.Identifier(schema, table), sql.SQL(", ").join(map(sql.Identifier, frame.columns))
     )
     with conn.cursor().copy(statement) as copy:

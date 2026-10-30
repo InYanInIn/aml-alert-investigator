@@ -12,7 +12,9 @@ ALL_DAYS = DayRange(date.min, date.max)
 
 FIRST_DAYS_CTES = load(__package__, "first_days_ctes")
 
-BUILD_SQL = f"WITH {FIRST_DAYS_CTES},\n{load(__package__, 'build_alerts')}"
+BUILD_SQL = f"{FIRST_DAYS_CTES}\n{load(__package__, 'build_alerts')}"
+
+ALERTS_EXIST_SQL = load(__package__, "alerts_exist")
 
 
 def first_days_parameters(
@@ -33,6 +35,6 @@ def first_days_parameters(
 def build_alerts(conn: psycopg.Connection[Any], thresholds: Mapping[str, float], *, suppression_days: int) -> int:
     parameters = first_days_parameters(thresholds, ALL_DAYS, suppression_days=suppression_days)
     with conn.transaction():
-        if conn.execute("SELECT EXISTS (SELECT 1 FROM core.alerts)").fetchone() == (True,):
+        if conn.execute(ALERTS_EXIST_SQL).fetchone() == (True,):
             raise RuntimeError("core.alerts is not empty; refusing to build alerts on top of existing ones")
         return conn.execute(BUILD_SQL, parameters).rowcount

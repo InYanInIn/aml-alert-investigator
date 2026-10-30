@@ -12,7 +12,7 @@ MIN_HISTORY_DAYS = 3
 MIN_LOG_STDDEV = Decimal("0.25")
 MIN_DAY_EUR = 1000
 
-DELETE_SQL = "DELETE FROM core.rule_candidates WHERE rule_id = %(rule_id)s"
+DELETE_SQL = load(__package__, "delete_rule_candidates")
 
 INSERT_SQL = load(__package__, "r6_profile_deviation")
 

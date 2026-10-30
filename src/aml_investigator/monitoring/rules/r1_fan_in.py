@@ -8,7 +8,7 @@ RULE_ID = "R1_fan_in"
 WINDOW_DAYS = 2
 FLOOR = 2
 
-DELETE_SQL = "DELETE FROM core.rule_candidates WHERE rule_id = %(rule_id)s"
+DELETE_SQL = load(__package__, "delete_rule_candidates")
 
 INSERT_SQL = load(__package__, "r1_fan_in")
 
