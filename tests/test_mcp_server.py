@@ -6,7 +6,7 @@ import pytest
 from fastmcp import Client
 from fastmcp.exceptions import ToolError
 
-from aml_investigator.mcp_server import build_server
+from aml_investigator.mcp_server.server import build_server
 from tests.conftest import Database
 
 WINDOW_START = datetime(2022, 9, 1)

@@ -6,7 +6,7 @@ from types import ModuleType
 import psycopg
 import pytest
 
-from aml_investigator.monitor import r3_pass_through, r4_cycle, r6_profile_deviation
+from aml_investigator.monitoring.rules import r3_pass_through, r4_cycle, r6_profile_deviation
 from tests.conftest import Database
 
 D = datetime(2022, 9, 5)

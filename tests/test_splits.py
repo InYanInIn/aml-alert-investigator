@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from aml_investigator.splits import DayRange, day_splits
+from aml_investigator.data.splits import DayRange, day_splits
 
 
 def test_ten_days_split_six_two_two() -> None:

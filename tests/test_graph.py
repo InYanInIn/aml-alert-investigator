@@ -1,4 +1,6 @@
 import uuid
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
 
@@ -7,10 +9,12 @@ from langchain.mcp import MCPAdapter
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
-from aml_investigator.agent.decision import Decision
-from aml_investigator.agent.drafters import Drafter, EvidencePack, scripted_drafter
-from aml_investigator.agent.graph import InvestigationGraph, build_graph, open_checkpointer
-from aml_investigator.mcp_server import build_server
+from aml_investigator.core.db import open_app_pool
+from aml_investigator.investigation.decision import Decision
+from aml_investigator.investigation.drafters import Drafter, EvidencePack, scripted_drafter
+from aml_investigator.investigation.graph import InvestigationGraph, build_graph, postgres_checkpointer
+from aml_investigator.investigation.repository import ReviewRepository
+from aml_investigator.mcp_server.server import build_server
 from tests.conftest import Database
 
 REVIEW = {"analyst": "jan", "final_decision": "close", "comment": "known payroll pattern"}
@@ -48,10 +52,15 @@ def thread(alert_id: int) -> RunnableConfig:
     return {"configurable": {"thread_id": f"{alert_id}:{uuid.uuid4().hex}"}}
 
 
-def graph_for(db: Database, checkpointer: Any, drafter: Drafter = scripted_drafter) -> InvestigationGraph:
-    return build_graph(
-        mcp=MCPAdapter(build_server(db.mcp_dsn)), drafter=drafter, app_dsn=db.app_dsn, checkpointer=checkpointer
-    )
+@asynccontextmanager
+async def running_graph(db: Database, drafter: Drafter = scripted_drafter) -> AsyncIterator[InvestigationGraph]:
+    async with open_app_pool(db.app_dsn) as pool:
+        yield build_graph(
+            mcp=MCPAdapter(build_server(db.mcp_dsn)),
+            drafter=drafter,
+            repository=ReviewRepository(pool),
+            checkpointer=await postgres_checkpointer(pool),
+        )
 
 
 def investigations(db: Database) -> list[tuple[Any, ...]]:
@@ -78,8 +87,8 @@ async def citing_unseen_transaction(evidence: EvidencePack) -> Decision:
 @pytest.mark.anyio
 async def test_run_stops_at_review_with_one_verified_investigation(db: Database, alert_id: int) -> None:
     config = thread(alert_id)
-    async with open_checkpointer(db.app_dsn) as checkpointer:
-        result = await graph_for(db, checkpointer).ainvoke({"alert_id": alert_id}, config)
+    async with running_graph(db) as graph:
+        result = await graph.ainvoke({"alert_id": alert_id}, config)
 
     [(investigation_id, thread_id, model, prompt_version, recommendation, verification)] = investigations(db)
     assert result["__interrupt__"][0].value == {
@@ -96,8 +105,7 @@ async def test_run_stops_at_review_with_one_verified_investigation(db: Database,
 @pytest.mark.anyio
 async def test_resume_records_exactly_one_decision(db: Database, alert_id: int) -> None:
     config = thread(alert_id)
-    async with open_checkpointer(db.app_dsn) as checkpointer:
-        graph = graph_for(db, checkpointer)
+    async with running_graph(db) as graph:
         await graph.ainvoke({"alert_id": alert_id}, config)
         final = await graph.ainvoke(Command(resume=REVIEW), config)
 
@@ -109,10 +117,8 @@ async def test_resume_records_exactly_one_decision(db: Database, alert_id: int) 
 
 @pytest.mark.anyio
 async def test_unseen_citation_fails_verification_and_forces_escalation(db: Database, alert_id: int) -> None:
-    async with open_checkpointer(db.app_dsn) as checkpointer:
-        result = await graph_for(db, checkpointer, citing_unseen_transaction).ainvoke(
-            {"alert_id": alert_id}, thread(alert_id)
-        )
+    async with running_graph(db, citing_unseen_transaction) as graph:
+        result = await graph.ainvoke({"alert_id": alert_id}, thread(alert_id))
 
     [(*_, recommendation, verification)] = investigations(db)
     assert result["decision"]["recommendation"] == "close"
@@ -124,8 +130,7 @@ async def test_unseen_citation_fails_verification_and_forces_escalation(db: Data
 @pytest.mark.anyio
 async def test_reinvoking_a_thread_keeps_one_investigation(db: Database, alert_id: int) -> None:
     config = thread(alert_id)
-    async with open_checkpointer(db.app_dsn) as checkpointer:
-        graph = graph_for(db, checkpointer)
+    async with running_graph(db) as graph:
         first = await graph.ainvoke({"alert_id": alert_id}, config)
         second = await graph.ainvoke({"alert_id": alert_id}, config)
         persist_steps = [
@@ -142,11 +147,11 @@ async def test_reinvoking_a_thread_keeps_one_investigation(db: Database, alert_i
 @pytest.mark.anyio
 async def test_resume_from_fresh_graph_on_same_checkpointer(db: Database, alert_id: int) -> None:
     config = thread(alert_id)
-    async with open_checkpointer(db.app_dsn) as checkpointer:
-        await graph_for(db, checkpointer).ainvoke({"alert_id": alert_id}, config)
+    async with running_graph(db) as graph:
+        await graph.ainvoke({"alert_id": alert_id}, config)
 
-    async with open_checkpointer(db.app_dsn) as restarted:
-        final = await graph_for(db, restarted).ainvoke(Command(resume=REVIEW), config)
+    async with running_graph(db) as restarted:
+        final = await restarted.ainvoke(Command(resume=REVIEW), config)
 
     [(investigation_id, *_)] = investigations(db)
     assert final["investigation_id"] == investigation_id

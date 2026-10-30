@@ -5,12 +5,13 @@ from typing import Any
 import psycopg
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import SecretStr
 
-from aml_investigator.api import create_app
-from aml_investigator.mcp_server import build_server
-from aml_investigator.monitor import r2_fan_out
-from aml_investigator.monitor.alerts import build_alerts
-from aml_investigator.settings import Settings
+from aml_investigator.core.settings import Settings
+from aml_investigator.mcp_server.server import build_server
+from aml_investigator.monitoring.alerts import build_alerts
+from aml_investigator.monitoring.rules import r2_fan_out
+from aml_investigator.web.app import create_app
 from tests.conftest import Database
 from tests.test_ingest import run_ingest, write_raw
 
@@ -33,7 +34,12 @@ def alert_id(seeded: Database) -> int:
 
 @pytest.fixture
 def client(seeded: Database) -> Iterator[TestClient]:
-    settings = Settings(seeded.owner_dsn, seeded.mcp_dsn, seeded.app_dsn, seeded.evaluator_dsn)
+    settings = Settings(
+        owner_dsn=SecretStr(seeded.owner_dsn),
+        mcp_dsn=SecretStr(seeded.mcp_dsn),
+        app_dsn=SecretStr(seeded.app_dsn),
+        evaluator_dsn=SecretStr(seeded.evaluator_dsn),
+    )
     with TestClient(create_app(settings, mcp=build_server(seeded.mcp_dsn)), follow_redirects=False) as client:
         yield client
 

@@ -6,8 +6,8 @@ import psycopg
 import pytest
 from psycopg import sql
 
-from aml_investigator.migrate import migrate
-from aml_investigator.settings import Settings, load_settings
+from aml_investigator.core.migrate import migrate
+from aml_investigator.core.settings import Settings, load_settings
 
 
 @dataclass(frozen=True)
@@ -23,21 +23,21 @@ class Database:
 
 def retarget(settings: Settings, dbname: str) -> Database:
     test = settings.with_database(dbname)
-    return Database(test.owner_dsn, test.mcp_dsn, test.app_dsn, test.evaluator_dsn)
+    return Database(test.owner_conninfo, test.mcp_conninfo, test.app_conninfo, test.evaluator_conninfo)
 
 
 @pytest.fixture(scope="session")
 def database() -> Iterator[Database]:
     settings = load_settings()
     dbname = f"aml_test_{uuid.uuid4().hex[:8]}"
-    with psycopg.connect(settings.owner_dsn, autocommit=True) as admin:
+    with psycopg.connect(settings.owner_conninfo, autocommit=True) as admin:
         admin.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(dbname)))
     test_db = retarget(settings, dbname)
     try:
         migrate(test_db.owner_dsn, (test_db.mcp_dsn, test_db.app_dsn, test_db.evaluator_dsn))
         yield test_db
     finally:
-        with psycopg.connect(settings.owner_dsn, autocommit=True) as admin:
+        with psycopg.connect(settings.owner_conninfo, autocommit=True) as admin:
             admin.execute(sql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(sql.Identifier(dbname)))
 
 
