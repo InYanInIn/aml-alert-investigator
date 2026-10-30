@@ -17,6 +17,7 @@ from aml_investigator.monitoring.calibration import (
     write_thresholds,
 )
 from aml_investigator.monitoring.rules import rules
+from aml_investigator.truth.candidate_truth import compute_candidate_truth
 from tests.conftest import Database
 
 BASE = date(2022, 9, 1)
@@ -64,6 +65,11 @@ def add_filler_candidates(db: Database, *, except_rule: str) -> None:
     for rule_id in RULE_IDS:
         if rule_id != except_rule:
             add_candidate(db, rule_id, FILLER, 0, 1)
+
+
+def compute_truth(db: Database) -> None:
+    with psycopg.connect(db.owner_dsn) as conn:
+        compute_candidate_truth(conn)
 
 
 def choose(db: Database, share_per_day: float, suppression_days: int, *, dsn: str | None = None) -> dict[str, float]:
@@ -170,6 +176,7 @@ def test_rule_curves_report_volume_positives_and_attempts(db: Database) -> None:
     add_attempt(db, 7, 1)
     add_attempt(db, 8, 3)
     add_attempt(db, 9, 4)
+    compute_truth(db)
 
     with psycopg.connect(db.evaluator_dsn) as conn:
         points = [point for point in rule_curves(conn, TRAIN, suppression_days=0) if point.rule_id == "R1_fan_in"]
@@ -192,6 +199,7 @@ def test_feasibility_counts_merged_alerts_on_validation_days_only(db: Database) 
     add_candidate(db, "R1_fan_in", "C", 6, 5)
     add_transaction(db, 1, at(4), "A", "X", laundering=True)
     add_transaction(db, 2, at(6), "X", "B", laundering=True)
+    compute_truth(db)
 
     with psycopg.connect(db.evaluator_dsn) as conn:
         result = feasibility(conn, val, {"R1_fan_in": 3, "R2_fan_out": 3}, suppression_days=1)

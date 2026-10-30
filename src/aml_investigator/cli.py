@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import json
 from datetime import date
 from pathlib import Path
@@ -52,11 +53,44 @@ def run_alerts(args: argparse.Namespace) -> None:
     print(f"alerts created: {created}")
 
 
-def run_truth(args: argparse.Namespace) -> None:
+def run_alert_truth(args: argparse.Namespace) -> None:
     from aml_investigator.truth.alert_truth import compute_alert_truth
 
     with psycopg.connect(settings_for(args).owner_conninfo) as conn:
         print(compute_alert_truth(conn))
+
+
+def run_candidate_truth(args: argparse.Namespace) -> None:
+    from aml_investigator.truth.candidate_truth import compute_candidate_truth
+
+    with psycopg.connect(settings_for(args).owner_conninfo) as conn:
+        print(compute_candidate_truth(conn))
+
+
+def test_reason(args: argparse.Namespace) -> str | None:
+    if args.split != "test":
+        return None
+    if not args.open_test or not args.reason:
+        raise SystemExit("the test split needs --open-test and --reason; every opening is logged")
+    return str(args.reason)
+
+
+def run_sample(args: argparse.Namespace) -> None:
+    from aml_investigator.evaluation.samples import create_sample
+
+    path = create_sample(
+        settings_for(args), split=args.split, size=args.size, seed=args.seed, test_reason=test_reason(args)
+    )
+    print(f"sample written to {path}")
+
+
+def run_evaluation(args: argparse.Namespace) -> None:
+    from aml_investigator.evaluation.runner import evaluate
+
+    result = asyncio.run(
+        evaluate(settings_for(args), system=args.system, split=args.split, test_reason=test_reason(args))
+    )
+    print(result.summary())
 
 
 def run_curves(args: argparse.Namespace) -> None:
@@ -130,7 +164,24 @@ def main() -> None:
     monitor.add_parser("candidates").set_defaults(handler=run_candidates)
     monitor.add_parser("alerts").set_defaults(handler=run_alerts)
 
-    commands.add_parser("truth").set_defaults(handler=run_truth)
+    truth = commands.add_parser("truth").add_subparsers(required=True)
+    truth.add_parser("alerts").set_defaults(handler=run_alert_truth)
+    truth.add_parser("candidates").set_defaults(handler=run_candidate_truth)
+
+    evaluation = commands.add_parser("eval").add_subparsers(required=True)
+    sample = evaluation.add_parser("sample")
+    sample.add_argument("--split", choices=["val", "test"], required=True)
+    sample.add_argument("--size", type=int)
+    sample.add_argument("--seed", type=int, default=20261030)
+    sample.add_argument("--open-test", action="store_true")
+    sample.add_argument("--reason")
+    sample.set_defaults(handler=run_sample)
+    run = evaluation.add_parser("run")
+    run.add_argument("--system", required=True)
+    run.add_argument("--split", choices=["val", "test"], required=True)
+    run.add_argument("--open-test", action="store_true")
+    run.add_argument("--reason")
+    run.set_defaults(handler=run_evaluation)
 
     calibrate = commands.add_parser("calibrate").add_subparsers(required=True)
     curves = calibrate.add_parser("curves")

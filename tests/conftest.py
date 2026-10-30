@@ -45,8 +45,8 @@ def database() -> Iterator[Database]:
 def db(database: Database) -> Database:
     with database.owner() as conn:
         conn.execute(
-            "TRUNCATE review.decisions, review.investigations, truth.alert_truth, truth.pattern_attempts, "
-            "truth.transaction_labels, core.alert_rule_hits, core.alerts, core.rule_candidates, core.transactions, "
-            "core.fx_rates, core.accounts RESTART IDENTITY CASCADE"
+            "TRUNCATE review.decisions, review.investigations, truth.alert_truth, truth.candidate_truth, "
+            "truth.pattern_attempts, truth.transaction_labels, core.alert_rule_hits, core.alerts, "
+            "core.rule_candidates, core.transactions, core.fx_rates, core.accounts RESTART IDENTITY CASCADE"
         )
     return database
