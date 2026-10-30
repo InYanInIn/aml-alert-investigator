@@ -293,12 +293,15 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+RUN_INPUTS = (":/src", ":/config", ":/pyproject.toml", ":/uv.lock", ":/eval/samples")
+
+
 def current_commit() -> str:
     return git("rev-parse", "HEAD")
 
 
 def working_tree_dirty() -> bool:
-    return git("status", "--porcelain") != ""
+    return git("status", "--porcelain", "--", *RUN_INPUTS) != ""
 
 
 def git(*arguments: str) -> str:
