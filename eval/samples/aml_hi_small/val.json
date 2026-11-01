@@ -1,0 +1,820 @@
+{
+  "database": "aml_hi_small",
+  "split": "val",
+  "seed": 20261030,
+  "created_at": "2026-10-30T15:33:46+00:00",
+  "days": {
+    "first": "2022-09-07",
+    "last": "2022-09-08"
+  },
+  "population": {
+    "positive": 178,
+    "negative": 1755
+  },
+  "drawn": {
+    "positive": 67,
+    "negative": 133
+  },
+  "alerts": [
+    {
+      "account_id": "A00b3fb6cdd1b",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A03c34748b740",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A09118047bc59",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A0942593ef162",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A0a3ce6ac097d",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A0b37573d11a1",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A0b61188b454a",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A0bc4c40d5d7c",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A0c34b77f94c8",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A0cb52bf1aba8",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A0d67cd0025db",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A0ec8bb007eeb",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A0ef0e6104525",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A138266349aeb",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A13a3a5ffa75b",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A14b5598e805c",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A1607995a1670",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A16dc0bda47b6",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A174081e46660",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A18ce0f533203",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A19a8cfc9fbbd",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A1a23d467d08b",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A1ad2282af657",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A1c08ea51d70b",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A1e20ec4df5e4",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A1f5b3ce7ce22",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A1f7f6cd0a27c",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A2054fde5f06c",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A22257e56e8c0",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A232ec50b9c84",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A2472f06696bd",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A2614d5a4fe1c",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A27224f4a77a3",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A28bc227e4b57",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A28faecfe78d0",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A29293e588274",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A2a654aee5235",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A2acaeafe93bf",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A2bed674c06ac",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A2c26643f5a40",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A2d3fd7df62ea",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A2de1032cbe11",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A30a8057839f8",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A32324150ea38",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A33e5bbc41954",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A36393f53613d",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A3677d8da5851",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A3702df1c958e",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A37169973b940",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A39b59e1c070c",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A3ab19396fe0c",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A3b785ea0021d",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A3be4f9d7e68e",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A3c77da387cf3",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A3d6d4e62b705",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A3dc0da23a6b6",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A3e69ea8a448e",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A3f7ca5049b37",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A3f8d8d6c8311",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A40687a9cb406",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A413165859e1a",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A420169733c2b",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A434ddc7a9cca",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A47f561bd613a",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A48d5631c58ec",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A4ab2798726bf",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A4acbf8ec9c8d",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A4b3b4f3accd1",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A4c4c15f3bf4d",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A4ce7bb87b423",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A4f572aae43af",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A4fbc1b16cd39",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A501265f90b9f",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A50c095eae3c2",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A50ceb48f2f4e",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A516d822bd27f",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A51cd5d65d3be",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A543a869b2e27",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A5450a36b2808",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A5560c018a994",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A55c59c32ba95",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A570e0d983988",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A572bc6f4c871",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A576d39f64f9b",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A5940649e2f8a",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A598bcee9d968",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A5cff877bc525",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A5e24b4f7687c",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A5e60a52a67d6",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A5ea6a8bc4fb5",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A5f07e684da5e",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A5f502e8a904d",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A60c0883c253e",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A62a2c4677c53",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A64630eee8f2f",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A6590910c6cd3",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A689165d38aaa",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A6b8705573e55",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A6c1a1931a0c5",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A6cb6cd11b024",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A6e5d64b509da",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A6eab0758fac1",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A6f2e73f08fac",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A703824e43c65",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A70b8c75b3f61",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A718f2d3aa40b",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A719e6b14efb4",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A71dc46811e28",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A77521e513161",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A787513edb7fd",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A78a899361767",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A7d4e4387b6bb",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A800cdee89421",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A8045166073e9",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A80f72ff1973b",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A828f5661d252",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A86f06d63d076",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A89481c5d5542",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A8cc9e1bba54b",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A8e665789eb58",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A8f8763584398",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A90250afcbc5e",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A93a741ab62da",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A946f66a7460f",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A9665b9cb82ff",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A9863c0dfa489",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A9bd74fedde2f",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "A9e453e8e1f66",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A9e82a2580a1e",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "A9ed58c1cc96c",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Aa095d6b252aa",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Aa2147c8f56ea",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Aa343af06ebef",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Aa3db771854c4",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Aa4a91a70ad16",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Aa995e3a53a5c",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Aac6d61ff0547",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Aadbf8aadb8e1",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Aaec3b94c071b",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ab08ee8f55527",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ab1ffbee27745",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ab5d60cb4f84d",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ab79b270bce86",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ab7bf2203007d",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ab8172fb0baa2",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ab9064a029cea",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Aba31a2549e58",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Abb4dab058d8e",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Abb698a1396c7",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Abd026a3c1815",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Abda6959fbd55",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Abe6dab6d0570",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Abeb5dc3daf43",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Abf85aa4c3ca6",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Abfe8800b8728",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ac0f51b43fbfd",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ac3d537d288ea",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ac611d60d5179",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ac987def98b13",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Aca2bbd29d5aa",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Acb0895cbb64a",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Acfb00ce3e6fc",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ad20e7a51f824",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ad29330a59334",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ad2f0e0bed0ea",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ad2fdae2de865",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ad3d63f7ae5f3",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ad68a0fc4a0ef",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ad6a862566eec",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ad8384bf5fc3d",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ada6c7110bbdb",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Adb75e918d976",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Adbc5ac8559d1",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ade7321109693",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Adefb42a81693",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ae035aea4dde4",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ae0cc934e7e95",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ae2c0c9a42c0a",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ae3ea75983e9c",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Ae7707e2273c7",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Ae9debb5e368f",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Aea7b7be3aafc",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Aec4d190f0564",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Aee89e9563308",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Af10e8a46d56e",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Af205ea8309ac",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Af51c5059bbc5",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Af63ddad00da0",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Af730d5d191eb",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Af81ccae14deb",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Af965b7272725",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Afa5e35c24563",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Afa780c8e13f3",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Afaa38d5d61ea",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Afabacb79d58c",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Afb1ae48dc035",
+      "alert_date": "2022-09-07"
+    },
+    {
+      "account_id": "Afd75ddabf2d5",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Afe40fedaedb3",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Afe4f2fac3424",
+      "alert_date": "2022-09-08"
+    },
+    {
+      "account_id": "Afe88782bc03c",
+      "alert_date": "2022-09-08"
+    }
+  ]
+}
