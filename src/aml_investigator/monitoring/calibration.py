@@ -18,15 +18,15 @@ CURVE_QUANTILES = (0.5, 0.75, 0.9, 0.95, 0.98, 0.99, 0.995, 0.999)
 
 DATA_DAYS_SQL = load(__package__, "data_days")
 
+CANDIDATES_WITHOUT_TRUTH_SQL = load(__package__, "candidates_without_truth")
+
 LOWEST_THRESHOLDS_SQL = load(__package__, "lowest_thresholds")
 
 SCORE_QUANTILES_SQL = load(__package__, "score_quantiles")
 
-LAUNDERING_SIDES_CTE = load(__package__, "laundering_sides_cte")
+RULE_CURVE_SQL = f"{FIRST_DAYS_CTES}\n{load(__package__, 'rule_curve')}"
 
-RULE_CURVE_SQL = f"{FIRST_DAYS_CTES}\n{LAUNDERING_SIDES_CTE}\n{load(__package__, 'rule_curve')}"
-
-FEASIBILITY_SQL = f"{FIRST_DAYS_CTES}\n{LAUNDERING_SIDES_CTE}\n{load(__package__, 'feasibility')}"
+FEASIBILITY_SQL = f"{FIRST_DAYS_CTES}\n{load(__package__, 'feasibility')}"
 
 
 @dataclass(frozen=True)
@@ -119,7 +119,14 @@ def float_above(level: Decimal) -> float:
     return value if Decimal(value) > level else math.nextafter(value, math.inf)
 
 
+def require_current_candidate_truth(conn: psycopg.Connection[Any]) -> None:
+    [(missing,)] = conn.execute(CANDIDATES_WITHOUT_TRUTH_SQL).fetchall()
+    if missing:
+        raise RuntimeError(f"{missing} rule candidates have no truth row; run `aml truth candidates` first")
+
+
 def rule_curves(conn: psycopg.Connection[Any], train: DayRange, *, suppression_days: int) -> list[CurvePoint]:
+    require_current_candidate_truth(conn)
     window = {"rule_ids": [rule.RULE_ID for rule in rules()], "first_day": train.first, "last_day": train.last}
     quantile_scores = dict(conn.execute(SCORE_QUANTILES_SQL, {**window, "quantiles": list(CURVE_QUANTILES)}).fetchall())
     points = []
@@ -136,6 +143,7 @@ def rule_curves(conn: psycopg.Connection[Any], train: DayRange, *, suppression_d
 def feasibility(
     conn: psycopg.Connection[Any], val: DayRange, thresholds: Mapping[str, float], *, suppression_days: int
 ) -> Feasibility:
+    require_current_candidate_truth(conn)
     parameters = first_days_parameters(thresholds, val, suppression_days=suppression_days)
     [(alerts, positive_alerts)] = conn.execute(FEASIBILITY_SQL, parameters).fetchall()
     return Feasibility(day_count(val), alerts, positive_alerts)

@@ -1,9 +1,7 @@
-alert_counts AS (
-    SELECT count(*) AS alerts,
-           count(*) FILTER (WHERE EXISTS (
-               SELECT FROM laundering_sides l
-               WHERE l.account_id = a.account_id AND l.ts >= a.window_start AND l.ts < a.window_end
-           )) AS positive_alerts
-    FROM account_days a
+positive_alerts AS (
+    SELECT DISTINCT f.account_id, f.alert_date
+    FROM first_days f
+    JOIN truth.candidate_truth ct USING (rule_id, account_id, alert_date)
+    WHERE ct.has_laundering
 )
-SELECT alerts, positive_alerts FROM alert_counts
+SELECT (SELECT count(*) FROM account_days), (SELECT count(*) FROM positive_alerts)
