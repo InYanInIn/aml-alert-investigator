@@ -35,7 +35,9 @@ def logged_lines(capsys: pytest.CaptureFixture[str]) -> list[dict[str, Any]]:
     return [json.loads(line) for line in capsys.readouterr().err.splitlines()]
 
 
-def test_a_process_can_hold_only_its_own_role_dsn() -> None:
+def test_a_process_can_hold_only_its_own_role_dsn(monkeypatch: pytest.MonkeyPatch) -> None:
+    for role in ("OWNER", "MCP", "APP", "EVALUATOR"):
+        monkeypatch.delenv(f"AML_{role}_DSN", raising=False)
     api = Settings(_env_file=None, app_dsn=dsn("aml_app")).with_database("aml_hi_small")
 
     assert api.database == "aml_hi_small"
