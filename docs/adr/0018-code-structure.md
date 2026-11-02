@@ -17,7 +17,7 @@ speculative.
 | `data/` | `ingest.py`, `fx.py` (exchange rates, split out of ingest), `splits.py` | `ingest.py`, `splits.py` |
 | `monitoring/` | `rules/` (`__init__.py` registry, `r1…r6`, `sql/`), `alerts.py` + `sql/`, `calibration.py` + `sql/` | `monitor/`, `calibrate.py` |
 | `truth/` | `alert_truth.py` + `sql/` — evaluator only, never imported by runtime code | `truth.py` |
-| `investigation/` | `decision.py`, `verify.py`, `drafters.py`, `graph.py` (domain), `repository.py`, `service.py` | `agent/`, parts of `api/` |
+| `investigation/` | `decision.py`, `verify.py`, `graph.py`, `tools.py`, `evidence.py`, `routing.py`, `conversation.py` + `prompts/`, `rule_score_model.py` (domain), `repository.py`, `service.py` | `agent/`, parts of `api/` |
 | `mcp_server/` | `server.py` + `sql/` | `mcp_server.py` |
 | `web/` | `app.py` (factory, lifespan, exception handlers), `dependencies.py`, `routes/alerts.py`, `routes/investigations.py`, `templates/` | `api/` |
 | `cli.py` | argument parsing → calls services and pipeline functions | `cli.py` |
@@ -29,7 +29,9 @@ speculative.
   nodes write through the repository, not raw connections.
 - **Batch pipeline** (data, monitoring, truth): plain modules of functions; SQL is the logic and lives in
   `.sql` files next to the module. No repository or service wrappers.
-- **Contracts**: `typing.Protocol` only where two real implementations exist (rules, drafters).
+- **Contracts**: `typing.Protocol` only where two real implementations exist (rules, evaluated systems). The
+  agent's model is LangChain's `BaseChatModel` (M5: the deterministic rule-score model and the scripted test
+  model; M7: Azure OpenAI), so no project protocol is needed.
 - **Dependencies point inward**: `web` → `investigation` → `core`; `investigation` never imports `web`;
   nothing runtime imports `truth`.
 

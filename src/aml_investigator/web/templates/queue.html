@@ -1,25 +1,29 @@
 {% extends "base.html" %}
-{% block title %}Alert queue{% endblock %}
+{% block title %}Analyst queue{% endblock %}
 {% block content %}
-<h1>Alert queue</h1>
-{% if alerts %}
+<h1>Analyst queue</h1>
+{% set escalations = items|selectattr("kind", "equalto", "escalation")|list %}
+<p class="muted">{{ items|length }} awaiting review: {{ escalations|length }} escalation{{ "" if escalations|length == 1 else "s" }}, {{ items|length - escalations|length }} QA sample{{ "" if items|length - escalations|length == 1 else "s" }}.</p>
+{% if items %}
 <table>
 <thead>
-<tr><th>Alert</th><th>Account</th><th>Alert date</th><th>Rules (score)</th><th>Investigation</th></tr>
+<tr><th>Alert</th><th>Account</th><th>Alert date</th><th>Rules (score)</th><th>Kind</th><th>Recommendation</th><th>Verification</th></tr>
 </thead>
 <tbody>
-{% for alert in alerts %}
+{% for item in items %}
 <tr>
-<td><a href="/alerts/{{ alert.alert_id }}">{{ alert.alert_id }}</a></td>
-<td>{{ alert.account_id }}</td>
-<td>{{ alert.alert_date }}</td>
-<td>{{ alert.rule_hits }}</td>
-<td>{{ alert.status }}</td>
+<td><a href="/alerts/{{ item.alert_id }}">{{ item.alert_id }}</a></td>
+<td>{{ item.account_id }}</td>
+<td>{{ item.alert_date }}</td>
+<td>{{ item.rule_hits }}</td>
+<td><span class="badge {{ item.kind }}">{{ "QA sample" if item.kind == "qa_sample" else "Escalation" }}</span></td>
+<td><span class="badge {{ item.recommendation }}">{{ item.recommendation }}</span></td>
+<td><span class="badge {{ item.verification_status }}">{{ item.verification_status }}</span></td>
 </tr>
 {% endfor %}
 </tbody>
 </table>
 {% else %}
-<p class="muted">No alerts.</p>
+<p class="muted">Nothing to review: no escalations or QA samples are waiting.</p>
 {% endif %}
 {% endblock %}

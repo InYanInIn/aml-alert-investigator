@@ -1,8 +1,8 @@
 WITH inserted AS (
     INSERT INTO review.investigations
-        (alert_id, thread_id, model, prompt_version, recommendation, decision, verification)
+        (alert_id, thread_id, model, prompt_version, recommendation, decision, verification, route, trace)
     VALUES (%(alert_id)s, %(thread_id)s, %(model)s, %(prompt_version)s, %(recommendation)s,
-            %(decision)s, %(verification)s)
+            %(decision)s, %(verification)s, %(route)s, %(trace)s)
     ON CONFLICT (thread_id) DO NOTHING
     RETURNING investigation_id
 )

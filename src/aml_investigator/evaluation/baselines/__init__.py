@@ -2,10 +2,11 @@ from collections.abc import Mapping
 from contextlib import AbstractAsyncContextManager
 
 from aml_investigator.evaluation.baselines.b0 import open_always_escalate
-from aml_investigator.evaluation.baselines.b1 import load_thresholds, open_rule_score
+from aml_investigator.evaluation.baselines.b1 import open_rule_score
 from aml_investigator.evaluation.baselines.b3 import open_gradient_boosting
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.systems import System
+from aml_investigator.monitoring.thresholds import load_thresholds
 
 SYSTEM_NAMES = ("b0", "b1", "b3", "b3_no_age", "scripted")
 TRAINED_SYSTEMS = frozenset({"b3", "b3_no_age"})

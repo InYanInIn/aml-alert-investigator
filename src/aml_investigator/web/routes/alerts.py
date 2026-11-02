@@ -20,7 +20,17 @@ def see_alert(alert_id: int) -> RedirectResponse:
 
 @router.get("/", response_class=HTMLResponse)
 async def queue(request: Request, service: Service) -> HTMLResponse:
-    return templates.TemplateResponse(request, "queue.html", {"alerts": await service.queue()})
+    return templates.TemplateResponse(request, "queue.html", {"items": await service.analyst_queue()})
+
+
+@router.get("/auto-closed", response_class=HTMLResponse)
+async def auto_closed(request: Request, service: Service) -> HTMLResponse:
+    return templates.TemplateResponse(request, "auto_closed.html", {"alerts": await service.auto_closed()})
+
+
+@router.get("/alerts", response_class=HTMLResponse)
+async def all_alerts(request: Request, service: Service) -> HTMLResponse:
+    return templates.TemplateResponse(request, "alerts.html", {"alerts": await service.alerts()})
 
 
 @router.get("/alerts/{alert_id}", response_class=HTMLResponse)
