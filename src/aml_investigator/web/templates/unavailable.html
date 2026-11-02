@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Data service unavailable · AML Alert Investigator{% endblock %}
+{% block content %}
+<h1>Data service unavailable</h1>
+<section>
+<p>The transaction data service (MCP server) cannot be reached, so this page cannot show evidence right now.
+Nothing was recorded. Try again in a moment.</p>
+<p class="muted">The queue and the auto-closed list still work: they read only the review database.</p>
+</section>
+{% endblock %}

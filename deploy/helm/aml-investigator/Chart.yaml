@@ -1,0 +1,6 @@
+apiVersion: v2
+name: aml-investigator
+description: AML alert investigator — analyst UI/API and the read-only MCP data server.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

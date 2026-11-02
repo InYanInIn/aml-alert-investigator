@@ -7,7 +7,7 @@ import pytest
 from pydantic import SecretStr
 
 from aml_investigator.core.logging import configure_logging, log_context
-from aml_investigator.core.settings import Settings
+from aml_investigator.core.settings import MissingSettingError, Settings
 
 PASSWORD = "s3cret-Passw0rd"  # noqa: S105
 
@@ -33,6 +33,17 @@ def json_logs() -> Iterator[logging.Logger]:
 
 def logged_lines(capsys: pytest.CaptureFixture[str]) -> list[dict[str, Any]]:
     return [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+
+
+def test_a_process_can_hold_only_its_own_role_dsn(monkeypatch: pytest.MonkeyPatch) -> None:
+    for role in ("OWNER", "MCP", "APP", "EVALUATOR"):
+        monkeypatch.delenv(f"AML_{role}_DSN", raising=False)
+    api = Settings(_env_file=None, app_dsn=dsn("aml_app")).with_database("aml_hi_small")
+
+    assert api.database == "aml_hi_small"
+    assert "aml_app" in api.app_conninfo
+    with pytest.raises(MissingSettingError, match="AML_OWNER_DSN is not set"):
+        _ = api.owner_conninfo
 
 
 def test_settings_never_show_passwords(settings: Settings) -> None:

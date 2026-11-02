@@ -7,7 +7,21 @@ to confirm or override. The agent is evaluated against labels it never sees and 
 
 Portfolio project on synthetic data (IBM AMLworld). Not a compliance product.
 
-**Status:** M0 — tooling, data profiling and SDK spike. See [docs/plan.md](docs/plan.md).
+**Status:** M6 — the full agent with a deterministic stand-in model, deployed to local Kubernetes. Phase B (live
+model on Azure) is next. See [docs/plan.md](docs/plan.md).
+
+## Run on local Kubernetes (kind)
+Needs Docker, `kind`, `helm`, `kubectl`, the compose Postgres running and a migrated, ingested database.
+
+```bash
+./scripts/kind-up.sh aml_hi_small
+uv run python scripts/kind_smoke.py
+kubectl --context kind-aml port-forward svc/aml-api 8080:8000
+```
+
+`kind-up.sh` builds the image, loads it into the `aml` cluster, creates one secret per workload from `.env`
+and installs the Helm chart in `deploy/helm/aml-investigator`. The smoke test loads the queue, investigates an
+alert and records one analyst decision.
 
 - Design: [docs/design.md](docs/design.md)
 - Decisions: [docs/adr/](docs/adr/)

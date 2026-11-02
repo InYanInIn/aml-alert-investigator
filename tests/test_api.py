@@ -19,6 +19,7 @@ from tests.conftest import Database
 from tests.test_ingest import run_ingest, write_raw
 
 SCRIPT = "<script>alert(1)</script>"
+UNREACHABLE_MCP = "http://127.0.0.1:9/mcp"
 ESCALATING = RuleScoreChatModel(thresholds={"R2_fan_out": 1.0}, close_below=0.0)
 CLOSING = RuleScoreChatModel(thresholds={"R2_fan_out": 1.0}, close_below=1e9)
 
@@ -61,14 +62,14 @@ def cited_regulations(db: Database, regulations: list[str]) -> Iterator[list[str
 
 
 @contextmanager
-def app_client(db: Database, model: RuleScoreChatModel) -> Iterator[TestClient]:
+def app_client(db: Database, model: RuleScoreChatModel, mcp: str | None = None) -> Iterator[TestClient]:
     settings = Settings(
         owner_dsn=SecretStr(db.owner_dsn),
         mcp_dsn=SecretStr(db.mcp_dsn),
         app_dsn=SecretStr(db.app_dsn),
         evaluator_dsn=SecretStr(db.evaluator_dsn),
     )
-    app = create_app(settings, mcp=build_server(db.mcp_dsn), model=model)
+    app = create_app(settings, mcp=mcp or build_server(db.mcp_dsn), model=model)
     with TestClient(app, follow_redirects=False) as client:
         yield client
 
@@ -82,6 +83,12 @@ def client(seeded: Database) -> Iterator[TestClient]:
 @pytest.fixture
 def closing(seeded: Database) -> Iterator[TestClient]:
     with app_client(seeded, CLOSING) as client:
+        yield client
+
+
+@pytest.fixture
+def without_mcp(seeded: Database) -> Iterator[TestClient]:
+    with app_client(seeded, ESCALATING, mcp=UNREACHABLE_MCP) as client:
         yield client
 
 
@@ -266,3 +273,24 @@ def test_auto_closed_alert_has_no_forms_and_rejects_qa_review(
         response = closing.post(f"/investigations/{investigation_id}/qa-review", data={"outcome": "confirmed"})
         assert response.status_code == 404
     assert rows(seeded, "SELECT count(*) FROM review.qa_reviews") == [(0,)]
+
+
+def test_alert_page_is_503_while_mcp_is_unreachable(without_mcp: TestClient, alert_id: int) -> None:
+    page = without_mcp.get(f"/alerts/{alert_id}")
+
+    assert page.status_code == 503
+    assert "Data service unavailable" in page.text
+
+
+def test_investigating_while_mcp_is_unreachable_is_503_and_records_nothing(
+    without_mcp: TestClient, seeded: Database, alert_id: int
+) -> None:
+    response = without_mcp.post(f"/alerts/{alert_id}/investigate")
+
+    assert response.status_code == 503
+    assert rows(seeded, "SELECT count(*) FROM review.investigations") == [(0,)]
+
+
+def test_queue_and_readiness_do_not_depend_on_mcp(without_mcp: TestClient) -> None:
+    assert without_mcp.get("/").status_code == 200
+    assert without_mcp.get("/readyz").status_code == 200
