@@ -26,8 +26,19 @@ class ToolCallError(DomainError):
     pass
 
 
+class McpUnavailableError(DomainError):
+    pass
+
+
+async def list_tools(mcp: MCPAdapter) -> list[BaseTool]:
+    try:
+        return await mcp.list_tools()
+    except RuntimeError as error:
+        raise McpUnavailableError(str(error)) from error
+
+
 async def call_tool(mcp: MCPAdapter, name: str, args: dict[str, Any]) -> dict[str, Any]:
-    tools = {tool.name: tool for tool in await mcp.list_tools()}
+    tools = {tool.name: tool for tool in await list_tools(mcp)}
     message = await tools[name].ainvoke({"type": "tool_call", "id": f"{name}-call", "name": name, "args": args})
     if message.status == "error":
         raise ToolCallError(f"MCP tool {name} failed: {message.content}")
@@ -59,7 +70,7 @@ class AlertTools:
 
     @classmethod
     async def of(cls, mcp: MCPAdapter, alert_id: int, names: Collection[str] | None = None) -> "AlertTools":
-        tools = await mcp.list_tools()
+        tools = await list_tools(mcp)
         return cls([tool for tool in tools if names is None or tool.name in names], alert_id)
 
     def schemas(self) -> list[dict[str, Any]]:

@@ -9,8 +9,11 @@ from fastmcp.exceptions import ToolError
 from psycopg import AsyncConnection, sql
 from psycopg.rows import DictRow, class_row
 from pydantic import BaseModel
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from aml_investigator.core.db import Pool, open_read_only_pool
+from aml_investigator.core.health import liveness, readiness
 from aml_investigator.core.logging import timed_event
 from aml_investigator.core.sql import load
 from aml_investigator.investigation.decision import Typology
@@ -233,12 +236,20 @@ def build_server(dsn: str, *, reference_variant: ReferenceVariant = "clean") -> 
     list_transactions_sql = with_reference("list_transactions", reference_variant)
     get_transactions_sql = with_reference("get_transactions", reference_variant)
 
+    resources: dict[str, Pool] = {}
+
     @asynccontextmanager
     async def lifespan(_: FastMCP[Any]) -> AsyncIterator[dict[str, Pool]]:
         async with open_read_only_pool(dsn) as pool:
-            yield {"pool": pool}
+            resources["pool"] = pool
+            yield resources
 
     server: FastMCP[Any] = FastMCP("aml-investigator", lifespan=lifespan)
+    server.custom_route("/healthz", methods=["GET"])(liveness)
+
+    @server.custom_route("/readyz", methods=["GET"])
+    async def readyz(_: Request) -> JSONResponse:
+        return await readiness(resources.get("pool"))
 
     @server.tool
     async def get_alert(alert_id: int, ctx: Context) -> Alert:
