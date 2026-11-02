@@ -37,6 +37,15 @@ def runtime_for(db: Database) -> RuntimeSettings:
     return RuntimeSettings.of(settings_for(db))
 
 
+def write_runtime_config(workspace: Path, database: str, operating_point: float) -> None:
+    thresholds = workspace / "config" / "thresholds" / f"{database}.json"
+    thresholds.parent.mkdir(parents=True)
+    thresholds.write_text(json.dumps({"thresholds": {"R2_fan_out": 11.0}}))
+    b1_result = workspace / "eval" / "results" / database / "val" / "b1.json"
+    b1_result.parent.mkdir(parents=True)
+    b1_result.write_text(json.dumps({"operating_point": {"threshold": operating_point}}))
+
+
 def add_accounts(conn: psycopg.Connection[tuple[object, ...]], *accounts: str) -> None:
     for account in accounts:
         conn.execute(
@@ -213,9 +222,7 @@ async def test_every_system_opens_without_a_working_evaluator_dsn(
     labels = read_train_labels(db.evaluator_dsn)
     settings = settings_for(db, evaluator_dsn="host=invalid.invalid dbname=none user=none connect_timeout=1")
     runtime = RuntimeSettings.of(settings)
-    thresholds = tmp_path / "config" / "thresholds" / f"{runtime.database}.json"
-    thresholds.parent.mkdir(parents=True)
-    thresholds.write_text(json.dumps({"thresholds": {"R2_fan_out": 11.0}}))
+    write_runtime_config(tmp_path, runtime.database, operating_point=1.0)
     monkeypatch.chdir(tmp_path)
 
     async with open_system(name, runtime, train_labels=labels) as system:
@@ -226,7 +233,11 @@ async def test_every_system_opens_without_a_working_evaluator_dsn(
 
 
 @pytest.mark.anyio
-async def test_scripted_runs_the_investigation_service(db: Database) -> None:
+async def test_scripted_runs_the_investigation_service(
+    db: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    write_runtime_config(tmp_path, runtime_for(db).database, operating_point=0.1)
+    monkeypatch.chdir(tmp_path)
     with db.owner() as conn:
         add_accounts(conn, "A1", "A2", "A3")
         add_transaction(conn, 11, datetime(2022, 9, 2, 10, 15), "A1", "A2", 2848.96, "ACH")

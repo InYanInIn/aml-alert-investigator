@@ -110,11 +110,13 @@ corpus.documents       (doc_id PK, celex, title, version_date, source_url)
 corpus.passages        (passage_id PK e.g. 'AMLR art. 77(1)', 'PL-AML art. 74 ust. 1', doc_id, article, paragraph,
                         text, content_sha256, embedding vector(1536))
 
-review.investigations  (investigation_id PK, alert_id, thread_id UNIQUE, run_id, model, prompt_version,
-                        recommendation, typologies jsonb, rationale jsonb, citations jsonb,
-                        verification jsonb, tool_calls int, input_tokens, output_tokens, cost_usd,
-                        latency_ms, created_at)
-review.decisions       (decision_id PK, investigation_id, analyst, final_decision, comment, decided_at)
+review.investigations  (investigation_id PK, alert_id, thread_id UNIQUE, model, prompt_version,
+                        recommendation, decision jsonb, verification jsonb,
+                        route ('auto_closed' | 'qa_sample' | 'escalated'), trace jsonb, created_at)
+review.decisions       (decision_id PK, investigation_id UNIQUE, analyst ('auto-close' for auto-closures),
+                        final_decision, comment, decided_at)
+review.qa_reviews      (qa_review_id PK, investigation_id UNIQUE, analyst, outcome ('confirmed' | 'reopened'),
+                        comment, reviewed_at)
 
 langgraph.*            -- managed by langgraph-checkpoint-postgres
 ```
@@ -139,7 +141,7 @@ Roles
 | Role | Grants |
 |---|---|
 | `owner` | migrations, ingest |
-| `mcp_reader` | `SELECT` on `core.*` (except `reference_injections`) and `corpus.*` |
+| `mcp_reader` | `SELECT` on `core.*` and `corpus.*` (`reference_injections` is read only in the injected variant) |
 | `app` | `SELECT` on `core.*`; `INSERT, SELECT` on `review.*`; all on `langgraph.*` |
 | `evaluator` | `SELECT` on `truth.*`, `review.*`, `core.*` |
 
@@ -158,7 +160,9 @@ flowchart TD
   E --> F[verify_citations]
   F -->|fail, first time| G[repair] --> F
   F -->|pass or second fail| H[persist_investigation]
-  H --> I[human_review<br/>interrupt]
+  H --> R{route}
+  R -->|verified close| K[auto_close]
+  R -->|escalate or failed| I[human_review<br/>interrupt]
   I --> J[record_decision]
 ```
 
@@ -166,16 +170,17 @@ flowchart TD
 |---|---|---|
 | `load_alert` | deterministic | `get_alert`; sets `as_of = window_end`. |
 | `build_evidence_pack` | deterministic | Fixed MCP calls: account profile, counterparties, window transactions, typology candidates, 2-hop fund trace. Same calls for every alert, so "information considered" is reproducible. |
-| `investigate` | LLM + tools | The model may call a subset of MCP tools to follow leads, up to `k` calls and a token budget. `k = 0` turns the graph into architecture A — the ablation. |
+| `investigate` | LLM + tools | The model may call a subset of MCP tools to follow leads, up to `k` calls and a token budget. `k = 0` turns the graph into architecture A — the ablation. The tools it sees have no `alert_id` parameter: the graph binds the current alert, so the model cannot query another alert whose later `as_of` would show it the future. Tool errors go back to the model as tool messages and count towards `k`. |
 | `retrieve_regulations` | deterministic | Query built from rule IDs and typology candidates → `search_regulations`. |
 | `draft_decision` | LLM | One call returning `Decision` (below) via structured output. |
 | `verify_citations` | deterministic | Section 5.2. |
-| `repair` | LLM | One retry with the verifier's error list. |
-| `persist_investigation` | deterministic | Insert into `review.investigations`, idempotent on `thread_id`. |
+| `repair` | LLM | One retry with the verifier's error list; output that does not parse into `Decision` is a failure too. |
+| `persist_investigation` | deterministic | Insert into `review.investigations` with the route and a run trace (tool calls, loop stop reason, tokens, repairs), idempotent on `thread_id`. |
+| `route` / `auto_close` | deterministic | ADR-0017: a verified `close` is recorded in `review.decisions` with `analyst = 'auto-close'` and the run ends; a seeded 3% of these are marked `qa_sample` and reviewed after closure (`review.qa_reviews`, outcome `confirmed` or `reopened`). Everything else goes to `human_review`. |
 | `human_review` | interrupt | `interrupt()` in its own node with no side effects: LangGraph re-runs the whole node on resume. |
 | `record_decision` | deterministic | Insert into `review.decisions`. |
 
-Checkpointing uses `PostgresSaver`; `thread_id = alert_id + run_id`. Evaluation runs stop at the interrupt and
+Checkpointing uses `PostgresSaver`; `thread_id = alert_id + run_id`. Evaluation runs end at auto-close or stop at the interrupt and
 read the recommendation; they never resume.
 
 ### 5.1 Decision schema
@@ -213,8 +218,11 @@ The agent state keeps a **provenance set**: every `txn_id` and `passage_id` that
 run. A decision passes only if:
 
 1. every cited `txn_id` is in the provenance set and has `ts ≤ as_of`;
-2. every cited `passage_id` is in the provenance set and its `content_sha256` matches the corpus;
-3. every `Fact` matches the database (amount within 0.01, same currency, same date);
+2. every cited `passage_id` is in the provenance set and the sha256 of its returned text equals its
+   `content_sha256`;
+3. every `Fact` matches the record a tool returned (amount within 0.01, same currency, same date); a fact about
+   a field no tool returned for that transaction (for example `amount_paid` of a fund-trace hop, which carries
+   only `amount_eur`) fails;
 4. every number appearing in a claim's `text` appears in that claim's `facts`;
 5. each `supported` typology cites at least one transaction.
 
@@ -228,8 +236,11 @@ Transaction references are untrusted text. Defences, each measured in the inject
 
 - tool results wrap references as quoted data with an explicit "untrusted customer-supplied text" label;
 - the model has no write tools, so an injection can at most change a recommendation;
+- the model cannot choose which alert a tool reads (`alert_id` is bound by the graph), so it cannot widen its
+  own `as_of`;
 - the verifier rejects any citation that is not a transaction or corpus passage seen through tools;
-- the analyst makes the final decision.
+- an analyst makes the final decision on every escalation; a verified `close` is final without one
+  (ADR-0017), so the injection eval measures attack success on that auto-close path in particular.
 
 ## 6. MCP server
 

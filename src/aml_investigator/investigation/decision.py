@@ -56,3 +56,9 @@ class AnalystReview(BaseModel):
     analyst: str
     final_decision: Literal["close", "escalate"]
     comment: str = ""
+
+
+class QaReview(BaseModel):
+    analyst: str
+    outcome: Literal["confirmed", "reopened"]
+    comment: str = ""

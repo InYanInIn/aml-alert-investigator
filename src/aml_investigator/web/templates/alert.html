@@ -1,102 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Alert {{ page.alert.alert_id }}{% endblock %}
 {% block content %}
-<h1>Alert {{ page.alert.alert_id }}</h1>
-
-<section>
-<dl>
-<dt>Account</dt><dd>{{ page.alert.account_id }}</dd>
-<dt>Alert date</dt><dd>{{ page.alert.alert_date }}</dd>
-<dt>Window</dt><dd>{{ page.alert.window_start }} to {{ page.alert.window_end }}</dd>
-</dl>
-</section>
-
-<h2>Rule hits</h2>
-<table>
-<thead><tr><th>Rule</th><th>Score</th><th>Evidence transactions</th></tr></thead>
-<tbody>
-{% for hit in page.rule_hits %}
-<tr>
-<td>{{ hit.rule_id }}</td>
-<td class="num">{{ hit.score }}</td>
-<td>{% for txn_id in hit.evidence_txn_ids %}<a href="#txn-{{ txn_id }}">{{ txn_id }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-
-<h2>Investigation</h2>
-{% if page.investigation %}
-<section>
-<dl>
-<dt>Recommendation</dt><dd><span class="badge {{ page.investigation.recommendation }}">{{ page.investigation.recommendation }}</span></dd>
-<dt>Verification <span class="hint" title="Checks that the agent made nothing up: every transaction it cites was really returned by the tools, and every amount, currency and date it states matches the data. It does not say whether the alert is suspicious; that is the recommendation above.">(?)</span></dt><dd><span class="badge {{ page.investigation.verification.status }}">{{ page.investigation.verification.status }}</span></dd>
-{% if page.investigation.verification.errors %}
-<dt>Errors</dt>
-<dd><ul>{% for error in page.investigation.verification.errors %}<li>{{ error }}</li>{% endfor %}</ul></dd>
-{% endif %}
-<dt>Created</dt><dd>{{ page.investigation.created_at }}</dd>
-</dl>
-
-{% for field in ["who", "what", "when", "where", "why", "how"] %}
-<h2>{{ field|capitalize }}</h2>
-{% if page.investigation.decision|attr(field) %}
-<ul class="claims">
-{% for claim in page.investigation.decision|attr(field) %}
-<li>{{ claim.text }}
-{% if claim.txn_ids %}<span class="muted">(transactions:
-{% for txn_id in claim.txn_ids %}<a href="#txn-{{ txn_id }}">{{ txn_id }}</a>{% if not loop.last %}, {% endif %}{% endfor %})</span>{% endif %}
-</li>
-{% endfor %}
-</ul>
-{% else %}
-<p class="muted">No claims.</p>
-{% endif %}
-{% endfor %}
-</section>
-
-{% if page.investigation.review %}
-<h2>Decision</h2>
-<section>
-<dl>
-<dt>Final decision</dt><dd><span class="badge {{ page.investigation.review.final_decision }}">{{ page.investigation.review.final_decision }}</span></dd>
-<dt>Analyst</dt><dd>{{ page.investigation.review.analyst }}</dd>
-<dt>Comment</dt><dd>{{ page.investigation.review.comment }}</dd>
-<dt>Decided</dt><dd>{{ page.investigation.review.decided_at }}</dd>
-</dl>
-</section>
-{% else %}
-<h2>Review</h2>
-<section>
-<form method="post" action="/investigations/{{ page.investigation.investigation_id }}/decision">
-<label for="final_decision">Final decision</label>
-<select id="final_decision" name="final_decision">
-<option value="close" {% if page.investigation.recommendation == "close" %}selected{% endif %}>Close</option>
-<option value="escalate" {% if page.investigation.recommendation == "escalate" %}selected{% endif %}>Escalate</option>
-</select>
-<label for="comment">Comment</label>
-<textarea id="comment" name="comment" rows="3"></textarea>
-<button type="submit">Confirm or override recommendation</button>
-</form>
-</section>
-{% endif %}
-{% else %}
-<p class="muted">Not investigated yet.</p>
-{% endif %}
-
-<form method="post" action="/alerts/{{ page.alert.alert_id }}/investigate">
-<button type="submit">{% if page.investigation %}Investigate again{% else %}Investigate{% endif %}</button>
-</form>
-
-<h2>Evidence transactions</h2>
-{% if page.evidence.truncated %}<p class="muted">More transactions matched than are shown.</p>{% endif %}
+{% macro txn_links(txn_ids, anchor="txn") %}{% for txn_id in txn_ids %}<a href="#{{ anchor }}-{{ txn_id }}">{{ txn_id }}</a>{% if not loop.last %}, {% endif %}{% endfor %}{% endmacro %}
+{% macro txn_table(transactions, anchor) %}
 <table>
 <thead>
 <tr><th>Txn</th><th>Time</th><th>From</th><th>To</th><th>Paid</th><th>Received</th><th>Format</th></tr>
 </thead>
 <tbody>
-{% for txn in page.evidence.transactions %}
-<tr id="txn-{{ txn.txn_id }}">
+{% for txn in transactions %}
+<tr id="{{ anchor }}-{{ txn.txn_id }}">
 <td>{{ txn.txn_id }}</td>
 <td>{{ txn.ts }}</td>
 <td>{{ txn.from_account }}</td>
@@ -108,4 +21,195 @@
 {% endfor %}
 </tbody>
 </table>
+{% endmacro %}
+{% macro passage_anchor(passage_id) %}passage-{{ passage_id|replace(" ", "_") }}{% endmacro %}
+{% set route_labels = {"auto_closed": "Auto-closed", "qa_sample": "QA sample", "escalated": "Escalated"} %}
+{% set loop_stops = {"skipped": "loop skipped", "model_done": "model finished", "tool_call_limit": "tool call limit reached", "token_budget": "token budget exhausted"} %}
+{% set investigation = page.investigation %}
+<h1>Alert {{ page.alert.alert_id }}{% if investigation %}<span class="badge {{ investigation.route }}">{{ route_labels[investigation.route] }}</span>{% endif %}</h1>
+
+<section>
+<dl>
+<dt>Account</dt><dd>{{ page.alert.account_id }}</dd>
+<dt>Alert date</dt><dd>{{ page.alert.alert_date }}</dd>
+<dt>Window</dt><dd>{{ page.alert.window_start }} to {{ page.alert.window_end }}</dd>
+</dl>
+</section>
+
+{% if investigation and investigation.route != "escalated" and investigation.review %}
+<section class="note">
+<p><strong>Closed automatically.</strong> The recommendation was close and verification passed, so no analyst decision was needed.
+Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.review.decided_at }}.
+{% if investigation.route == "qa_sample" %}This alert was drawn as a QA sample for review after closure.{% endif %}</p>
+</section>
+{% endif %}
+
+<h2>Rule hits</h2>
+<table>
+<thead><tr><th>Rule</th><th>Score</th><th>Evidence transactions</th></tr></thead>
+<tbody>
+{% for hit in page.rule_hits %}
+<tr>
+<td>{{ hit.rule_id }}</td>
+<td class="num">{{ hit.score }}</td>
+<td>{{ txn_links(hit.evidence_txn_ids, "window-txn") }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<h2>Investigation</h2>
+{% if investigation %}
+<section>
+<dl>
+<dt>Recommendation</dt><dd><span class="badge {{ investigation.recommendation }}">{{ investigation.recommendation }}</span></dd>
+<dt>Verification <span class="hint" title="Checks that the agent made nothing up: every transaction it cites was really returned by the tools, and every amount, currency and date it states matches the data. It does not say whether the alert is suspicious; that is the recommendation above.">(?)</span></dt><dd><span class="badge {{ investigation.verification.status }}">{{ investigation.verification.status }}</span></dd>
+{% if investigation.verification.errors %}
+<dt>Errors</dt>
+<dd><ul>{% for error in investigation.verification.errors %}<li>{{ error }}</li>{% endfor %}</ul></dd>
+{% endif %}
+<dt>Created</dt><dd>{{ investigation.created_at }}</dd>
+</dl>
+
+<h2>Typologies</h2>
+{% if investigation.decision.typologies %}
+<table>
+<thead><tr><th>Typology</th><th>Verdict</th><th>Transactions</th></tr></thead>
+<tbody>
+{% for verdict in investigation.decision.typologies %}
+<tr>
+<td>{{ verdict.typology }}</td>
+<td>{{ verdict.verdict|replace("_", " ") }}</td>
+<td>{{ txn_links(verdict.txn_ids) }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p class="muted">No typology verdicts.</p>
+{% endif %}
+
+{% for field in ["who", "what", "when", "where", "why", "how"] %}
+<h2>{{ field|capitalize }}</h2>
+{% if investigation.decision|attr(field) %}
+<ul class="claims">
+{% for claim in investigation.decision|attr(field) %}
+<li>{{ claim.text }}
+{% if claim.txn_ids %}<span class="muted">(transactions: {{ txn_links(claim.txn_ids) }})</span>{% endif %}
+{% if claim.passage_ids %}<span class="muted">(regulations:
+{% for passage_id in claim.passage_ids %}<a href="#{{ passage_anchor(passage_id) }}">{{ passage_id }}</a>{% if not loop.last %}, {% endif %}{% endfor %})</span>{% endif %}
+</li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="muted">No claims.</p>
+{% endif %}
+{% endfor %}
+</section>
+
+{% if investigation.trace %}
+<details>
+<summary>Investigation trace: {{ investigation.trace.tool_calls|length }} tool calls, {{ loop_stops.get(investigation.trace.loop_stop, investigation.trace.loop_stop) }}, {{ investigation.trace.tokens }} tokens, {{ investigation.trace.repairs }} repairs</summary>
+<table>
+<thead><tr><th>Phase</th><th>Tool</th><th>Arguments</th><th>Result</th></tr></thead>
+<tbody>
+{% for call in investigation.trace.tool_calls %}
+<tr>
+<td>{{ call.phase }}</td>
+<td>{{ call.tool }}</td>
+<td><code>{{ call.args|tojson }}</code></td>
+<td>{% if call.error %}<span class="badge failed">error</span> {{ call.error }}{% else %}{{ call.rows }} rows{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</details>
+{% else %}
+<p class="muted">No run trace was recorded for this investigation.</p>
+{% endif %}
+
+{% if investigation.review %}
+<h2>Decision</h2>
+<section>
+<dl>
+<dt>Final decision</dt><dd><span class="badge {{ investigation.review.final_decision }}">{{ investigation.review.final_decision }}</span></dd>
+<dt>Analyst</dt><dd>{{ investigation.review.analyst }}</dd>
+<dt>Comment</dt><dd>{{ investigation.review.comment }}</dd>
+<dt>Decided</dt><dd>{{ investigation.review.decided_at }}</dd>
+</dl>
+</section>
+{% elif investigation.route == "escalated" %}
+<h2>Review</h2>
+<section>
+<form method="post" action="/investigations/{{ investigation.investigation_id }}/decision">
+<label for="final_decision">Final decision</label>
+<select id="final_decision" name="final_decision">
+<option value="close" {% if investigation.recommendation == "close" %}selected{% endif %}>Close</option>
+<option value="escalate" {% if investigation.recommendation == "escalate" %}selected{% endif %}>Escalate</option>
+</select>
+<label for="comment">Comment</label>
+<textarea id="comment" name="comment" rows="3"></textarea>
+<button type="submit">Confirm or override recommendation</button>
+</form>
+</section>
+{% endif %}
+
+{% if investigation.qa_review %}
+<h2>QA review</h2>
+<section>
+<dl>
+<dt>Outcome</dt><dd><span class="badge {{ investigation.qa_review.outcome }}">{{ investigation.qa_review.outcome }}</span></dd>
+<dt>Analyst</dt><dd>{{ investigation.qa_review.analyst }}</dd>
+<dt>Comment</dt><dd>{{ investigation.qa_review.comment }}</dd>
+<dt>Reviewed</dt><dd>{{ investigation.qa_review.reviewed_at }}</dd>
+</dl>
+</section>
+{% elif investigation.route == "qa_sample" %}
+<h2>QA review</h2>
+<section>
+<form method="post" action="/investigations/{{ investigation.investigation_id }}/qa-review">
+<label for="outcome">Outcome</label>
+<select id="outcome" name="outcome">
+<option value="confirmed">Confirm close</option>
+<option value="reopened">Reopen</option>
+</select>
+<label for="qa_comment">Comment</label>
+<textarea id="qa_comment" name="comment" rows="3"></textarea>
+<button type="submit">Record QA review</button>
+</form>
+</section>
+{% endif %}
+{% else %}
+<p class="muted">Not investigated yet.</p>
+{% endif %}
+
+<form method="post" action="/alerts/{{ page.alert.alert_id }}/investigate">
+<button type="submit">{% if investigation %}Investigate again{% else %}Investigate{% endif %}</button>
+</form>
+
+{% if investigation %}
+<h2>Cited transactions</h2>
+{% if page.cited_transactions %}
+{{ txn_table(page.cited_transactions, "txn") }}
+{% else %}
+<p class="muted">The decision cites no transactions.</p>
+{% endif %}
+
+<h2>Cited regulations</h2>
+<section>
+{% for passage in page.cited_passages %}
+<div class="passage" id="{{ passage_anchor(passage.passage_id) }}">
+<h3>{{ passage.passage_id }}</h3>
+<div class="muted">{{ passage.doc_id }}, art. {{ passage.article }}{% if passage.paragraph %}({{ passage.paragraph }}){% endif %}{% if passage.heading %}: {{ passage.heading }}{% endif %}</div>
+<p>{{ passage.text }}</p>
+</div>
+{% else %}
+<p class="muted">The decision cites no regulations.</p>
+{% endfor %}
+</section>
+{% endif %}
+
+<h2>Window transactions</h2>
+{% if page.evidence.truncated %}<p class="muted">More transactions matched than are shown.</p>{% endif %}
+{{ txn_table(page.evidence.transactions, "window-txn") }}
 {% endblock %}

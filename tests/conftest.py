@@ -45,8 +45,50 @@ def database() -> Iterator[Database]:
 def db(database: Database) -> Database:
     with database.owner() as conn:
         conn.execute(
-            "TRUNCATE review.decisions, review.investigations, truth.alert_truth, truth.candidate_truth, "
-            "truth.pattern_attempts, truth.transaction_labels, core.alert_rule_hits, core.alerts, "
-            "core.rule_candidates, core.transactions, core.fx_rates, core.accounts RESTART IDENTITY CASCADE"
+            "TRUNCATE review.qa_reviews, review.decisions, review.investigations, truth.alert_truth, "
+            "truth.candidate_truth, truth.pattern_attempts, truth.transaction_labels, core.alert_rule_hits, "
+            "core.alerts, core.rule_candidates, core.transactions, core.fx_rates, core.accounts "
+            "RESTART IDENTITY CASCADE"
         )
     return database
+
+
+REGULATION_PASSAGES = (
+    (
+        "AMLR art. 69(1)",
+        "amlr",
+        "Obliged entities shall report to the FIU where they have reasonable grounds to suspect criminal activity.",
+        "english",
+    ),
+    (
+        "AMLR art. 34(2)",
+        "amlr",
+        "Obliged entities shall examine the purpose of a transaction that is complex or unusually large.",
+        "english",
+    ),
+    (
+        "PL-AML art. 74 ust. 1",
+        "pl-aml",
+        "Instytucja obowiązana zawiadamia Generalnego Inspektora o okolicznościach wskazujących na podejrzenie.",
+        "simple",
+    ),
+)
+
+
+@pytest.fixture
+def regulations(db: Database) -> list[str]:
+    with db.owner() as conn:
+        conn.execute("DELETE FROM corpus.passages")
+        conn.execute("DELETE FROM corpus.documents")
+        conn.execute(
+            "INSERT INTO corpus.documents VALUES ('amlr', 'AMLR', 'en', '2024', 'https://example.test/amlr', 'x'), "
+            "('pl-aml', 'Ustawa', 'pl', '2025', 'https://example.test/pl', 'y')"
+        )
+        for position, (passage_id, doc_id, text, config) in enumerate(REGULATION_PASSAGES):
+            conn.execute(
+                "INSERT INTO corpus.passages (passage_id, doc_id, article, paragraph, position, heading, text, "
+                "content_sha256, search_config) "
+                "VALUES (%s, %s, '1', '1', %s, NULL, %s, encode(sha256(convert_to(%s, 'UTF8')), 'hex'), %s)",
+                (passage_id, doc_id, position, text, text, config),
+            )
+    return [passage_id for passage_id, *_ in REGULATION_PASSAGES]

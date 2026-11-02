@@ -6,32 +6,27 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastmcp import FastMCP
 from langchain.mcp import MCPAdapter
+from langchain_core.language_models import BaseChatModel
 
-from aml_investigator.core.db import open_app_pool
 from aml_investigator.core.errors import NotFoundError
 from aml_investigator.core.logging import configure_logging
 from aml_investigator.core.settings import Settings
-from aml_investigator.investigation.drafters import scripted_drafter
-from aml_investigator.investigation.graph import build_graph, postgres_checkpointer
-from aml_investigator.investigation.repository import ReviewRepository
-from aml_investigator.investigation.service import InvestigationService
+from aml_investigator.core.tracing import tracing_callbacks
+from aml_investigator.investigation.service import open_investigation_service
 from aml_investigator.web.routes import alerts, investigations
 
 
-def create_app(settings: Settings, *, mcp: str | FastMCP[Any]) -> FastAPI:
+def create_app(settings: Settings, *, mcp: str | FastMCP[Any], model: BaseChatModel) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         configure_logging()
-        adapter = MCPAdapter(mcp)
-        async with open_app_pool(settings.app_conninfo) as pool:
-            repository = ReviewRepository(pool)
-            graph = build_graph(
-                mcp=adapter,
-                drafter=scripted_drafter,
-                repository=repository,
-                checkpointer=await postgres_checkpointer(pool),
-            )
-            app.state.investigation_service = InvestigationService(graph=graph, repository=repository, mcp=adapter)
+        async with open_investigation_service(
+            app_conninfo=settings.app_conninfo,
+            mcp=MCPAdapter(mcp),
+            model=model,
+            callbacks=tracing_callbacks(settings),
+        ) as service:
+            app.state.investigation_service = service
             yield
 
     app = FastAPI(lifespan=lifespan)

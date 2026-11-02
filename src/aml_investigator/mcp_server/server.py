@@ -174,6 +174,7 @@ class PassageMatch(BaseModel):
     paragraph: str | None
     heading: str | None
     text: str
+    content_sha256: str
     rank: float
 
 
@@ -450,7 +451,8 @@ def build_server(dsn: str, *, reference_variant: ReferenceVariant = "clean") -> 
         query uses web-search syntax: plain words are ANDed, "quoted phrase" matches a phrase, OR between words,
         -word excludes. Each passage is matched in its own language, so query Polish passages with Polish words.
         Returns at most 5 passages (top_k clamped to 1..5), best rank first, each with passage_id, doc_id,
-        article, paragraph, heading, the full text and its rank. Cite passages by passage_id."""
+        article, paragraph, heading, the full text, its content_sha256 (the hash of the text, used to verify
+        citations) and its rank. Cite passages by passage_id."""
         capped = min(max(top_k, 1), MAX_PASSAGES)
         with timed_event(logger, "tool_call", tool="search_regulations") as event:
             async with pool_of(ctx).connection() as conn, conn.cursor(row_factory=class_row(PassageMatch)) as cursor:

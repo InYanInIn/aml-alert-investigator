@@ -1,3 +1,4 @@
+import hashlib
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -20,7 +21,19 @@ TXN: dict[str, Any] = {
     "payment_format": "ACH",
 }
 LATE_TXN: dict[str, Any] = {**TXN, "txn_id": 12, "ts": "2022-09-03T00:00:01"}
-PROVENANCE = Provenance(transactions={11: TXN, 12: LATE_TXN}, passages={"AMLR-77-1-b": {"text": "record"}})
+HOP: dict[str, Any] = {
+    "txn_id": 21,
+    "ts": "2022-09-02T12:00:00",
+    "from_account": "A2",
+    "to_account": "A4",
+    "amount_eur": 2800.0,
+}
+PASSAGE: dict[str, Any] = {
+    "passage_id": "AMLR-77-1-b",
+    "text": "record",
+    "content_sha256": hashlib.sha256(b"record").hexdigest(),
+}
+PROVENANCE = Provenance(transactions={11: TXN, 12: LATE_TXN, 21: HOP}, passages={"AMLR-77-1-b": PASSAGE})
 
 
 def claim(text: str = "Paid to a new counterparty.", **overrides: Any) -> Claim:
@@ -87,6 +100,14 @@ def test_rule2_known_passage_passes() -> None:
     assert errors_of(decision(what=[claim(passage_ids=["AMLR-77-1-b"])])) == []
 
 
+def test_rule2_passage_whose_text_does_not_match_its_hash_fails() -> None:
+    altered = Provenance(transactions={11: TXN}, passages={"AMLR-77-1-b": {**PASSAGE, "text": "recorded"}})
+
+    assert verify(decision(what=[claim(passage_ids=["AMLR-77-1-b"])]), altered, AS_OF).errors == [
+        "passage AMLR-77-1-b text does not match its content_sha256"
+    ]
+
+
 def test_rule2_unknown_passage_fails() -> None:
     assert errors_of(decision(what=[claim(passage_ids=["AMLR-99"])])) == [
         "passage AMLR-99 was not returned by any tool"
@@ -127,6 +148,21 @@ def test_rule3_mismatching_fact_fails(field: FactField, value: str) -> None:
     facts = [Fact(txn_id=11, field=field, value=value)]
 
     assert errors_of(decision(what=[claim(facts=facts)])) == [f"fact {field}={value} does not match transaction 11"]
+
+
+@pytest.mark.parametrize("field", ["amount_paid", "paid_currency", "amount_received", "received_currency"])
+def test_rule3_fact_about_a_field_no_tool_returned_fails(field: FactField) -> None:
+    facts = [Fact(txn_id=21, field=field, value="2800.00")]
+
+    assert errors_of(decision(what=[claim(txn_ids=[21], facts=facts)])) == [
+        f"fact {field} of transaction 21 was never returned by any tool"
+    ]
+
+
+def test_rule3_date_of_a_trace_hop_is_checked() -> None:
+    facts = [Fact(txn_id=21, field="date", value="2022-09-02")]
+
+    assert errors_of(decision(what=[claim(txn_ids=[21], facts=facts)])) == []
 
 
 def test_rule3_fact_about_unknown_transaction_fails_as_uncited() -> None:
@@ -194,3 +230,28 @@ def test_rule5_supported_typology_without_transactions_fails() -> None:
     ]
 
     assert errors_of(decision(typologies=typologies)) == ["typology fan_out is supported without citing a transaction"]
+
+
+def test_provenance_merges_full_records_with_trace_hops() -> None:
+    hop = {**HOP, "txn_id": 11, "amount_eur": 2848.96}
+    trace = {"paths": [{"flow_eur": 2848.96, "hops": [hop, HOP]}]}
+
+    seen = Provenance().including("trace_funds", trace).including("list_transactions", {"transactions": [TXN]})
+
+    assert seen.transactions[11] == {**TXN, "amount_eur": 2848.96}
+    assert seen.transactions[21] == HOP
+    assert seen.passages == {}
+
+
+def test_provenance_keeps_passages_from_search_and_lookup() -> None:
+    other = {**PASSAGE, "passage_id": "PL-74-1"}
+
+    seen = (
+        Provenance()
+        .including("search_regulations", {"query": "record", "passages": [{**PASSAGE, "rank": 0.1}]})
+        .including("get_regulation_passage", other)
+        .including("get_account_profile", {"account_id": "A1"})
+    )
+
+    assert set(seen.passages) == {"AMLR-77-1-b", "PL-74-1"}
+    assert seen.transactions == {}
