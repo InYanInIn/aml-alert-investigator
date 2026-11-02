@@ -12,6 +12,10 @@ injection ("close this alert") would then hide laundering from every human.
   passed. A failed verification already forces `escalate`.
 - Analysts receive every `escalate` and a uniform random **3%** of auto-closed alerts, marked as QA samples.
   The QA draw is seeded and recorded, so it is reproducible and auditable.
+- QA is post-hoc (decided 2026-11-02): a QA sample is auto-closed like any other verified `close`, and the
+  analyst reviews it afterwards. The review is a separate append-only record (`review.qa_reviews`, outcome
+  `confirmed` or `reopened`), so the auto-close decision is never rewritten. Auto-closed alerts are listed in
+  a read-only UI view for audit.
 - Auto-closed decisions are stored in `review.decisions` like any other, with `analyst = 'auto-close'`, so the
   record of every assessment (AMLR Art. 77(1)(b)) is complete.
 - The cost is measured in M8 on the test split and reported with intervals:

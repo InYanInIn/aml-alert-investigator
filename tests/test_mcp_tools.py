@@ -1,3 +1,4 @@
+import hashlib
 import json
 from datetime import datetime, timedelta
 from itertools import pairwise
@@ -477,6 +478,7 @@ async def test_search_regulations_ranking_and_shape(db: Database) -> None:
     assert passage["doc_id"] == "amlr"
     assert passage["article"] == "69"
     assert passage["text"].startswith("Obliged entities shall report")
+    assert passage["content_sha256"] == hashlib.sha256(passage["text"].encode()).hexdigest()
     assert passage["rank"] > 0
 
     broad = await call(db, "search_regulations", query="obliged entities transactions")

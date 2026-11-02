@@ -4,13 +4,10 @@ from dataclasses import dataclass
 
 from langchain.mcp import MCPAdapter
 
-from aml_investigator.core.db import open_app_pool
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.systems import EvalAlert, SystemDecision
-from aml_investigator.investigation.drafters import scripted_drafter
-from aml_investigator.investigation.graph import build_graph, postgres_checkpointer
-from aml_investigator.investigation.repository import ReviewRepository
-from aml_investigator.investigation.service import InvestigationService
+from aml_investigator.investigation.rule_score_model import rule_score_model
+from aml_investigator.investigation.service import InvestigationService, open_investigation_service
 from aml_investigator.mcp_server.server import build_server
 
 
@@ -38,9 +35,10 @@ class ScriptedInvestigation:
 
 @asynccontextmanager
 async def open_scripted(settings: RuntimeSettings) -> AsyncIterator[ScriptedInvestigation]:
-    async with open_app_pool(settings.app_conninfo) as pool, MCPAdapter(build_server(settings.mcp_conninfo)) as mcp:
-        repository = ReviewRepository(pool)
-        graph = build_graph(
-            mcp=mcp, drafter=scripted_drafter, repository=repository, checkpointer=await postgres_checkpointer(pool)
-        )
-        yield ScriptedInvestigation(InvestigationService(graph=graph, repository=repository, mcp=mcp))
+    async with (
+        MCPAdapter(build_server(settings.mcp_conninfo)) as mcp,
+        open_investigation_service(
+            app_conninfo=settings.app_conninfo, mcp=mcp, model=rule_score_model(settings.database)
+        ) as service,
+    ):
+        yield ScriptedInvestigation(service)

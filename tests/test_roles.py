@@ -36,13 +36,32 @@ def test_review_records_are_append_only(db: Database) -> None:
     with psycopg.connect(db.app_dsn) as conn:
         conn.execute(
             "INSERT INTO review.investigations (alert_id, thread_id, model, prompt_version, recommendation, "
-            "decision, verification) VALUES (1, 't1', 'scripted', 'v0', 'close', '{}', '{}')"
+            "decision, verification, route, trace) "
+            "VALUES (1, 't1', 'scripted', 'v0', 'close', '{}', '{}', 'qa_sample', '{}')"
+        )
+        conn.execute(
+            "INSERT INTO review.qa_reviews (investigation_id, analyst, outcome) VALUES (1, 'eve', 'confirmed')"
         )
         conn.commit()
+        for table in ("investigations", "qa_reviews"):
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                conn.execute(f"DELETE FROM review.{table}")  # noqa: S608
+            conn.rollback()
+    for statement in (
+        "UPDATE review.investigations SET recommendation = 'escalate'",
+        "UPDATE review.qa_reviews SET outcome = 'reopened'",
+    ):
+        with db.owner() as conn, pytest.raises(psycopg.errors.RaiseException):
+            conn.execute(statement)
+
+
+def test_evaluator_reads_but_cannot_write_qa_reviews(db: Database) -> None:
+    with psycopg.connect(db.evaluator_dsn) as conn:
+        conn.execute("SELECT 1 FROM review.qa_reviews LIMIT 1")
         with pytest.raises(psycopg.errors.InsufficientPrivilege):
-            conn.execute("UPDATE review.investigations SET recommendation = 'escalate'")
-    with db.owner() as conn, pytest.raises(psycopg.errors.RaiseException):
-        conn.execute("UPDATE review.investigations SET recommendation = 'escalate'")
+            conn.execute(
+                "INSERT INTO review.qa_reviews (investigation_id, analyst, outcome) VALUES (1, 'x', 'confirmed')"
+            )
 
 
 def test_migrate_is_idempotent(database: Database) -> None:

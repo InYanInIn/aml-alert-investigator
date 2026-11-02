@@ -1,21 +1,13 @@
-import json
-import math
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from pathlib import Path
 
 from aml_investigator.core.db import Pool, open_read_only_pool
 from aml_investigator.core.sql import load
 from aml_investigator.evaluation.systems import EvalAlert, SystemDecision
+from aml_investigator.monitoring.thresholds import rule_score
 
-THRESHOLDS_DIR = Path("config/thresholds")
 RULE_HIT_SCORES_SQL = load(__package__, "rule_hit_scores")
-
-
-def load_thresholds(database: str) -> dict[str, float]:
-    config = json.loads((THRESHOLDS_DIR / f"{database}.json").read_text())
-    return {rule_id: float(threshold) for rule_id, threshold in config["thresholds"].items()}
 
 
 @dataclass(frozen=True)
@@ -28,8 +20,8 @@ class RuleScore:
         async with self.pool.connection() as conn:
             cursor = await conn.execute(RULE_HIT_SCORES_SQL, {"alert_id": alert.alert_id})
             hits = await cursor.fetchall()
-        risk_score = math.fsum(float(hit["score"]) / self.thresholds[hit["rule_id"]] for hit in hits)
-        return SystemDecision(recommendation=None, risk_score=risk_score)
+        score = rule_score(((hit["rule_id"], float(hit["score"])) for hit in hits), self.thresholds)
+        return SystemDecision(recommendation=None, risk_score=score)
 
 
 @asynccontextmanager
