@@ -1,17 +1,18 @@
+from datetime import date, datetime
 from pathlib import Path
-from typing import Any
 
 import pytest
 from fastmcp import Client
 
 from aml_investigator.corpus.loader import load_corpus
-from aml_investigator.investigation.evidence import (
+from aml_investigator.investigation.agent.evidence import (
     PASSAGES_PER_QUERY,
     REGULATION_QUERIES,
     RULE_TOPICS,
     evidence_calls,
     regulation_calls,
 )
+from aml_investigator.investigation.agent.state import AlertRuleHit, InvestigatedAlert
 from aml_investigator.mcp_server.server import build_server
 from aml_investigator.monitoring.typologies import RULE_TYPOLOGIES
 from tests.conftest import Database
@@ -30,11 +31,13 @@ def anyio_backend() -> str:
     return "asyncio"
 
 
-def alert(*hits: tuple[str, list[int]]) -> dict[str, Any]:
-    return {
-        "account_id": "A1",
-        "rule_hits": [{"rule_id": rule_id, "score": 1.0, "evidence_txn_ids": ids} for rule_id, ids in hits],
-    }
+def alert(*hits: tuple[str, list[int]]) -> InvestigatedAlert:
+    return InvestigatedAlert(
+        account_id="A1",
+        alert_date=date(2022, 9, 2),
+        as_of=datetime(2022, 9, 3),
+        rule_hits=[AlertRuleHit(rule_id=rule_id, evidence_txn_ids=ids) for rule_id, ids in hits],
+    )
 
 
 def test_evidence_pack_fetches_every_flagged_transaction_in_batches() -> None:

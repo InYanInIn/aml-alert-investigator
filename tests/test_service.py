@@ -5,17 +5,18 @@ from typing import Any
 import pytest
 from langchain.mcp import MCPAdapter
 
+from aml_investigator.core.db import open_app_pool
 from aml_investigator.investigation.decision import AnalystReview, QaReview
+from aml_investigator.investigation.models.rule_score import RuleScoreChatModel
 from aml_investigator.investigation.routing import qa_sampled
-from aml_investigator.investigation.rule_score_model import RuleScoreChatModel
 from aml_investigator.investigation.service import (
-    AlertNotFoundError,
-    InvestigationNotFoundError,
     InvestigationService,
     QaSampleNotFoundError,
     open_investigation_service,
 )
 from aml_investigator.mcp_server.server import build_server
+from aml_investigator.review.pages import ReviewPages
+from aml_investigator.review.repository import AlertNotFoundError, InvestigationNotFoundError, ReviewRepository
 from tests.conftest import Database
 
 REVIEW = AnalystReview(analyst="jan", final_decision="close", comment="known payroll pattern")
@@ -69,21 +70,27 @@ def first_day(sampled: bool) -> date:
 
 
 @pytest.fixture
-async def service(db: Database) -> AsyncIterator[InvestigationService]:
-    async with (
-        MCPAdapter(build_server(db.mcp_dsn)) as mcp,
-        open_investigation_service(app_conninfo=db.app_dsn, mcp=mcp, model=ESCALATING) as service,
-    ):
+async def mcp(db: Database) -> AsyncIterator[MCPAdapter]:
+    async with MCPAdapter(build_server(db.mcp_dsn)) as adapter:
+        yield adapter
+
+
+@pytest.fixture
+async def service(db: Database, mcp: MCPAdapter) -> AsyncIterator[InvestigationService]:
+    async with open_investigation_service(app_conninfo=db.app_dsn, mcp=mcp, model=ESCALATING) as service:
         yield service
 
 
 @pytest.fixture
-async def closing(db: Database) -> AsyncIterator[InvestigationService]:
-    async with (
-        MCPAdapter(build_server(db.mcp_dsn)) as mcp,
-        open_investigation_service(app_conninfo=db.app_dsn, mcp=mcp, model=CLOSING) as service,
-    ):
+async def closing(db: Database, mcp: MCPAdapter) -> AsyncIterator[InvestigationService]:
+    async with open_investigation_service(app_conninfo=db.app_dsn, mcp=mcp, model=CLOSING) as service:
         yield service
+
+
+@pytest.fixture
+async def pages(db: Database, mcp: MCPAdapter) -> AsyncIterator[ReviewPages]:
+    async with open_app_pool(db.app_dsn) as pool:
+        yield ReviewPages(ReviewRepository(pool), mcp)
 
 
 def rows(db: Database, query: str) -> list[tuple[Any, ...]]:
@@ -92,7 +99,9 @@ def rows(db: Database, query: str) -> list[tuple[Any, ...]]:
 
 
 @pytest.mark.anyio
-async def test_investigate_then_decide_without_http(db: Database, alert_id: int, service: InvestigationService) -> None:
+async def test_investigate_then_decide_without_http(
+    db: Database, alert_id: int, service: InvestigationService, pages: ReviewPages
+) -> None:
     outcome = await service.investigate(alert_id)
 
     [(investigation_id, stored_alert_id, thread_id, recommendation, route)] = rows(
@@ -102,7 +111,7 @@ async def test_investigate_then_decide_without_http(db: Database, alert_id: int,
     assert (outcome.recommendation, outcome.verification_status, outcome.route) == ("escalate", "passed", "escalated")
     assert (stored_alert_id, recommendation, route) == (alert_id, "escalate", "escalated")
     assert thread_id.startswith(f"{alert_id}:")
-    [queued] = await service.analyst_queue()
+    [queued] = await pages.analyst_queue()
     assert (queued.kind, queued.investigation_id, queued.verification_status) == (
         "escalation",
         investigation_id,
@@ -114,9 +123,9 @@ async def test_investigate_then_decide_without_http(db: Database, alert_id: int,
     assert rows(db, "SELECT investigation_id, analyst, final_decision, comment FROM review.decisions") == [
         (investigation_id, "jan", "close", "known payroll pattern")
     ]
-    assert await service.analyst_queue() == []
-    assert [alert.status for alert in await service.alerts()] == ["decided: close"]
-    page = await service.alert_page(alert_id)
+    assert await pages.analyst_queue() == []
+    assert [alert.status for alert in await pages.alerts()] == ["decided: close"]
+    page = await pages.alert_page(alert_id)
     assert page.investigation is not None
     assert page.investigation.review is not None
     assert page.investigation.review.final_decision == "close"
@@ -144,7 +153,7 @@ async def test_second_decision_is_ignored(db: Database, alert_id: int, service: 
 
 @pytest.mark.anyio
 async def test_each_investigation_gets_a_fresh_thread(
-    db: Database, alert_id: int, service: InvestigationService
+    db: Database, alert_id: int, service: InvestigationService, pages: ReviewPages
 ) -> None:
     first = await service.investigate(alert_id)
     second = await service.investigate(alert_id)
@@ -152,12 +161,14 @@ async def test_each_investigation_gets_a_fresh_thread(
     assert first.investigation_id != second.investigation_id
     [(threads,)] = rows(db, "SELECT count(DISTINCT thread_id) FROM review.investigations")
     assert threads == 2
-    [queued] = await service.analyst_queue()
+    [queued] = await pages.analyst_queue()
     assert queued.investigation_id == second.investigation_id
 
 
 @pytest.mark.anyio
-async def test_auto_closed_alerts_and_qa_review(db: Database, alert_id: int, closing: InvestigationService) -> None:
+async def test_auto_closed_alerts_and_qa_review(
+    db: Database, alert_id: int, closing: InvestigationService, pages: ReviewPages
+) -> None:
     unsampled = add_alert(db, first_day(sampled=False))
     sampled = add_alert(db, first_day(sampled=True))
     plain = await closing.investigate(unsampled)
@@ -165,11 +176,11 @@ async def test_auto_closed_alerts_and_qa_review(db: Database, alert_id: int, clo
 
     assert (plain.route, qa.route) == ("auto_closed", "qa_sample")
     assert rows(db, "SELECT analyst, final_decision FROM review.decisions") == [("auto-close", "close")] * 2
-    [queued] = await closing.analyst_queue()
+    [queued] = await pages.analyst_queue()
     assert (queued.kind, queued.investigation_id, queued.alert_id) == ("qa_sample", qa.investigation_id, sampled)
-    closed = {item.alert_id: (item.route, item.qa_status) for item in await closing.auto_closed()}
+    closed = {item.alert_id: (item.route, item.qa_status) for item in await pages.auto_closed()}
     assert closed == {unsampled: ("auto_closed", "not_sampled"), sampled: ("qa_sample", "pending")}
-    statuses = {alert.alert_id: alert.status for alert in await closing.alerts()}
+    statuses = {alert.alert_id: alert.status for alert in await pages.alerts()}
     assert statuses == {alert_id: "none", unsampled: "auto-closed", sampled: "auto-closed, QA pending"}
 
     assert await closing.record_qa_review(qa.investigation_id, QA) == sampled
@@ -179,10 +190,10 @@ async def test_auto_closed_alerts_and_qa_review(db: Database, alert_id: int, clo
     assert rows(db, "SELECT investigation_id, analyst, outcome, comment FROM review.qa_reviews") == [
         (qa.investigation_id, "eve", "confirmed", "looks right")
     ]
-    assert await closing.analyst_queue() == []
-    assert {item.alert_id: item.qa_status for item in await closing.auto_closed()}[sampled] == "confirmed"
-    assert {alert.alert_id: alert.status for alert in await closing.alerts()}[sampled] == "auto-closed, QA confirmed"
-    page = await closing.alert_page(sampled)
+    assert await pages.analyst_queue() == []
+    assert {item.alert_id: item.qa_status for item in await pages.auto_closed()}[sampled] == "confirmed"
+    assert {alert.alert_id: alert.status for alert in await pages.alerts()}[sampled] == "auto-closed, QA confirmed"
+    page = await pages.alert_page(sampled)
     assert page.investigation is not None
     assert page.investigation.route == "qa_sample"
     assert page.investigation.qa_review is not None
@@ -216,12 +227,12 @@ async def test_uninvestigated_alerts_of_a_day(db: Database, alert_id: int, servi
 
 @pytest.mark.anyio
 async def test_unknown_alert_raises_and_stores_nothing(
-    db: Database, alert_id: int, service: InvestigationService
+    db: Database, alert_id: int, service: InvestigationService, pages: ReviewPages
 ) -> None:
     with pytest.raises(AlertNotFoundError):
         await service.investigate(alert_id + 1000)
     with pytest.raises(AlertNotFoundError):
-        await service.alert_page(alert_id + 1000)
+        await pages.alert_page(alert_id + 1000)
 
     assert rows(db, "SELECT count(*) FROM review.investigations") == [(0,)]
 

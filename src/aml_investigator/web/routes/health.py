@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from aml_investigator.core.health import liveness, readiness
-from aml_investigator.web.routes.alerts import Service
+from aml_investigator.web.dependencies import Service
 
 router = APIRouter()
 

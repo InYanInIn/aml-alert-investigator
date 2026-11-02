@@ -1,16 +1,27 @@
-from dataclasses import dataclass
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import date
 from typing import Any, Literal
 
 from psycopg.rows import class_row
 from psycopg.types.json import Jsonb
 
 from aml_investigator.core.db import Pool
+from aml_investigator.core.errors import NotFoundError
 from aml_investigator.core.sql import load
 from aml_investigator.investigation.decision import AnalystReview, Decision, QaReview
 from aml_investigator.investigation.routing import Route
 from aml_investigator.investigation.verify import Verification
+from aml_investigator.review.records import (
+    Alert,
+    AlertOverview,
+    AlertSummary,
+    AutoClosedAlert,
+    InvestigationReference,
+    InvestigationView,
+    QueueItem,
+    RecordedQaReview,
+    RecordedReview,
+    RuleHit,
+)
 
 ALERTS_SQL = load(__package__, "alerts")
 ANALYST_QUEUE_SQL = load(__package__, "analyst_queue")
@@ -26,97 +37,14 @@ SAVE_DECISION_SQL = load(__package__, "save_decision")
 SAVE_QA_REVIEW_SQL = load(__package__, "save_qa_review")
 
 
-@dataclass(frozen=True)
-class AlertSummary:
-    alert_id: int
-    account_id: str
-    alert_date: date
-    rule_hits: str
-    status: str
+class AlertNotFoundError(NotFoundError):
+    def __init__(self, alert_id: int) -> None:
+        super().__init__("alert", alert_id)
 
 
-@dataclass(frozen=True)
-class QueueItem:
-    kind: Literal["escalation", "qa_sample"]
-    investigation_id: int
-    alert_id: int
-    account_id: str
-    alert_date: date
-    rule_hits: str
-    recommendation: Literal["close", "escalate"]
-    verification_status: Literal["passed", "failed"]
-    created_at: datetime
-
-
-@dataclass(frozen=True)
-class AutoClosedAlert:
-    investigation_id: int
-    alert_id: int
-    account_id: str
-    alert_date: date
-    route: Literal["auto_closed", "qa_sample"]
-    qa_status: Literal["not_sampled", "pending", "confirmed", "reopened"]
-    closed_at: datetime
-
-
-@dataclass(frozen=True)
-class Alert:
-    alert_id: int
-    account_id: str
-    alert_date: date
-    window_start: datetime
-    window_end: datetime
-
-
-@dataclass(frozen=True)
-class RuleHit:
-    rule_id: str
-    score: Decimal
-    evidence_txn_ids: list[int]
-
-
-@dataclass(frozen=True)
-class AlertOverview:
-    alert: Alert
-    rule_hits: list[RuleHit]
-
-
-@dataclass(frozen=True)
-class RecordedReview:
-    analyst: str
-    final_decision: Literal["close", "escalate"]
-    comment: str
-    decided_at: datetime
-
-
-@dataclass(frozen=True)
-class RecordedQaReview:
-    analyst: str
-    outcome: Literal["confirmed", "reopened"]
-    comment: str
-    reviewed_at: datetime
-
-
-@dataclass(frozen=True)
-class InvestigationView:
-    investigation_id: int
-    recommendation: Literal["close", "escalate"]
-    route: Route
-    decision: Decision
-    verification: Verification
-    trace: dict[str, Any]
-    created_at: datetime
-    review: RecordedReview | None
-    qa_review: RecordedQaReview | None
-
-
-@dataclass(frozen=True)
-class InvestigationReference:
-    alert_id: int
-    thread_id: str
-    route: Route
-    decided: bool
-    qa_reviewed: bool
+class InvestigationNotFoundError(NotFoundError):
+    def __init__(self, investigation_id: int) -> None:
+        super().__init__("investigation", investigation_id)
 
 
 class ReviewRepository:
@@ -143,13 +71,13 @@ class ReviewRepository:
             cursor = await conn.execute(UNINVESTIGATED_ALERTS_SQL, {"day": day, "limit": limit})
             return [int(row["alert_id"]) for row in await cursor.fetchall()]
 
-    async def alert_overview(self, alert_id: int) -> AlertOverview | None:
+    async def alert_overview(self, alert_id: int) -> AlertOverview:
         async with self.pool.connection() as conn:
             async with conn.cursor(row_factory=class_row(Alert)) as cursor:
                 await cursor.execute(ALERT_SQL, (alert_id,))
                 alert = await cursor.fetchone()
             if alert is None:
-                return None
+                raise AlertNotFoundError(alert_id)
             async with conn.cursor(row_factory=class_row(RuleHit)) as cursor:
                 await cursor.execute(RULE_HITS_SQL, (alert_id,))
                 return AlertOverview(alert=alert, rule_hits=await cursor.fetchall())
@@ -159,10 +87,13 @@ class ReviewRepository:
             row = await (await conn.execute(LATEST_INVESTIGATION_SQL, (alert_id,))).fetchone()
         return None if row is None else investigation_view(row)
 
-    async def investigation_reference(self, investigation_id: int) -> InvestigationReference | None:
+    async def investigation_reference(self, investigation_id: int) -> InvestigationReference:
         async with self.pool.connection() as conn, conn.cursor(row_factory=class_row(InvestigationReference)) as cursor:
             await cursor.execute(INVESTIGATION_REFERENCE_SQL, (investigation_id,))
-            return await cursor.fetchone()
+            reference = await cursor.fetchone()
+        if reference is None:
+            raise InvestigationNotFoundError(investigation_id)
+        return reference
 
     async def save_investigation(
         self,

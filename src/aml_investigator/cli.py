@@ -172,7 +172,7 @@ def run_mcp(args: argparse.Namespace) -> None:
 def run_api(args: argparse.Namespace) -> None:
     import uvicorn
 
-    from aml_investigator.investigation.rule_score_model import rule_score_model
+    from aml_investigator.investigation.models.rule_score import rule_score_model
     from aml_investigator.web.app import create_app
 
     settings = settings_for(args)
@@ -193,7 +193,7 @@ async def investigate_day(settings: Settings, day: date, limit: int | None) -> t
     from langchain.mcp import MCPAdapter
 
     from aml_investigator.core.tracing import tracing_callbacks
-    from aml_investigator.investigation.rule_score_model import rule_score_model
+    from aml_investigator.investigation.models.rule_score import rule_score_model
     from aml_investigator.investigation.service import open_investigation_service
     from aml_investigator.mcp_server.server import build_server
 
