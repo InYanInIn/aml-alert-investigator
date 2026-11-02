@@ -16,7 +16,7 @@ from aml_investigator.core.db import Pool, open_read_only_pool
 from aml_investigator.core.health import liveness, readiness
 from aml_investigator.core.logging import timed_event
 from aml_investigator.core.sql import load
-from aml_investigator.investigation.decision import Typology
+from aml_investigator.monitoring.typologies import RULE_TYPOLOGIES, Typology
 
 logger = logging.getLogger(__name__)
 
@@ -37,15 +37,6 @@ COUNTERPARTIES_SQL = load(__package__, "counterparties")
 TRACE_SQL = {"forward": load(__package__, "trace_forward"), "backward": load(__package__, "trace_backward")}
 SEARCH_REGULATIONS_SQL = load(__package__, "search_regulations")
 REGULATION_PASSAGE_SQL = load(__package__, "regulation_passage")
-
-RULE_TYPOLOGIES: dict[str, list[Typology]] = {
-    "R1": ["fan_in", "gather_scatter"],
-    "R2": ["fan_out", "scatter_gather"],
-    "R3": ["bipartite", "stack", "scatter_gather"],
-    "R4": ["cycle", "random"],
-    "R5": ["structuring"],
-    "R6": ["profile_deviation"],
-}
 
 
 class RuleHit(BaseModel):

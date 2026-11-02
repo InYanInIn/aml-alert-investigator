@@ -12,7 +12,8 @@ from aml_investigator.investigation.evidence import (
     evidence_calls,
     regulation_calls,
 )
-from aml_investigator.mcp_server.server import RULE_TYPOLOGIES, build_server
+from aml_investigator.mcp_server.server import build_server
+from aml_investigator.monitoring.typologies import RULE_TYPOLOGIES
 from tests.conftest import Database
 
 SOURCES = Path("corpus/sources")
