@@ -1,0 +1,145 @@
+{
+  "description": "Hand-labelled English retrieval queries over corpus.passages (ADR-0005). polish_only marks queries whose answer exists only in the Polish act (cross-lingual).",
+  "queries": [
+    {
+      "id": "q01",
+      "query": "what must be recorded when an unusual transaction is assessed but not reported",
+      "expected": ["AMLR art. 77(1)", "PL-AML art. 34 ust. 3"],
+      "polish_only": false,
+      "rationale": "AMLR 77(1)(b): \"a record of the assessment ... whether or not such assessment results in a suspicious transaction report\"; PL 34(3): \"dokumentują ... wyniki bieżącej analizy przeprowadzanych transakcji\"."
+    },
+    {
+      "id": "q02",
+      "query": "deadline to notify the FIU about a suspicious transaction in Poland",
+      "expected": ["PL-AML art. 74 ust. 2"],
+      "polish_only": true,
+      "rationale": "\"przekazywane niezwłocznie, nie później jednak niż w terminie 2 dni roboczych od dnia potwierdzenia ... podejrzenia\"."
+    },
+    {
+      "id": "q03",
+      "query": "threshold for reporting cash transactions",
+      "expected": ["PL-AML art. 72 ust. 1"],
+      "polish_only": true,
+      "rationale": "Threshold reports to the GIIF: \"przyjętej wpłacie lub dokonanej wypłacie środków pieniężnych o równowartości przekraczającej 15 000 euro\"."
+    },
+    {
+      "id": "q04",
+      "query": "human oversight of automated decisions",
+      "expected": ["AMLR art. 76(5)"],
+      "polish_only": false,
+      "rationale": "Decisions from automated processes or AI systems must be \"subject to meaningful human intervention to ensure the accuracy and appropriateness\"."
+    },
+    {
+      "id": "q05",
+      "query": "record retention period",
+      "expected": ["AMLR art. 77(3)", "PL-AML art. 49 ust. 1"],
+      "polish_only": false,
+      "rationale": "AMLR 77(3): \"shall be retained for a period of 5 years commencing on the date of the termination\"; PL 49(1): \"przechowują przez okres 5 lat\"."
+    },
+    {
+      "id": "q06",
+      "query": "obligation to report suspicious transactions to the financial intelligence unit",
+      "expected": ["AMLR art. 69(1)", "PL-AML art. 74 ust. 1"],
+      "polish_only": false,
+      "rationale": "AMLR 69(1): \"All suspicious transactions, including attempted transactions ... shall be reported\"; PL 74(1): \"zawiadamia Generalnego Inspektora o okolicznościach\"."
+    },
+    {
+      "id": "q07",
+      "query": "prohibition on telling the customer that a suspicious transaction report was filed",
+      "expected": ["AMLR art. 73(1)", "PL-AML art. 54 ust. 1"],
+      "polish_only": false,
+      "rationale": "AMLR 73(1): \"shall not disclose to the customer concerned ... that information ... has been transmitted\"; PL 54(1): \"zachowują w tajemnicy ... fakt przekazania Generalnemu Inspektorowi\"."
+    },
+    {
+      "id": "q08",
+      "query": "must a suspicious transaction be held back until it has been reported",
+      "expected": ["AMLR art. 71(1)", "PL-AML art. 86 ust. 1"],
+      "polish_only": false,
+      "rationale": "AMLR 71(1): \"shall refrain from carrying out transactions which they know or suspect ... until they have submitted a report\"; PL 86(1) notification before execution."
+    },
+    {
+      "id": "q09",
+      "query": "how long can the FIU suspend a transaction or block an account in Poland",
+      "expected": ["PL-AML art. 86 ust. 5"],
+      "polish_only": true,
+      "rationale": "\"żądanie wstrzymania transakcji lub blokady rachunku na okres nie dłuższy niż 96 godzin\"."
+    },
+    {
+      "id": "q10",
+      "query": "maximum administrative fine for a bank breaching AML obligations in Poland",
+      "expected": ["PL-AML art. 150 ust. 3"],
+      "polish_only": true,
+      "rationale": "For legal persons: \"do wysokości równowartości kwoty 5 000 000 euro albo do wysokości 10 % obrotu\"."
+    },
+    {
+      "id": "q11",
+      "query": "criminal penalty for failing to file a suspicious activity notification",
+      "expected": ["PL-AML art. 156 ust. 1"],
+      "polish_only": true,
+      "rationale": "Failing to notify the GIIF \"podlega karze pozbawienia wolności od 3 miesięcy do lat 5\"."
+    },
+    {
+      "id": "q12",
+      "query": "deadline for submitting above-threshold transaction information",
+      "expected": ["PL-AML art. 72 ust. 5"],
+      "polish_only": true,
+      "rationale": "\"Instytucje obowiązane przekazują informacje w terminie 7 dni od dnia ... przyjęcia wpłaty lub dokonania wypłaty\"."
+    },
+    {
+      "id": "q13",
+      "query": "which authority is the financial intelligence unit in Poland",
+      "expected": ["PL-AML art. 10 ust. 1"],
+      "polish_only": true,
+      "rationale": "Organs of financial information are the finance minister and the \"Generalny Inspektor Informacji Finansowej, zwany dalej „Generalnym Inspektorem”\"."
+    },
+    {
+      "id": "q14",
+      "query": "is the Polish register of beneficial owners public",
+      "expected": ["PL-AML art. 67"],
+      "polish_only": true,
+      "rationale": "The Central Register of Beneficial Owners article states: \"Rejestr jest jawny.\""
+    },
+    {
+      "id": "q15",
+      "query": "how often is the national money laundering risk assessment updated",
+      "expected": ["PL-AML art. 25 ust. 3"],
+      "polish_only": true,
+      "rationale": "The GIIF reviews it and \"nie rzadziej jednak niż co 2 lata, opracowuje krajową ocenę ryzyka\"."
+    },
+    {
+      "id": "q16",
+      "query": "ongoing monitoring of transactions against the customer's risk profile",
+      "expected": ["AMLR art. 26(1)"],
+      "polish_only": false,
+      "rationale": "\"ongoing monitoring of business relationships ... to ensure that those transactions are consistent with ... risk profile\"."
+    },
+    {
+      "id": "q17",
+      "query": "transaction value that triggers customer due diligence for occasional transactions",
+      "expected": ["AMLR art. 19(1)", "PL-AML art. 35 ust. 1"],
+      "polish_only": false,
+      "rationale": "AMLR 19(1)(b): \"occasional transaction of a value of at least EUR 10 000\"; PL 35(1): \"o równowartości 15 000 euro lub większej\"."
+    },
+    {
+      "id": "q18",
+      "query": "limit on cash payments for traders in goods",
+      "expected": ["AMLR art. 80(1)"],
+      "polish_only": false,
+      "rationale": "\"may accept or make a payment in cash only up to an amount of EUR 10 000\"."
+    },
+    {
+      "id": "q19",
+      "query": "enhanced measures for politically exposed persons",
+      "expected": ["AMLR art. 42(1)", "PL-AML art. 46 ust. 2"],
+      "polish_only": false,
+      "rationale": "AMLR 42(1): \"obtain senior management approval ... establish the source of wealth and source of funds\"; PL 46(2): \"uzyskują akceptację kadry kierowniczej wyższego szczebla\"."
+    },
+    {
+      "id": "q20",
+      "query": "who in the institution is responsible for reporting suspicious transactions to the FIU",
+      "expected": ["AMLR art. 11(2)", "PL-AML art. 8"],
+      "polish_only": false,
+      "rationale": "AMLR 11(2): \"The compliance officer shall also be responsible for reporting suspicious transactions to the FIU\"; PL 8: designated manager transmits notifications under art. 74."
+    }
+  ]
+}

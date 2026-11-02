@@ -10,6 +10,7 @@ from aml_investigator.core.logging import configure_logging
 from aml_investigator.core.settings import Settings, load_settings
 
 THRESHOLDS_DIR = Path("config/thresholds")
+CORPUS_SOURCES = Path("corpus/sources")
 
 
 def settings_for(args: argparse.Namespace) -> Settings:
@@ -93,6 +94,33 @@ def run_evaluation(args: argparse.Namespace) -> None:
     print(result.summary())
 
 
+def run_references(args: argparse.Namespace) -> None:
+    from aml_investigator.data.references import fill_references
+
+    with psycopg.connect(settings_for(args).owner_conninfo) as conn:
+        print(f"references filled: {fill_references(conn)}")
+
+
+def run_corpus_fetch(_: argparse.Namespace) -> None:
+    from aml_investigator.corpus.sources import fetch_sources
+
+    for path in fetch_sources(CORPUS_SOURCES):
+        print(f"verified {path}")
+
+
+def run_corpus_load(args: argparse.Namespace) -> None:
+    from aml_investigator.corpus.loader import load_corpus
+
+    with psycopg.connect(settings_for(args).owner_conninfo) as conn:
+        print(load_corpus(conn, CORPUS_SOURCES))
+
+
+def run_injections(args: argparse.Namespace) -> None:
+    from aml_investigator.evaluation.injections import create_injection_set
+
+    print(f"injection set written to {create_injection_set(settings_for(args), size=args.size, seed=args.seed)}")
+
+
 def run_curves(args: argparse.Namespace) -> None:
     from aml_investigator.monitoring.calibration import rule_curves, train_split
 
@@ -135,7 +163,9 @@ def run_thresholds(args: argparse.Namespace) -> None:
 def run_mcp(args: argparse.Namespace) -> None:
     from aml_investigator.mcp_server.server import build_server
 
-    build_server(settings_for(args).mcp_conninfo).run(transport="http", host=args.host, port=args.port)
+    build_server(settings_for(args).mcp_conninfo, reference_variant=args.reference_variant).run(
+        transport="http", host=args.host, port=args.port
+    )
 
 
 def run_api(args: argparse.Namespace) -> None:
@@ -168,7 +198,17 @@ def main() -> None:
     truth.add_parser("alerts").set_defaults(handler=run_alert_truth)
     truth.add_parser("candidates").set_defaults(handler=run_candidate_truth)
 
+    commands.add_parser("references").set_defaults(handler=run_references)
+
+    corpus = commands.add_parser("corpus").add_subparsers(required=True)
+    corpus.add_parser("fetch").set_defaults(handler=run_corpus_fetch)
+    corpus.add_parser("load").set_defaults(handler=run_corpus_load)
+
     evaluation = commands.add_parser("eval").add_subparsers(required=True)
+    injections = evaluation.add_parser("injections")
+    injections.add_argument("--size", type=int, default=40)
+    injections.add_argument("--seed", type=int, default=20261102)
+    injections.set_defaults(handler=run_injections)
     sample = evaluation.add_parser("sample")
     sample.add_argument("--split", choices=["val", "test"], required=True)
     sample.add_argument("--size", type=int)
@@ -195,6 +235,7 @@ def main() -> None:
     mcp = commands.add_parser("mcp")
     mcp.add_argument("--host", default="127.0.0.1")
     mcp.add_argument("--port", type=int, default=8100)
+    mcp.add_argument("--reference-variant", choices=["clean", "injected"], default="clean")
     mcp.set_defaults(handler=run_mcp)
 
     api = commands.add_parser("api")

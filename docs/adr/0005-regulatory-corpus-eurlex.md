@@ -21,7 +21,7 @@ The brief proposed RAG over FATF recommendations and EU legislation.
   - Polish AML Act, Polish, consolidated text Dz.U. 2025 poz. 644 (`T` file from
     `api.sejm.gov.pl/eli/acts/DU/2025/644`). The non-binding unified text with later amendments is not used.
 - Both texts are extracted once and committed with source and version; `corpus.documents` stores the version.
-- Passages are split by article and paragraph; IDs are legal citations, e.g. `AMLR art. 77(1)(b)` and
+- Passages are split by article and paragraph; IDs are legal citations, e.g. `AMLR art. 77(1)` and
   `PL-AML art. 74 ust. 1`.
 - FATF material is referenced by recommendation number only, never stored.
 - RAG justifies why an alert must be assessed and what the record must contain; typology detection comes from

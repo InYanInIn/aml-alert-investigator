@@ -65,7 +65,7 @@ re-running produces identical numbers; the test split cannot be opened without a
   retrieval (including cross-lingual) once embeddings exist.
 
 Check: contract tests per tool (row limits hold, no row after `as_of`, no truth field in any response);
-reference independence test passes; corpus contains N passages; `AMLR art. 77(1)(b)` and
+reference independence test passes; corpus contains N passages; `AMLR art. 77(1)` and
 `PL-AML art. 74 ust. 1` resolve to the expected text.
 
 ### M5 — Full agent with fake model, verifier, UI
@@ -94,6 +94,8 @@ investigation and records one decision.
 ### M7 — Live model and cost calibration
 - You create the Azure account and upgrade to pay-as-you-go. Terraform (first part): resource group, Azure
   OpenAI with `gpt-5-mini` (Data Zone EU or Global Standard), embeddings deployment, budget alerts.
+- Split the two oversized passages (`AMLR art. 2(1)` ~24.6k chars, `PL-AML art. 2 ust. 1` ~17k) before
+  embedding.
 - Embed the corpus; run B2 and C on 10 validation alerts; Langfuse Cloud EU traces; record responses for
   replay.
 
