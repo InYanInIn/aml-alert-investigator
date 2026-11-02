@@ -1,0 +1,20 @@
+image:
+  repository: aml-investigator
+  tag: dev
+  pullPolicy: IfNotPresent
+
+database: aml_hi_small
+
+api:
+  port: 8000
+  secretName: aml-api
+  resources:
+    requests: {cpu: 100m, memory: 384Mi}
+    limits: {memory: 768Mi}
+
+mcp:
+  port: 8100
+  secretName: aml-mcp
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {memory: 512Mi}

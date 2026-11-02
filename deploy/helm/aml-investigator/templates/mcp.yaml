@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-mcp
+  labels:
+    {{- include "aml.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: mcp
+  template:
+    metadata:
+      labels:
+        {{- include "aml.labels" . | nindent 8 }}
+        app.kubernetes.io/component: mcp
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: mcp
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["--database", {{ .Values.database | quote }}, "mcp", "--host", "0.0.0.0", "--port", {{ .Values.mcp.port | quote }}]
+          ports:
+            - {name: http, containerPort: {{ .Values.mcp.port }}}
+          envFrom:
+            - secretRef: {name: {{ .Values.mcp.secretName }}}
+          securityContext:
+            {{- include "aml.securityContext" . | nindent 12 }}
+          {{- include "aml.probes" . | nindent 10 }}
+          resources:
+            {{- toYaml .Values.mcp.resources | nindent 12 }}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - {name: tmp, emptyDir: {}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-mcp
+  labels:
+    {{- include "aml.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mcp
+spec:
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: mcp
+  ports:
+    - {name: http, port: {{ .Values.mcp.port }}, targetPort: http}
