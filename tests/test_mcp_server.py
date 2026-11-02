@@ -106,6 +106,7 @@ async def test_transaction_shape(db: Database, alert_id: int) -> None:
                 "amount_received": 2848.96,
                 "received_currency": "Euro",
                 "payment_format": "Wire",
+                "reference_untrusted": None,
             }
         ],
     }
@@ -231,4 +232,14 @@ async def test_responses_never_mention_laundering(db: Database, alert_id: int) -
         ]
     )
     assert "laundering" not in everything.lower()
-    assert [tool.name for tool in tools] == ["get_alert", "list_transactions"]
+    assert [tool.name for tool in tools] == [
+        "get_alert",
+        "list_transactions",
+        "get_transactions",
+        "get_account_profile",
+        "get_counterparties",
+        "trace_funds",
+        "get_typology_candidates",
+        "search_regulations",
+        "get_regulation_passage",
+    ]

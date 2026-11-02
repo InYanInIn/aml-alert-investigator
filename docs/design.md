@@ -107,7 +107,7 @@ truth.pattern_attempts   (attempt_id, typology, txn_id)
 truth.alert_truth        (alert_id PK, escalate_truth, escalate_truth_account_level, typologies text[])
 
 corpus.documents       (doc_id PK, celex, title, version_date, source_url)
-corpus.passages        (passage_id PK e.g. 'AMLR art. 77(1)(b)', 'PL-AML art. 74 ust. 1', doc_id, article, paragraph,
+corpus.passages        (passage_id PK e.g. 'AMLR art. 77(1)', 'PL-AML art. 74 ust. 1', doc_id, article, paragraph,
                         text, content_sha256, embedding vector(1536))
 
 review.investigations  (investigation_id PK, alert_id, thread_id UNIQUE, run_id, model, prompt_version,
@@ -240,13 +240,14 @@ cannot widen it), and returns compact aggregates with hard limits.
 | Tool | Returns | Limits |
 |---|---|---|
 | `get_alert(alert_id)` | rule hits, window, evidence txn IDs | — |
-| `get_account_profile(account_id)` | first/last seen, in/out counts and volumes, currencies, payment formats, per-day baselines before `as_of` | history ≤ `as_of` |
-| `list_transactions(account_id, start, end, direction, min_amount)` | rows incl. untrusted `reference` | ≤ 50 rows, ≤ `as_of` |
-| `get_counterparties(account_id, start, end)` | per-counterparty aggregates | top 20 |
-| `trace_funds(account_id, start, direction, max_hops)` | flow paths with txn IDs | ≤ 3 hops, ≤ 20 paths |
-| `get_typology_candidates(alert_id)` | deterministic detector output with txn IDs | — |
-| `search_regulations(query)` | passages with IDs | top 5 |
-| `get_regulation_passage(passage_id)` | one passage | — |
+| `list_transactions(alert_id, account_id, direction, start, end, min_amount, limit)` | rows incl. `reference_untrusted` | ≤ 50 rows, < `as_of` |
+| `get_transactions(alert_id, txn_ids)` | rows incl. `reference_untrusted`, `omitted` count | ≤ 100 IDs, < `as_of` |
+| `get_account_profile(alert_id, account_id)` | entity type, first seen, active days, in/out counts and EUR volumes, counterparties, payment-format shares, daily outgoing EUR mean/median, other accounts of the entity | history < `as_of`; ≤ 10 other account IDs |
+| `get_counterparties(alert_id, account_id, direction, start, end)` | per-counterparty counts, EUR volumes, first/last ts, formats | top 20, < `as_of` |
+| `trace_funds(alert_id, account_id, direction, max_hops)` | time-ordered paths with txn IDs, EUR, ts | window to `as_of`; ≤ 3 hops, ≤ 20 paths |
+| `get_typology_candidates(alert_id)` | rule hits mapped to candidate typologies with txn IDs | — |
+| `search_regulations(query, top_k)` | passages with IDs and full text (Postgres full-text) | top 5 |
+| `get_regulation_passage(passage_id)` | one passage with `content_sha256` | — |
 
 The server runs with `REFERENCE_VARIANT=clean|injected`; only the eval harness starts an `injected`
 instance, which overlays `core.reference_injections`.

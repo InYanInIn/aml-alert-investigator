@@ -1,0 +1,24 @@
+[
+  {
+    "doc_id": "AMLR",
+    "file": "amlr-2024-1624.en.xhtml",
+    "title": "Regulation (EU) 2024/1624 of the European Parliament and of the Council of 31 May 2024 on the prevention of the use of the financial system for the purposes of money laundering or terrorist financing",
+    "language": "en",
+    "version": "OJ L, 2024/1624, 19.6.2024 (CELEX 32024R1624)",
+    "source_url": "https://publications.europa.eu/resource/celex/32024R1624",
+    "retrieved_at": "2026-11-01T23:44:59+00:00",
+    "sha256": "83a2e2e277276cc26b2b0a980382e38f2beee4b6c06446710e8bf2d4f56f3512",
+    "licence": "© European Union, https://eur-lex.europa.eu/. Reused under Commission Decision 2011/833/EU on the reuse of Commission documents; the source is acknowledged and the meaning is not distorted. Only the Official Journal edition is authentic."
+  },
+  {
+    "doc_id": "PL-AML",
+    "file": "pl-aml-2025-644.pdf",
+    "title": "Ustawa z dnia 1 marca 2018 r. o przeciwdziałaniu praniu pieniędzy oraz finansowaniu terroryzmu",
+    "language": "pl",
+    "version": "Dz.U. 2025 poz. 644 (tekst jednolity, obwieszczenie Marszałka Sejmu z dnia 9 maja 2025 r.)",
+    "source_url": "https://api.sejm.gov.pl/eli/acts/DU/2025/644/text/T/D20250644L.pdf",
+    "retrieved_at": "2026-11-01T23:44:30+00:00",
+    "sha256": "7c41dfabf5bb45e3d77d3f104ef576a9647776b78d6136238d21c5776bbba562",
+    "licence": "Polish normative acts are not subject to copyright (art. 4 pkt 1 ustawy z dnia 4 lutego 1994 r. o prawie autorskim i prawach pokrewnych, Dz.U. 2025 poz. 24). Source: Kancelaria Sejmu, ELI API."
+  }
+]

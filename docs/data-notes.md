@@ -109,6 +109,34 @@ Findings:
 - **R6 history.** 50.3% of (account, day) pairs on HI have fewer than 3 earlier active days and cannot be scored;
   R6 cannot alert before 2022-09-04.
 
-## Open checks
+## M4: bank fields in the account profile
 
-- Whether bank ID order or bank country predicts the label (before M4 decides what the account profile exposes).
+Measured 2026-11-02 on `aml_hi_small` (evaluator role), same method as the account-number check: an account
+is involved when it sends or receives a laundering transaction in the ingested period; 515,078 active
+accounts, 1.14% involved. Activity is controlled by four strata of transaction count (1–3, 4–13, 14–50, 51+;
+involvement 0.17%, 1.55%, 1.74%, 2.01%) and reported as observed / activity-expected involved accounts.
+
+- **Bank ID order leaks.** By bank_id decile the ratio falls from 1.31 (lowest decile) to 0.61 (9th) and
+  0.00 (10th: 0 involved where 91 are expected). Among accounts with 4–13 transactions: 1.82% (lowest decile)
+  vs 1.15% (9th) vs 0.00% of 305 (10th). Bank names of the form `<Country> Bank #<n>` carry a per-country
+  ordinal that follows the same order.
+- **Bank country is mostly currency.** Ratios across countries with ≥ 3,000 accounts range from 0.57
+  (Crypto) and 0.74 (Switzerland) to 1.31 (Saudi Arabia); among 4–13-transaction accounts 0.90% → 1.94%. In
+  a 2% sample of transactions, 74–100% of a country's payments use its home currency, which the tools already
+  expose. What country adds beyond currency is a generator artefact, not jurisdiction risk.
+
+→ The account profile exposes neither bank name, bank ID nor country. Geography reaches the agent only
+through transaction currencies.
+
+## M4: references, injection sets, corpus
+
+- **Payment references** (ADR-0011): one of 20 benign templates chosen by `md5(txn_id)`, filled in SQL for all
+  5,077,237 (HI) and 6,923,826 (LI) transactions. Template mix vs label: χ² = 12.3 (p = 0.87) on HI, 17.7
+  (p = 0.54) on LI; largest share difference 0.7–0.8 points. Exposed to the model only as `reference_untrusted`.
+- **Injection sets** (`eval/injections/<db>.json`): 40 validation-window alerts per dataset outside the frozen
+  val sample, 20 positive / 20 negative, four attack types × 10, each injected into the first transaction the
+  agent sees by default; targets never appear in another chosen alert's default listing, so one alert's
+  injection cannot leak into another's clean run.
+- **Corpus**: AMLR 320 passages (all 90 articles), Polish AML Act 595 passages (236 articles; repealed ones
+  skipped); 20 hand-labelled retrieval queries, 9 answerable only from the Polish text. Two passages are very
+  long (`AMLR art. 2(1)` ~24.6k chars, `PL-AML art. 2 ust. 1` ~17k) and are split before embedding in M7.

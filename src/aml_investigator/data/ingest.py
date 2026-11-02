@@ -13,6 +13,7 @@ from psycopg import sql
 
 from aml_investigator.core.sql import load
 from aml_investigator.data.fx import eur_per_unit, pair_rates, round_trip_error, used_currencies
+from aml_investigator.data.references import fill_references
 
 SALT = "aml-investigator-v1"
 RAW_COLUMNS = [
@@ -79,6 +80,7 @@ def ingest(
             loaded.select("txn_id", (pl.col("is_laundering") == "1").alias("is_laundering")),
         )
         copy_frame(conn, "truth", "pattern_attempts", attempts)
+        fill_references(conn)
     return IngestReport(
         transactions=loaded.height,
         accounts=accounts.height,
