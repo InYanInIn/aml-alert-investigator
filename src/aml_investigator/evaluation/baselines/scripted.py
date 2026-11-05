@@ -6,7 +6,7 @@ from langchain.mcp import MCPAdapter
 
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.systems import EvalAlert, SystemDecision
-from aml_investigator.investigation.rule_score_model import rule_score_model
+from aml_investigator.investigation.models.rule_score import rule_score_model
 from aml_investigator.investigation.service import InvestigationService, open_investigation_service
 from aml_investigator.mcp_server.server import build_server
 

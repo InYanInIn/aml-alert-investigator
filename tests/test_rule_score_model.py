@@ -8,7 +8,7 @@ import pytest
 from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 
 from aml_investigator.investigation.decision import Decision
-from aml_investigator.investigation.rule_score_model import RuleScoreChatModel, rule_score_model
+from aml_investigator.investigation.models.rule_score import RuleScoreChatModel, rule_score_model
 from aml_investigator.investigation.verify import Provenance, verify
 
 AS_OF = "2022-09-03T00:00:00"

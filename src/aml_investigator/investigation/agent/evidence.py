@@ -4,6 +4,8 @@ from typing import Any
 from langchain_core.messages import ToolCall
 from langchain_core.messages.tool import tool_call
 
+from aml_investigator.investigation.agent.state import InvestigatedAlert
+
 TRANSACTION_BATCH = 100
 TRACE_HOPS = 2
 PASSAGES_PER_QUERY = 3
@@ -40,10 +42,10 @@ def alert_call() -> ToolCall:
     return tool_call(name="get_alert", args={}, id="alert")
 
 
-def evidence_calls(alert: dict[str, Any]) -> list[ToolCall]:
-    account = {"account_id": alert["account_id"]}
-    flagged = list(dict.fromkeys(txn_id for hit in alert["rule_hits"] for txn_id in hit["evidence_txn_ids"]))
-    planned = [
+def evidence_calls(alert: InvestigatedAlert) -> list[ToolCall]:
+    account = {"account_id": alert.account_id}
+    flagged = list(dict.fromkeys(txn_id for hit in alert.rule_hits for txn_id in hit.evidence_txn_ids))
+    planned: list[tuple[str, dict[str, Any]]] = [
         ("get_account_profile", account),
         ("get_counterparties", account),
         ("list_transactions", account),
@@ -55,8 +57,8 @@ def evidence_calls(alert: dict[str, Any]) -> list[ToolCall]:
     return [tool_call(name=name, args=args, id=f"evidence-{index}") for index, (name, args) in enumerate(planned)]
 
 
-def regulation_calls(alert: dict[str, Any]) -> list[ToolCall]:
-    topics = dict.fromkeys([ALWAYS_RELEVANT, *(RULE_TOPICS[rule_prefix(hit["rule_id"])] for hit in alert["rule_hits"])])
+def regulation_calls(alert: InvestigatedAlert) -> list[ToolCall]:
+    topics = dict.fromkeys([ALWAYS_RELEVANT, *(RULE_TOPICS[rule_prefix(hit.rule_id)] for hit in alert.rule_hits)])
     queries = [query for topic in topics for query in REGULATION_QUERIES[topic]]
     return [
         tool_call(

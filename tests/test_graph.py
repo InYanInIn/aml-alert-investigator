@@ -12,19 +12,16 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
 from aml_investigator.core.db import open_app_pool
-from aml_investigator.investigation.conversation import PROMPT_VERSION
-from aml_investigator.investigation.decision import Claim, Decision, Fact, TypologyVerdict
-from aml_investigator.investigation.graph import (
-    LOOP_TOOLS,
-    NOT_EXECUTED,
-    InvestigationGraph,
-    build_graph,
-    postgres_checkpointer,
-)
-from aml_investigator.investigation.repository import ReviewRepository
+from aml_investigator.investigation.agent.conversation import PROMPT_VERSION
+from aml_investigator.investigation.agent.graph import InvestigationGraph, build_graph, postgres_checkpointer
+from aml_investigator.investigation.agent.loop import LOOP_TOOLS, NOT_EXECUTED
+from aml_investigator.investigation.agent.state import AlertRuleHit, InvestigatedAlert, InvestigationState
+from aml_investigator.investigation.decision import AnalystReview, Claim, Decision, Fact, TypologyVerdict
+from aml_investigator.investigation.models.rule_score import RuleScoreChatModel
 from aml_investigator.investigation.routing import qa_sampled
-from aml_investigator.investigation.rule_score_model import RuleScoreChatModel
+from aml_investigator.investigation.verify import Provenance, Verification
 from aml_investigator.mcp_server.server import build_server
+from aml_investigator.review.repository import ReviewRepository
 from tests.conftest import Database
 from tests.scripted_model import ScriptedChatModel, decision_reply, text_reply, tool_reply
 
@@ -210,7 +207,7 @@ async def test_resume_records_exactly_one_decision(db: Database, alert_id: int) 
 
     [(investigation_id, *_)] = investigations(db)
     assert decisions(db) == [(investigation_id, "jan", "close", "known payroll pattern")]
-    assert final["review"] == REVIEW
+    assert final["review"] == AnalystReview.model_validate(REVIEW)
     assert "__interrupt__" not in final
 
 
@@ -236,7 +233,7 @@ async def test_second_failure_is_stored_as_failed_and_escalated(db: Database, al
         result = await graph.ainvoke({"alert_id": alert_id}, thread(alert_id))
 
     [(*_, recommendation, verification, route, trace)] = investigations(db)
-    assert result["decision"]["recommendation"] == "close"
+    assert result["decision"].recommendation == "close"
     assert (recommendation, route, trace["repairs"]) == ("escalate", "escalated", 1)
     assert verification == {"status": "failed", "errors": ["transaction 998 was not returned by any tool"]}
     assert result["__interrupt__"][0].value["verification_status"] == "failed"
@@ -267,7 +264,7 @@ async def test_no_decision_at_all_stores_an_empty_escalation(db: Database, alert
     assert (recommendation, route, verification["status"]) == ("escalate", "escalated", "failed")
     [error] = verification["errors"]
     assert error.startswith("output does not parse into a Decision")
-    assert result["decision"] == {
+    assert result["decision"].model_dump() == {
         "recommendation": "escalate",
         "typologies": [],
         **{field: [] for field in ("who", "what", "when", "where", "why", "how")},
@@ -398,6 +395,33 @@ async def test_resume_after_rebuilding_pool_and_graph(db: Database, alert_id: in
 
 
 @pytest.mark.anyio
+async def test_checkpointer_restores_every_typed_state_field(db: Database) -> None:
+    state: InvestigationState = {
+        "alert": InvestigatedAlert(
+            account_id="A1",
+            alert_date=date(2022, 9, 2),
+            as_of=datetime(2022, 9, 3),
+            rule_hits=[AlertRuleHit(rule_id="R2_fan_out", evidence_txn_ids=[11, 12])],
+        ),
+        "provenance": Provenance(
+            transactions={11: {"txn_id": 11, "ts": "2022-09-02T10:15:00", "amount_paid": 2848.96}},
+            passages={"AMLR art. 69(1)": {"passage_id": "AMLR art. 69(1)", "text": "report", "content_sha256": "x"}},
+        ),
+        "draft": valid_decision(),
+        "verification": Verification(status="failed", errors=["transaction 999 was not returned by any tool"]),
+        "decision": valid_decision("close"),
+        "review": AnalystReview.model_validate(REVIEW),
+    }
+    async with open_app_pool(db.app_dsn) as pool:
+        serde = (await postgres_checkpointer(pool)).serde
+
+    restored = serde.loads_typed(serde.dumps_typed(state))
+
+    assert {key: type(value) for key, value in restored.items()} == {key: type(value) for key, value in state.items()}
+    assert restored == state
+
+
+@pytest.mark.anyio
 @pytest.mark.parametrize(("close_below", "route"), [(1.0, "escalated"), (3.0, "auto_closed")])
 async def test_rule_score_model_decisions_pass_verification(
     db: Database, alert_id: int, regulations: list[str], close_below: float, route: str
@@ -410,5 +434,5 @@ async def test_rule_score_model_decisions_pass_verification(
     expected = "qa_sample" if route == "auto_closed" and qa_sampled("A1", date(2022, 9, 2)) else route
     assert (name, verification, stored_route) == ("rule-score", {"status": "passed", "errors": []}, expected)
     assert (trace["loop_stop"], trace["repairs"]) == ("model_done", 0)
-    cited = {passage for claim in result["decision"]["why"] for passage in claim["passage_ids"]}
+    cited = {passage for claim in result["decision"].why for passage in claim.passage_ids}
     assert cited == {"AMLR art. 69(1)", "PL-AML art. 74 ust. 1", "AMLR art. 34(2)"} <= set(regulations)

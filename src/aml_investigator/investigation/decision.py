@@ -2,18 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-Typology = Literal[
-    "fan_out",
-    "fan_in",
-    "gather_scatter",
-    "scatter_gather",
-    "cycle",
-    "random",
-    "bipartite",
-    "stack",
-    "structuring",
-    "profile_deviation",
-]
+from aml_investigator.monitoring.typologies import Typology
 
 FactField = Literal["amount_paid", "amount_received", "paid_currency", "received_currency", "date"]
 
