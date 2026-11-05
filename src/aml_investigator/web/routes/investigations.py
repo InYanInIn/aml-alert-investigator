@@ -5,7 +5,8 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 from aml_investigator.investigation.decision import AnalystReview, QaReview
-from aml_investigator.web.routes.alerts import Service, see_alert
+from aml_investigator.web.dependencies import Service
+from aml_investigator.web.routes.alerts import see_alert
 
 ANALYST = "analyst"
 

@@ -1,6 +1,6 @@
 # ADR-0018: Code structure — domain packages, layers where there are callers, SQL in files
 
-Status: accepted · 2026-10-30
+Status: accepted · 2026-10-30 · package layout and request-path layering superseded by ADR-0021
 
 ## Context
 After M2 the package was flat; web routes mixed HTTP with workflow logic; four places opened a database

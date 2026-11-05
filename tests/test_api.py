@@ -10,7 +10,7 @@ from pydantic import SecretStr
 
 from aml_investigator.core.settings import Settings
 from aml_investigator.investigation import routing
-from aml_investigator.investigation.rule_score_model import RuleScoreChatModel
+from aml_investigator.investigation.models.rule_score import RuleScoreChatModel
 from aml_investigator.mcp_server.server import build_server
 from aml_investigator.monitoring.alerts import build_alerts
 from aml_investigator.monitoring.rules import r2_fan_out

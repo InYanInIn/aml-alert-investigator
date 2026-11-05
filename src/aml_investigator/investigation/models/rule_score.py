@@ -13,9 +13,10 @@ from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
 from langchain_core.utils.function_calling import convert_to_openai_tool
 
-from aml_investigator.investigation.decision import Claim, Decision, Fact, FactField, Typology, TypologyVerdict
+from aml_investigator.investigation.decision import Claim, Decision, Fact, FactField, TypologyVerdict
 from aml_investigator.investigation.verify import TRANSACTION_TOOLS
 from aml_investigator.monitoring.thresholds import load_thresholds, rule_score
+from aml_investigator.monitoring.typologies import Typology
 
 B1_VALIDATION_RESULT = "eval/results/{database}/val/b1.json"
 CITED_PAYMENTS = 3

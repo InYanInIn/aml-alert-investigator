@@ -12,8 +12,9 @@ from aml_investigator.core.errors import NotFoundError
 from aml_investigator.core.logging import configure_logging
 from aml_investigator.core.settings import Settings
 from aml_investigator.core.tracing import tracing_callbacks
+from aml_investigator.investigation.agent.tools import McpUnavailableError
 from aml_investigator.investigation.service import open_investigation_service
-from aml_investigator.investigation.tools import McpUnavailableError
+from aml_investigator.review.pages import ReviewPages
 from aml_investigator.web.routes import alerts, health, investigations
 
 
@@ -21,13 +22,15 @@ def create_app(settings: Settings, *, mcp: str | FastMCP[Any], model: BaseChatMo
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         configure_logging()
+        adapter = MCPAdapter(mcp)
         async with open_investigation_service(
             app_conninfo=settings.app_conninfo,
-            mcp=MCPAdapter(mcp),
+            mcp=adapter,
             model=model,
             callbacks=tracing_callbacks(settings),
         ) as service:
             app.state.investigation_service = service
+            app.state.review_pages = ReviewPages(service.repository, adapter)
             yield
 
     app = FastAPI(lifespan=lifespan)
