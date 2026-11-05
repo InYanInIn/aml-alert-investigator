@@ -30,31 +30,51 @@ from aml_investigator.evaluation.results import (
     write_result,
 )
 from aml_investigator.evaluation.samples import AlertKey, EvalSplit, Strata, load_sample, sample_path
-from aml_investigator.evaluation.systems import EvalAlert, Recommendation, System, SystemDecision
+from aml_investigator.evaluation.systems import CONCURRENCY, EvalAlert, Recommendation, System, SystemDecision
 from aml_investigator.evaluation.training import read_train_labels
-
-CONCURRENCY = 8
 
 RESOLVE_ALERTS_SQL = load(__package__, "resolve_alerts")
 SAMPLE_TRUTH_SQL = load(__package__, "sample_truth")
 
 
 async def evaluate(
-    settings: Settings, *, system: str, split: EvalSplit, test_reason: str | None, workspace: Path = Path()
+    settings: Settings,
+    *,
+    system: str,
+    split: EvalSplit,
+    test_reason: str | None,
+    workspace: Path = Path(),
+    limit: int | None = None,
+    concurrency: int = CONCURRENCY,
 ) -> EvaluationResult:
     require_reason(split, test_reason)
     train_labels = read_train_labels(settings.evaluator_conninfo) if system in TRAINED_SYSTEMS else None
     async with open_system(system, RuntimeSettings.of(settings), train_labels=train_labels) as opened:
-        return await evaluate_system(settings, opened, split=split, test_reason=test_reason, workspace=workspace)
+        return await evaluate_system(
+            settings,
+            opened,
+            split=split,
+            test_reason=test_reason,
+            workspace=workspace,
+            limit=limit,
+            concurrency=concurrency,
+        )
 
 
 async def evaluate_system(
-    settings: Settings, system: System, *, split: EvalSplit, test_reason: str | None, workspace: Path = Path()
+    settings: Settings,
+    system: System,
+    *,
+    split: EvalSplit,
+    test_reason: str | None,
+    workspace: Path = Path(),
+    limit: int | None = None,
+    concurrency: int = CONCURRENCY,
 ) -> EvaluationResult:
     require_reason(split, test_reason)
     sample = load_sample(sample_path(workspace, settings.database, split))
-    alerts = await resolve_alerts(settings.app_conninfo, sample.keys)
-    decisions = await decide_all(system, alerts)
+    alerts = await resolve_alerts(settings.app_conninfo, sample.keys[:limit])
+    decisions = await decide_all(system, alerts, concurrency)
     reused_point = (
         validation_operating_point(workspace, settings.database, system.name)
         if split == "test" and any(decision.recommendation is None for decision in decisions)
@@ -75,7 +95,7 @@ async def evaluate_system(
         alerts=len(alerts),
         operating_point=point,
         metrics=report([e.outcome() for e in evaluated], sample.population.by_truth()),
-        path=results_path(workspace, settings.database, split, system.name),
+        path=results_path(workspace, settings.database, split, result_name(system.name, limit)),
     )
     write_result(result, sample=sample, evaluated=evaluated, workspace=workspace)
     return result
@@ -96,8 +116,14 @@ async def resolve_alerts(conninfo: str, keys: Sequence[AlertKey]) -> list[EvalAl
     return alerts
 
 
-async def decide_all(system: System, alerts: Sequence[EvalAlert]) -> list[SystemDecision]:
-    gate = asyncio.Semaphore(CONCURRENCY)
+def result_name(system: str, limit: int | None) -> str:
+    return system if limit is None else f"{system}-first{limit}"
+
+
+async def decide_all(
+    system: System, alerts: Sequence[EvalAlert], concurrency: int = CONCURRENCY
+) -> list[SystemDecision]:
+    gate = asyncio.Semaphore(concurrency)
 
     async def timed_decision(alert: EvalAlert) -> SystemDecision:
         async with gate:

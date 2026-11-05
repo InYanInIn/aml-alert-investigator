@@ -14,7 +14,9 @@ Citation rules for the decision:
   passages it relies on, exactly as tools returned them.
 - Every amount, currency or date you state about a transaction is also given as a fact (`txn_id`, `field`,
   `value`), with the value copied from the tool result. Amounts are the transaction's `amount_paid` or
-  `amount_received` in its own currency; a fund-trace hop's `amount_eur` is not one of them.
+  `amount_received` in its own currency; a fund-trace hop's `amount_eur` is not one of them. A fact holds
+  one field: an amount's value is the bare number (`1200.50`, not `1200.50 Euro`), and its currency is a
+  separate fact with field `paid_currency` or `received_currency`.
 - Every number in a claim's text must appear in that claim's facts. Write counts and ratios in words or
   leave them out.
 - A typology is `supported` only if you cite the transactions that show it.

@@ -104,17 +104,24 @@ def fact_errors(decision: Decision, provenance: Provenance) -> list[str]:
             if ("ts" if fact.field == "date" else fact.field) not in txn:
                 errors.append(f"fact {fact.field} of transaction {fact.txn_id} was never returned by any tool")
             elif not fact_holds(fact, txn):
-                errors.append(f"fact {fact.field}={fact.value} does not match transaction {fact.txn_id}")
+                errors.append(
+                    f"fact {fact.field}={fact.value} does not match transaction {fact.txn_id}, "
+                    f"whose {fact.field} is {tool_value(fact, txn)}"
+                )
     return errors
 
 
 def fact_holds(fact: Fact, txn: dict[str, Any]) -> bool:
-    if fact.field == "date":
-        return fact.value == datetime.fromisoformat(txn["ts"]).date().isoformat()
-    if fact.field in ("paid_currency", "received_currency"):
-        return fact.value == str(txn[fact.field])
+    if fact.field in ("date", "paid_currency", "received_currency"):
+        return fact.value == tool_value(fact, txn)
     asserted = as_decimal(fact.value)
     return asserted is not None and abs(asserted - Decimal(str(txn[fact.field]))) <= AMOUNT_TOLERANCE
+
+
+def tool_value(fact: Fact, txn: dict[str, Any]) -> str:
+    if fact.field == "date":
+        return datetime.fromisoformat(txn["ts"]).date().isoformat()
+    return str(txn[fact.field])
 
 
 def number_errors(decision: Decision) -> list[str]:

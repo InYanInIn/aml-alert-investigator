@@ -28,6 +28,13 @@ default. Ollama is installed. Candidates found on 2026-11-05 (to be re-checked b
 - Prefer `ChatOpenAI` against Ollama's OpenAI-compatible endpoint, because M7's `AzureChatOpenAI` comes from
   the same `langchain-openai` package. Fall back to `ChatOllama` (`langchain-ollama`) if the spike shows tool
   calls or structured output do not work through the compatible endpoint.
+- Spike result (2026-11-05, `qwen3.6:35b-a3b-q8_0`, Apache 2.0, on a synthetic evidence conversation):
+  through the compatible endpoint `ChatOpenAI` returned no tool calls, and its `json_schema` structured output
+  raised a pydantic `ValidationError` instead of returning `parsing_error`, which would crash `draft_decision`.
+  `ChatOllama` with thinking off failed both steps too (no tool calls, `Decision` wrapped in markdown).
+  `ChatOllama` with thinking on made two valid tool calls (68 s) and returned a parseable `Decision` with the
+  default `json_schema` method (152 s); the `function_calling` method also parsed but took 271 s. So the
+  fallback applies: the local model is `ChatOllama(reasoning=True, temperature=0)`.
 - Local runs use the validation split only. The test split is not opened with the local model.
 - Responses recorded from the local model may seed the CI replay evaluation planned for M7.
 - Whether the local model also appears as its own system in the final results is decided in M8.
@@ -39,3 +46,5 @@ default. Ollama is installed. Candidates found on 2026-11-05 (to be re-checked b
   `gpt-5-mini` and compares before any M8 tuning is trusted.
 - Local latency and token counts say nothing about Azure cost; cost calibration stays in M7.
 - Embeddings stay in M7; M6.6 uses the existing full-text search.
+- M7 must check that `AzureChatOpenAI`'s structured output returns `parsing_error` rather than raising; the
+  spike saw the same `langchain-openai` path raise against Ollama.

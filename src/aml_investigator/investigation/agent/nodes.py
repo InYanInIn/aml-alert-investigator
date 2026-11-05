@@ -51,6 +51,7 @@ class InvestigationNodes:
             "tool_calls": [],
             "tokens": 0,
             "repairs": 0,
+            "verifications": [],
         }
         return {
             **started,
@@ -87,9 +88,12 @@ class InvestigationNodes:
 
     async def verify_citations(self, state: InvestigationState) -> InvestigationState:
         draft = state["draft"]
-        if draft is None:
-            return {"verification": Verification(status="failed", errors=state["draft_errors"])}
-        return {"verification": verify(draft, state["provenance"], state["alert"].as_of)}
+        verification = (
+            Verification(status="failed", errors=state["draft_errors"])
+            if draft is None
+            else verify(draft, state["provenance"], state["alert"].as_of)
+        )
+        return {"verification": verification, "verifications": [*state["verifications"], verification]}
 
     async def repair(self, state: InvestigationState) -> InvestigationState:
         request = repair_request(state["draft_output"], state["verification"].errors)
@@ -117,6 +121,7 @@ class InvestigationNodes:
                 "loop_stop": state["loop_stop"],
                 "tokens": state["tokens"],
                 "repairs": state["repairs"],
+                "verifications": [attempt.model_dump() for attempt in state["verifications"]],
             },
         )
         return {

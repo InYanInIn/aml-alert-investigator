@@ -59,6 +59,7 @@ class Evaluated:
             "verification_status": self.decision.verification_status,
             "cost_usd": self.decision.cost_usd,
             "latency_ms": self.decision.latency_ms,
+            "trace": self.decision.trace,
             "escalate_truth": self.truth.escalate_truth,
             "truth_typologies": self.truth.typologies,
         }

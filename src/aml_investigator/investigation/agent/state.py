@@ -36,6 +36,7 @@ class InvestigationState(TypedDict, total=False):
     draft_errors: list[str]
     repairs: int
     verification: Verification
+    verifications: list[Verification]
     decision: Decision
     recommendation: Literal["close", "escalate"]
     route: Route

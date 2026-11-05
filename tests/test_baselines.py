@@ -215,7 +215,7 @@ def test_b3_requires_train_labels(db: Database) -> None:
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("name", SYSTEM_NAMES)
+@pytest.mark.parametrize("name", [name for name in SYSTEM_NAMES if name != "local"])
 async def test_every_system_opens_without_a_working_evaluator_dsn(
     db: Database, learnable: tuple[EvalAlert, EvalAlert], name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -252,10 +252,18 @@ async def test_scripted_runs_the_investigation_service(
 
     assert (decision.recommendation, decision.verification_status) == ("escalate", "passed")
     assert decision.typologies == ("fan_out",)
+    assert decision.trace is not None
+    assert (decision.trace["repairs"], decision.trace["verifications"]) == (0, [{"status": "passed", "errors": []}])
     with db.owner() as conn:
         assert conn.execute("SELECT alert_id FROM review.investigations").fetchall() == [(alert.alert_id,)]
 
 
 def test_unknown_system_lists_the_valid_names(db: Database) -> None:
-    with pytest.raises(ValueError, match="b0, b1, b3, b3_no_age, scripted"):
+    with pytest.raises(ValueError, match="b0, b1, b3, b3_no_age, scripted, local"):
         open_system("b2", runtime_for(db))
+
+
+@pytest.mark.anyio
+async def test_local_system_opens_without_calling_the_model(db: Database) -> None:
+    async with open_system("local", runtime_for(db)) as system:
+        assert system.name == "local"

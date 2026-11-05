@@ -133,21 +133,24 @@ def test_rule3_matching_fact_passes(field: FactField, value: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("field", "value"),
+    ("field", "value", "returned"),
     [
-        ("amount_paid", "2848.98"),
-        ("amount_paid", "about three thousand"),
-        ("amount_paid", "NaN"),
-        ("amount_received", "2848.96"),
-        ("paid_currency", "US Dollar"),
-        ("received_currency", "Euro"),
-        ("date", "2022-09-03"),
+        ("amount_paid", "2848.98", "2848.96"),
+        ("amount_paid", "about three thousand", "2848.96"),
+        ("amount_paid", "NaN", "2848.96"),
+        ("amount_paid", "2848.96 Euro", "2848.96"),
+        ("amount_received", "2848.96", "3100.5"),
+        ("paid_currency", "US Dollar", "Euro"),
+        ("received_currency", "Euro", "US Dollar"),
+        ("date", "2022-09-03", "2022-09-02"),
     ],
 )
-def test_rule3_mismatching_fact_fails(field: FactField, value: str) -> None:
+def test_rule3_mismatching_fact_fails_and_names_the_returned_value(field: FactField, value: str, returned: str) -> None:
     facts = [Fact(txn_id=11, field=field, value=value)]
 
-    assert errors_of(decision(what=[claim(facts=facts)])) == [f"fact {field}={value} does not match transaction 11"]
+    assert errors_of(decision(what=[claim(facts=facts)])) == [
+        f"fact {field}={value} does not match transaction 11, whose {field} is {returned}"
+    ]
 
 
 @pytest.mark.parametrize("field", ["amount_paid", "paid_currency", "amount_received", "received_currency"])

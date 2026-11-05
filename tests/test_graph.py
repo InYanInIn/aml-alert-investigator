@@ -179,6 +179,7 @@ async def test_valid_path_stops_at_review_with_a_traced_investigation(db: Databa
     assert (name, prompt_version, recommendation, route) == ("scripted", PROMPT_VERSION, "escalate", "escalated")
     assert verification == {"status": "passed", "errors": []}
     assert (trace["loop_stop"], trace["tokens"], trace["repairs"]) == ("model_done", 100, 0)
+    assert trace["verifications"] == [{"status": "passed", "errors": []}]
     phases = [(call["phase"], call["tool"]) for call in trace["tool_calls"]]
     assert phases == [
         *(("evidence", tool) for tool in EVIDENCE_TOOLS),
@@ -219,6 +220,10 @@ async def test_invalid_citation_is_repaired(db: Database, alert_id: int) -> None
 
     [(*_, recommendation, verification, route, trace)] = investigations(db)
     assert (recommendation, verification["status"], route, trace["repairs"]) == ("escalate", "passed", "escalated", 1)
+    assert trace["verifications"] == [
+        {"status": "failed", "errors": ["transaction 999 was not returned by any tool"]},
+        {"status": "passed", "errors": []},
+    ]
     assert result["__interrupt__"][0].value["verification_status"] == "passed"
     repair_request = model.calls[-1].messages[-1]
     assert model.calls[-1].drafting
@@ -248,6 +253,9 @@ async def test_unparseable_output_is_repaired(db: Database, alert_id: int) -> No
 
     [(*_, verification, _route, trace)] = investigations(db)
     assert (verification["status"], trace["repairs"]) == ("passed", 1)
+    first_attempt = trace["verifications"][0]
+    assert first_attempt["status"] == "failed"
+    assert first_attempt["errors"][0].startswith("output does not parse into a Decision")
     repair_request = model.calls[-1].messages[-1].text
     assert "output does not parse into a Decision" in repair_request
     assert "I would escalate this." in repair_request
