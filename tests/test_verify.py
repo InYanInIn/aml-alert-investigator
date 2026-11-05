@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 
 from aml_investigator.investigation.decision import Claim, Decision, Fact, FactField, TypologyVerdict
-from aml_investigator.investigation.verify import Provenance, numbers_in, verify
+from aml_investigator.investigation.verify import Provenance, number_errors, numbers_in, verify
 
 AS_OF = datetime(2022, 9, 3)
 TXN: dict[str, Any] = {
@@ -124,6 +124,7 @@ def test_rule2_unknown_passage_fails() -> None:
         ("paid_currency", "Euro"),
         ("received_currency", "US Dollar"),
         ("date", "2022-09-02"),
+        ("date", "2022-09-02T10:15:00"),
     ],
 )
 def test_rule3_matching_fact_passes(field: FactField, value: str) -> None:
@@ -192,8 +193,16 @@ def test_rule4_unbacked_number_fails() -> None:
     )
 
     assert errors_of(decision(what=[unbacked])) == [
-        "number 7 in claim 'Paid 2848.96 Euro to 7 counterparties.' is not backed by a fact"
+        "number 7 in claim 'Paid 2848.96 Euro to 7 counterparties.' is not backed by a fact or a cited id"
     ]
+
+
+def test_rule4_numbers_of_the_claims_cited_ids_are_backed() -> None:
+    cited = claim(
+        text="Transaction 11 breaches AMLR art. 77(1).", txn_ids=[11], passage_ids=["AMLR art. 77(1)"], facts=[]
+    )
+
+    assert number_errors(decision(what=[cited])) == []
 
 
 def test_rule4_facts_of_other_claims_do_not_count() -> None:
@@ -201,7 +210,7 @@ def test_rule4_facts_of_other_claims_do_not_count() -> None:
     second = claim(text="Paid 2848.96 in total.")
 
     assert errors_of(decision(what=[first, second])) == [
-        "number 2848.96 in claim 'Paid 2848.96 in total.' is not backed by a fact"
+        "number 2848.96 in claim 'Paid 2848.96 in total.' is not backed by a fact or a cited id"
     ]
 
 

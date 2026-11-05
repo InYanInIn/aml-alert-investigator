@@ -112,7 +112,9 @@ def fact_errors(decision: Decision, provenance: Provenance) -> list[str]:
 
 
 def fact_holds(fact: Fact, txn: dict[str, Any]) -> bool:
-    if fact.field in ("date", "paid_currency", "received_currency"):
+    if fact.field == "date":
+        return fact.value in (tool_value(fact, txn), txn["ts"])
+    if fact.field in ("paid_currency", "received_currency"):
         return fact.value == tool_value(fact, txn)
     asserted = as_decimal(fact.value)
     return asserted is not None and abs(asserted - Decimal(str(txn[fact.field]))) <= AMOUNT_TOLERANCE
@@ -127,9 +129,10 @@ def tool_value(fact: Fact, txn: dict[str, Any]) -> str:
 def number_errors(decision: Decision) -> list[str]:
     errors: list[str] = []
     for claim in decision.claims:
-        backed = {number for fact in claim.facts for number in numbers_in(fact.value)}
+        cited = [fact.value for fact in claim.facts] + [str(txn_id) for txn_id in claim.txn_ids] + claim.passage_ids
+        backed = {number for value in cited for number in numbers_in(value)}
         errors.extend(
-            f"number {number} in claim {claim.text!r} is not backed by a fact"
+            f"number {number} in claim {claim.text!r} is not backed by a fact or a cited id"
             for number in sorted(numbers_in(claim.text) - backed)
         )
     return errors
