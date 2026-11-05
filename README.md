@@ -7,8 +7,8 @@ to confirm or override. The agent is evaluated against labels it never sees and 
 
 Portfolio project on synthetic data (IBM AMLworld). Not a compliance product.
 
-**Status:** M6 — the full agent with a deterministic stand-in model, deployed to local Kubernetes. Phase B (live
-model on Azure) is next. See [docs/plan.md](docs/plan.md).
+**Status:** M6 — the full agent with a deterministic stand-in model, deployed to local Kubernetes. Next: M6.6, the
+agent on a local open-weight model (ADR-0022), then Phase B (live model on Azure). See [docs/plan.md](docs/plan.md).
 
 ## Run on local Kubernetes (kind)
 Needs Docker, `kind`, `helm`, `kubectl`, the compose Postgres running and a migrated, ingested database.

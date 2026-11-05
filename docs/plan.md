@@ -6,8 +6,8 @@ Each milestone is a thin slice that runs end to end and ends with a check that p
 "N" are measured in that milestone and written into `docs/data-notes.md` or `docs/results.md`; nothing is
 claimed before it is measured.
 
-Phase A runs locally with a fake model and costs $0. Phase B starts when the Azure account is created and
-must finish within its 30-day credit window (ADR-0009).
+Phase A runs locally and costs $0: first with a fake model, then with a local open-weight model (ADR-0022).
+Phase B starts when the Azure account is created and must finish within its 30-day credit window (ADR-0009).
 
 ## Phase A — local, $0
 
@@ -89,6 +89,17 @@ thread. Verifier has unit tests for each rule.
 Check: `helm install` on kind; a smoke test through port-forward loads the queue, runs one fake-model
 investigation and records one decision.
 
+### M6.6 — Local open-weight model (ADR-0022)
+- Spike: re-check the candidates and their licences, pull the first one into Ollama (`Qwen3.6-35B-A3B` at Q8
+  first), and call it through LangChain with tool binding and `with_structured_output(Decision)`.
+- `investigation/models/local.py`; a CLI option selects the model for `api` and `eval run`.
+- Run the agent on 10 validation alerts in both reference variants; record the responses for replay.
+- Iterate on the prompt, `k` and budget against validation only.
+
+Check: recorded in `docs/results.md` as a local-model section: share of valid tool calls,
+`Decision` parse rate, repair rate, verification pass rate, tokens and latency; close and false-close rate on
+the 10 alerts, marked as not comparable to the baselines at that sample size. The test split is not opened.
+
 ## Phase B — Azure credit window (≤ 30 days)
 
 ### M7 — Live model and cost calibration
@@ -96,8 +107,8 @@ investigation and records one decision.
   OpenAI with `gpt-5-mini` (Data Zone EU or Global Standard), embeddings deployment, budget alerts.
 - Split the two oversized passages (`AMLR art. 2(1)` ~24.6k chars, `PL-AML art. 2 ust. 1` ~17k) before
   embedding.
-- Embed the corpus; run B2 and C on 10 validation alerts; Langfuse Cloud EU traces; record responses for
-  replay.
+- Embed the corpus; run B2 and C on 10 validation alerts, the same ones as M6.6, and compare with the local
+  model; Langfuse Cloud EU traces; record responses for replay.
 
 Check: retrieval hit rate on the M4 query set reported (AMLR and PL-AML separately); measured cost, tokens
 and latency per alert recorded; Cost Management shows the spend drawn from credit;
