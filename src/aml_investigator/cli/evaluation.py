@@ -42,6 +42,8 @@ def run_evaluation(args: argparse.Namespace) -> None:
 
     if args.system == "local" and args.split == "test":
         raise SystemExit("the test split is never opened with the local model (ADR-0022)")
+    if args.record and args.system not in AGENT_SYSTEMS:
+        raise SystemExit(f"--record needs an agent system: {', '.join(AGENT_SYSTEMS)}")
     result = asyncio.run(
         evaluate(
             settings_for(args),
@@ -50,6 +52,7 @@ def run_evaluation(args: argparse.Namespace) -> None:
             test_reason=test_reason(args),
             limit=args.limit,
             concurrency=args.concurrency,
+            record=args.record,
         )
     )
     print(result.summary())
@@ -95,6 +98,7 @@ def register(commands: Commands) -> None:
     run.add_argument("--reason")
     run.add_argument("--limit", type=positive_int, help="evaluate only the first N alerts of the frozen sample")
     run.add_argument("--concurrency", type=positive_int, default=CONCURRENCY)
+    run.add_argument("--record", action="store_true", help="write a replay cassette per agent investigation")
     run.set_defaults(handler=run_evaluation)
 
     pairs = evaluation.add_parser("pairs", help="run the injection set in the clean and the injected variant")
