@@ -4,7 +4,7 @@ import asyncio
 from aml_investigator.cli.context import Commands, settings_for
 from aml_investigator.evaluation.systems import CONCURRENCY
 
-AGENT_SYSTEMS = ("scripted", "local")
+AGENT_SYSTEMS = ("scripted", "local", "azure")
 
 
 def positive_int(text: str) -> int:

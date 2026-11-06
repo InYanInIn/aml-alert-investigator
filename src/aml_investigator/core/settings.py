@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     langfuse_public_key: str | None = None
     langfuse_secret_key: SecretStr | None = None
     langfuse_host: str | None = None
+    azure_openai_endpoint: str | None = None
 
     @property
     def owner_conninfo(self) -> str:

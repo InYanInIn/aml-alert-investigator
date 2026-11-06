@@ -4,6 +4,7 @@ from typing import Any, Literal, TypedDict
 from langchain_core.messages import BaseMessage
 from pydantic import BaseModel
 
+from aml_investigator.investigation.agent.usage import TokenUsage
 from aml_investigator.investigation.decision import AnalystReview, Decision
 from aml_investigator.investigation.routing import Route
 from aml_investigator.investigation.verify import Provenance, Verification
@@ -31,6 +32,7 @@ class InvestigationState(TypedDict, total=False):
     tool_calls: list[dict[str, Any]]
     loop_stop: LoopStop
     tokens: int
+    usage: TokenUsage
     draft: Decision | None
     draft_output: str
     draft_errors: list[str]
@@ -44,4 +46,4 @@ class InvestigationState(TypedDict, total=False):
     review: AnalystReview
 
 
-CHECKPOINTED_TYPES = (InvestigatedAlert, Provenance, Decision, Verification, AnalystReview)
+CHECKPOINTED_TYPES = (InvestigatedAlert, TokenUsage, Provenance, Decision, Verification, AnalystReview)

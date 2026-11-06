@@ -5,10 +5,12 @@ description = "LLM agent that prepares AML alert investigations for analyst revi
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "azure-identity>=1.19,<2",
     "fastapi>=0.115,<1",
     "fastmcp>=4.0,<5",
     "jinja2>=3.1,<4",
     "langchain-ollama>=1.1,<2",
+    "langchain-openai>=1.2,<2",
     "langchain[mcp]>=1.4,<2",
     "langfuse>=4.17,<5",
     "langgraph>=1.2,<2",

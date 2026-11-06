@@ -23,7 +23,9 @@ def run_api(args: argparse.Namespace) -> None:
     from aml_investigator.web.app import create_app
 
     settings = settings_for(args)
-    app = create_app(settings, mcp=args.mcp_url, model=chat_model(args.model, settings.database))
+    app = create_app(
+        settings, mcp=args.mcp_url, model=chat_model(args.model, settings.database, settings.azure_openai_endpoint)
+    )
     uvicorn.run(app, host=args.host, port=args.port, log_config=None)
 
 
@@ -53,7 +55,7 @@ async def investigate_day(
         open_investigation_service(
             app_conninfo=settings.app_conninfo,
             mcp=mcp,
-            model=chat_model(model, settings.database),
+            model=chat_model(model, settings.database, settings.azure_openai_endpoint),
             callbacks=tracing_callbacks(settings),
         ) as service,
     ):
