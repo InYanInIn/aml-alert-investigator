@@ -216,7 +216,7 @@ def test_b3_requires_train_labels(db: Database) -> None:
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("name", [name for name in SYSTEM_NAMES if name not in {"local", "azure"}])
+@pytest.mark.parametrize("name", [name for name in SYSTEM_NAMES if name not in {"b2", "local", "azure"}])
 async def test_every_system_opens_without_a_working_evaluator_dsn(
     db: Database, learnable: tuple[EvalAlert, EvalAlert], name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -262,8 +262,8 @@ async def test_scripted_runs_the_investigation_service(
 
 
 def test_unknown_system_lists_the_valid_names(db: Database) -> None:
-    with pytest.raises(ValueError, match="b0, b1, b3, b3_no_age, scripted, local, azure"):
-        open_system("b2", runtime_for(db))
+    with pytest.raises(ValueError, match="b0, b1, b2, b3, b3_no_age, scripted, local, azure"):
+        open_system("b9", runtime_for(db))
 
 
 @pytest.mark.anyio
