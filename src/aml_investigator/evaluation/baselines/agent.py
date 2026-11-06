@@ -36,6 +36,7 @@ class AgentInvestigation:
                 verdict.typology for verdict in investigation.decision.typologies if verdict.verdict == "supported"
             ),
             verification_status=outcome.verification_status,
+            cost_usd=investigation.trace.get("cost_usd"),
             trace=investigation.trace,
         )
 
