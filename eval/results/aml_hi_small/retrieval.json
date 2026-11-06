@@ -1,8 +1,8 @@
 {
   "database": "aml_hi_small",
-  "created_at": "2026-11-06T10:52:01+00:00",
-  "git_commit": "56ebb5c8e6ecd37c00361e586a8c8035e87e9178",
-  "git_dirty": true,
+  "created_at": "2026-11-06T11:00:18+00:00",
+  "git_commit": "108ba9b0b91b4646f151ed8232c63455bb85eac8",
+  "git_dirty": false,
   "queries_sha256": "3bb0977a31caf169e1c6a9cf0d30a24a871591125386424b267f093b7124de09",
   "embedding_model": "text-embedding-3-small",
   "passages": {
@@ -13,7 +13,7 @@
   "rrf_k": 60,
   "default_top_k": 5,
   "missing_expected_passages": [],
-  "metrics": {
+  "metrics_unfiltered": {
     "AMLR": {
       "queries": 11,
       "fts": {
@@ -57,244 +57,688 @@
       }
     }
   },
+  "metrics_per_document": {
+    "AMLR": {
+      "queries": 11,
+      "fts": {
+        "hit@1": 0.18181818181818182,
+        "hit@3": 0.18181818181818182,
+        "hit@5": 0.18181818181818182,
+        "mrr": 0.18181818181818182
+      },
+      "vector": {
+        "hit@1": 0.6363636363636364,
+        "hit@3": 0.7272727272727273,
+        "hit@5": 0.8181818181818182,
+        "mrr": 0.7247474747474748
+      },
+      "hybrid": {
+        "hit@1": 0.6363636363636364,
+        "hit@3": 0.7272727272727273,
+        "hit@5": 0.8181818181818182,
+        "mrr": 0.7247474747474748
+      }
+    },
+    "PL-AML": {
+      "queries": 17,
+      "fts": {
+        "hit@1": 0.0,
+        "hit@3": 0.0,
+        "hit@5": 0.0,
+        "mrr": 0.0
+      },
+      "vector": {
+        "hit@1": 0.11764705882352941,
+        "hit@3": 0.29411764705882354,
+        "hit@5": 0.47058823529411764,
+        "mrr": 0.27958165571128635
+      },
+      "hybrid": {
+        "hit@1": 0.11764705882352941,
+        "hit@3": 0.29411764705882354,
+        "hit@5": 0.47058823529411764,
+        "mrr": 0.27958165571128635
+      }
+    }
+  },
   "queries": [
     {
       "id": "q01",
       "first_expected_rank": {
+        "unfiltered": {
+          "AMLR": {
+            "fts": null,
+            "vector": 6,
+            "hybrid": 6
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "AMLR": {
-          "fts": null,
-          "vector": 6,
-          "hybrid": 6
+          "AMLR": {
+            "fts": null,
+            "vector": 6,
+            "hybrid": 6
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
         },
         "PL-AML": {
-          "fts": null,
-          "vector": null,
-          "hybrid": null
+          "AMLR": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": 7,
+            "hybrid": 7
+          }
         }
       }
     },
     {
       "id": "q02",
       "first_expected_rank": {
+        "unfiltered": {
+          "PL-AML": {
+            "fts": null,
+            "vector": 36,
+            "hybrid": 36
+          }
+        },
+        "AMLR": {
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "PL-AML": {
-          "fts": null,
-          "vector": 36,
-          "hybrid": 36
+          "PL-AML": {
+            "fts": null,
+            "vector": 20,
+            "hybrid": 20
+          }
         }
       }
     },
     {
       "id": "q03",
       "first_expected_rank": {
+        "unfiltered": {
+          "PL-AML": {
+            "fts": null,
+            "vector": 43,
+            "hybrid": 43
+          }
+        },
+        "AMLR": {
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "PL-AML": {
-          "fts": null,
-          "vector": 43,
-          "hybrid": 43
+          "PL-AML": {
+            "fts": null,
+            "vector": 2,
+            "hybrid": 2
+          }
         }
       }
     },
     {
       "id": "q04",
       "first_expected_rank": {
+        "unfiltered": {
+          "AMLR": {
+            "fts": null,
+            "vector": 1,
+            "hybrid": 1
+          }
+        },
         "AMLR": {
-          "fts": null,
-          "vector": 1,
-          "hybrid": 1
+          "AMLR": {
+            "fts": null,
+            "vector": 1,
+            "hybrid": 1
+          }
+        },
+        "PL-AML": {
+          "AMLR": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
         }
       }
     },
     {
       "id": "q05",
       "first_expected_rank": {
+        "unfiltered": {
+          "AMLR": {
+            "fts": null,
+            "vector": 1,
+            "hybrid": 1
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": 8,
+            "hybrid": 8
+          }
+        },
         "AMLR": {
-          "fts": null,
-          "vector": 1,
-          "hybrid": 1
+          "AMLR": {
+            "fts": null,
+            "vector": 1,
+            "hybrid": 1
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
         },
         "PL-AML": {
-          "fts": null,
-          "vector": 8,
-          "hybrid": 8
+          "AMLR": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": 2,
+            "hybrid": 2
+          }
         }
       }
     },
     {
       "id": "q06",
       "first_expected_rank": {
+        "unfiltered": {
+          "AMLR": {
+            "fts": null,
+            "vector": 1,
+            "hybrid": 1
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "AMLR": {
-          "fts": null,
-          "vector": 1,
-          "hybrid": 1
+          "AMLR": {
+            "fts": null,
+            "vector": 1,
+            "hybrid": 1
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
         },
         "PL-AML": {
-          "fts": null,
-          "vector": null,
-          "hybrid": null
+          "AMLR": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": 6,
+            "hybrid": 6
+          }
         }
       }
     },
     {
       "id": "q07",
       "first_expected_rank": {
+        "unfiltered": {
+          "AMLR": {
+            "fts": null,
+            "vector": 1,
+            "hybrid": 1
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "AMLR": {
-          "fts": null,
-          "vector": 1,
-          "hybrid": 1
+          "AMLR": {
+            "fts": null,
+            "vector": 1,
+            "hybrid": 1
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
         },
         "PL-AML": {
-          "fts": null,
-          "vector": null,
-          "hybrid": null
+          "AMLR": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
         }
       }
     },
     {
       "id": "q08",
       "first_expected_rank": {
+        "unfiltered": {
+          "AMLR": {
+            "fts": null,
+            "vector": 2,
+            "hybrid": 2
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "AMLR": {
-          "fts": null,
-          "vector": 2,
-          "hybrid": 2
+          "AMLR": {
+            "fts": null,
+            "vector": 2,
+            "hybrid": 2
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
         },
         "PL-AML": {
-          "fts": null,
-          "vector": null,
-          "hybrid": null
+          "AMLR": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": 19,
+            "hybrid": 19
+          }
         }
       }
     },
     {
       "id": "q09",
       "first_expected_rank": {
+        "unfiltered": {
+          "PL-AML": {
+            "fts": null,
+            "vector": 6,
+            "hybrid": 6
+          }
+        },
+        "AMLR": {
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "PL-AML": {
-          "fts": null,
-          "vector": 6,
-          "hybrid": 6
+          "PL-AML": {
+            "fts": null,
+            "vector": 5,
+            "hybrid": 5
+          }
         }
       }
     },
     {
       "id": "q10",
       "first_expected_rank": {
+        "unfiltered": {
+          "PL-AML": {
+            "fts": null,
+            "vector": 32,
+            "hybrid": 32
+          }
+        },
+        "AMLR": {
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "PL-AML": {
-          "fts": null,
-          "vector": 32,
-          "hybrid": 32
+          "PL-AML": {
+            "fts": null,
+            "vector": 29,
+            "hybrid": 29
+          }
         }
       }
     },
     {
       "id": "q11",
       "first_expected_rank": {
+        "unfiltered": {
+          "PL-AML": {
+            "fts": null,
+            "vector": 13,
+            "hybrid": 13
+          }
+        },
+        "AMLR": {
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "PL-AML": {
-          "fts": null,
-          "vector": 13,
-          "hybrid": 13
+          "PL-AML": {
+            "fts": null,
+            "vector": 1,
+            "hybrid": 1
+          }
         }
       }
     },
     {
       "id": "q12",
       "first_expected_rank": {
+        "unfiltered": {
+          "PL-AML": {
+            "fts": null,
+            "vector": 48,
+            "hybrid": 48
+          }
+        },
+        "AMLR": {
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "PL-AML": {
-          "fts": null,
-          "vector": 48,
-          "hybrid": 48
+          "PL-AML": {
+            "fts": null,
+            "vector": 6,
+            "hybrid": 6
+          }
         }
       }
     },
     {
       "id": "q13",
       "first_expected_rank": {
+        "unfiltered": {
+          "PL-AML": {
+            "fts": null,
+            "vector": 3,
+            "hybrid": 3
+          }
+        },
+        "AMLR": {
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "PL-AML": {
-          "fts": null,
-          "vector": 3,
-          "hybrid": 3
+          "PL-AML": {
+            "fts": null,
+            "vector": 3,
+            "hybrid": 3
+          }
         }
       }
     },
     {
       "id": "q14",
       "first_expected_rank": {
+        "unfiltered": {
+          "PL-AML": {
+            "fts": null,
+            "vector": 47,
+            "hybrid": 47
+          }
+        },
+        "AMLR": {
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "PL-AML": {
-          "fts": null,
-          "vector": 47,
-          "hybrid": 47
+          "PL-AML": {
+            "fts": null,
+            "vector": 32,
+            "hybrid": 32
+          }
         }
       }
     },
     {
       "id": "q15",
       "first_expected_rank": {
+        "unfiltered": {
+          "PL-AML": {
+            "fts": null,
+            "vector": 7,
+            "hybrid": 7
+          }
+        },
+        "AMLR": {
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "PL-AML": {
-          "fts": null,
-          "vector": 7,
-          "hybrid": 7
+          "PL-AML": {
+            "fts": null,
+            "vector": 1,
+            "hybrid": 1
+          }
         }
       }
     },
     {
       "id": "q16",
       "first_expected_rank": {
+        "unfiltered": {
+          "AMLR": {
+            "fts": 1,
+            "vector": 1,
+            "hybrid": 1
+          }
+        },
         "AMLR": {
-          "fts": 1,
-          "vector": 1,
-          "hybrid": 1
+          "AMLR": {
+            "fts": 1,
+            "vector": 1,
+            "hybrid": 1
+          }
+        },
+        "PL-AML": {
+          "AMLR": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
         }
       }
     },
     {
       "id": "q17",
       "first_expected_rank": {
+        "unfiltered": {
+          "AMLR": {
+            "fts": null,
+            "vector": 4,
+            "hybrid": 4
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "AMLR": {
-          "fts": null,
-          "vector": 4,
-          "hybrid": 4
+          "AMLR": {
+            "fts": null,
+            "vector": 4,
+            "hybrid": 4
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
         },
         "PL-AML": {
-          "fts": null,
-          "vector": null,
-          "hybrid": null
+          "AMLR": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": 5,
+            "hybrid": 5
+          }
         }
       }
     },
     {
       "id": "q18",
       "first_expected_rank": {
+        "unfiltered": {
+          "AMLR": {
+            "fts": null,
+            "vector": 1,
+            "hybrid": 1
+          }
+        },
         "AMLR": {
-          "fts": null,
-          "vector": 1,
-          "hybrid": 1
+          "AMLR": {
+            "fts": null,
+            "vector": 1,
+            "hybrid": 1
+          }
+        },
+        "PL-AML": {
+          "AMLR": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
         }
       }
     },
     {
       "id": "q19",
       "first_expected_rank": {
+        "unfiltered": {
+          "AMLR": {
+            "fts": 1,
+            "vector": 1,
+            "hybrid": 1
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "AMLR": {
-          "fts": 1,
-          "vector": 1,
-          "hybrid": 1
+          "AMLR": {
+            "fts": 1,
+            "vector": 1,
+            "hybrid": 1
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
         },
         "PL-AML": {
-          "fts": null,
-          "vector": null,
-          "hybrid": null
+          "AMLR": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": 4,
+            "hybrid": 4
+          }
         }
       }
     },
     {
       "id": "q20",
       "first_expected_rank": {
+        "unfiltered": {
+          "AMLR": {
+            "fts": null,
+            "vector": 18,
+            "hybrid": 18
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
+        },
         "AMLR": {
-          "fts": null,
-          "vector": 18,
-          "hybrid": 18
+          "AMLR": {
+            "fts": null,
+            "vector": 18,
+            "hybrid": 18
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          }
         },
         "PL-AML": {
-          "fts": null,
-          "vector": null,
-          "hybrid": null
+          "AMLR": {
+            "fts": null,
+            "vector": null,
+            "hybrid": null
+          },
+          "PL-AML": {
+            "fts": null,
+            "vector": 8,
+            "hybrid": 8
+          }
         }
       }
     }
