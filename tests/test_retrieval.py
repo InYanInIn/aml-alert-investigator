@@ -10,8 +10,9 @@ from aml_investigator.corpus.embeddings import EMBEDDING_MODEL, embed_missing, p
 from aml_investigator.corpus.search import reciprocal_rank_fusion
 from aml_investigator.evaluation.retrieval import (
     LabelledQuery,
-    evaluate_rankings,
+    document_metrics,
     evaluate_retrieval,
+    first_expected_ranks,
     first_rank,
     summarise,
 )
@@ -55,21 +56,28 @@ def test_summarise_hit_at_k_and_mrr() -> None:
     assert scores == {"hit@1": 0.25, "hit@3": 0.5, "hit@5": 0.75, "mrr": pytest.approx((1 + 1 / 3 + 0 + 1 / 5) / 4)}
 
 
-def test_metrics_are_split_by_document() -> None:
+def test_metrics_use_the_scope_of_each_document() -> None:
     queries = [
         LabelledQuery("q1", "one", ("AMLR art. 1", "PL-AML art. 2")),
         LabelledQuery("q2", "two", ("PL-AML art. 3",)),
     ]
-    ranking = {"fts": [], "vector": ["PL-AML art. 3", "AMLR art. 1"], "hybrid": ["AMLR art. 1"]}
-    metrics, per_query = evaluate_rankings(queries, {"q1": ranking, "q2": ranking})
+    unfiltered = {"fts": [], "vector": ["AMLR art. 1", "PL-AML art. 3", "PL-AML art. 2"], "hybrid": []}
+    within_pl = {"fts": [], "vector": ["PL-AML art. 3", "PL-AML art. 2"], "hybrid": []}
+    within_amlr = {"fts": [], "vector": ["AMLR art. 1"], "hybrid": []}
+    scoped = {"unfiltered": unfiltered, "AMLR": within_amlr, "PL-AML": within_pl}
 
-    assert metrics["AMLR"]["queries"] == 1
-    assert metrics["AMLR"]["vector"]["hit@1"] == 0
-    assert metrics["AMLR"]["vector"]["hit@3"] == 1
-    assert metrics["PL-AML"]["queries"] == 2
-    assert metrics["PL-AML"]["vector"]["hit@1"] == 0.5
-    assert metrics["PL-AML"]["fts"]["mrr"] == 0
-    assert per_query[1]["first_expected_rank"] == {"PL-AML": {"fts": None, "vector": 1, "hybrid": None}}
+    flat = document_metrics(queries, {"q1": scoped, "q2": scoped}, lambda _: "unfiltered")
+    split = document_metrics(queries, {"q1": scoped, "q2": scoped}, lambda document: document)
+
+    assert flat["PL-AML"]["queries"] == 2
+    assert flat["PL-AML"]["vector"]["hit@1"] == 0
+    assert split["PL-AML"]["vector"]["hit@1"] == 0.5
+    assert split["PL-AML"]["vector"]["hit@3"] == 1
+    assert split["AMLR"]["vector"]["hit@1"] == 1
+    assert split["PL-AML"]["fts"]["mrr"] == 0
+    assert first_expected_ranks(queries, {"q1": scoped, "q2": scoped})[1]["first_expected_rank"]["PL-AML"] == {
+        "PL-AML": {"fts": None, "vector": 1, "hybrid": None}
+    }
 
 
 def test_passage_input_prepends_the_heading() -> None:
@@ -105,6 +113,13 @@ def test_embedding_input_contains_heading_and_text(db: Database, regulations: li
 @pytest.mark.usefixtures("regulations")
 def test_retrieval_evaluation_writes_provenance_and_scores(db: Database, tmp_path: Path) -> None:
     with db.owner() as conn:
+        for old, new in (("amlr", "AMLR"), ("pl-aml", "PL-AML")):
+            conn.execute(
+                "INSERT INTO corpus.documents SELECT %s, title, language, version, source_url, content_sha256 "
+                "FROM corpus.documents WHERE doc_id = %s",
+                (new, old),
+            )
+            conn.execute("UPDATE corpus.passages SET doc_id = %s WHERE doc_id = %s", (new, old))
         embed_missing(conn, KeywordEmbedder())
     queries = tmp_path / "eval" / "retrieval" / "queries.json"
     queries.parent.mkdir(parents=True)
@@ -129,8 +144,10 @@ def test_retrieval_evaluation_writes_provenance_and_scores(db: Database, tmp_pat
     assert result["embedding_model"] == EMBEDDING_MODEL
     assert result["missing_expected_passages"] == ["PL-AML art. 99"]
     assert result["passages"] == {"embedded": 3, "total": 3}
-    assert result["metrics"]["AMLR"]["vector"]["hit@1"] == 1
-    assert result["metrics"]["PL-AML"]["vector"]["hit@1"] == 1
+    assert result["metrics_unfiltered"]["AMLR"]["vector"]["hit@1"] == 1
+    assert result["metrics_unfiltered"]["PL-AML"]["vector"]["hit@1"] == 1
+    assert result["metrics_per_document"]["PL-AML"]["vector"]["hit@1"] == 1
+    assert result["queries"][0]["first_expected_rank"]["AMLR"]["AMLR"]["vector"] == 1
     assert {"git_commit", "git_dirty", "queries_sha256", "created_at"} <= result.keys()
     assert "hit@5" in table
 

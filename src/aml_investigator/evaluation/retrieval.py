@@ -20,6 +20,7 @@ DOCUMENTS = ("AMLR", "PL-AML")
 MODES = ("fts", "vector", "hybrid")
 HIT_CUTOFFS = (1, 3, 5)
 DEPTH = 50
+SCOPES: dict[str, str | None] = {"unfiltered": None, "AMLR": "AMLR", "PL-AML": "PL-AML"}
 
 type Ranking = list[str]
 type Rankings = dict[str, Ranking]
@@ -54,37 +55,57 @@ def summarise(ranks: Sequence[int | None]) -> dict[str, float]:
     return scores
 
 
-def search_rankings(conn: psycopg.Connection[tuple[object, ...]], text: str, embedding: list[float]) -> Rankings:
-    fts = [str(row[0]) for row in conn.execute(SEARCH_REGULATIONS_SQL, {"query": text, "top_k": DEPTH}).fetchall()]
-    vector_params = {"embedding": vector_literal(embedding), "top_k": DEPTH}
+def search_rankings(
+    conn: psycopg.Connection[tuple[object, ...]], text: str, embedding: list[float], doc_id: str | None
+) -> Rankings:
+    fts_params = {"query": text, "doc_id": doc_id, "top_k": DEPTH}
+    fts = [str(row[0]) for row in conn.execute(SEARCH_REGULATIONS_SQL, fts_params).fetchall()]
+    vector_params = {"embedding": vector_literal(embedding), "doc_id": doc_id, "top_k": DEPTH}
     vector = [str(row[0]) for row in conn.execute(VECTOR_SQL, vector_params).fetchall()]
     return {"fts": fts, "vector": vector, "hybrid": reciprocal_rank_fusion([fts, vector])}
 
 
-def evaluate_rankings(
-    queries: Sequence[LabelledQuery], rankings: Mapping[str, Rankings]
-) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def scoped_rankings(
+    conn: psycopg.Connection[tuple[object, ...]], text: str, embedding: list[float]
+) -> dict[str, Rankings]:
+    return {scope: search_rankings(conn, text, embedding, doc_id) for scope, doc_id in SCOPES.items()}
+
+
+def document_metrics(
+    queries: Sequence[LabelledQuery], rankings: Mapping[str, Mapping[str, Rankings]], scope_of: Callable[[str], str]
+) -> dict[str, Any]:
     metrics: dict[str, Any] = {}
     for document in DOCUMENTS:
         asked = [query for query in queries if relevant_in(document, query)]
         metrics[document] = {"queries": len(asked)} | {
-            mode: summarise([first_rank(rankings[q.query_id][mode], relevant_in(document, q)) for q in asked])
+            mode: summarise(
+                [first_rank(rankings[q.query_id][scope_of(document)][mode], relevant_in(document, q)) for q in asked]
+            )
             for mode in MODES
         }
-    per_query = [
+    return metrics
+
+
+def first_expected_ranks(
+    queries: Sequence[LabelledQuery], rankings: Mapping[str, Mapping[str, Rankings]]
+) -> list[dict[str, Any]]:
+    return [
         {
             "id": query.query_id,
             "first_expected_rank": {
-                document: {
-                    mode: first_rank(rankings[query.query_id][mode], relevant_in(document, query)) for mode in MODES
+                scope: {
+                    document: {
+                        mode: first_rank(rankings[query.query_id][scope][mode], relevant_in(document, query))
+                        for mode in MODES
+                    }
+                    for document in DOCUMENTS
+                    if relevant_in(document, query)
                 }
-                for document in DOCUMENTS
-                if relevant_in(document, query)
+                for scope in rankings[query.query_id]
             },
         }
         for query in queries
     ]
-    return metrics, per_query
 
 
 def missing_passages(conn: psycopg.Connection[tuple[object, ...]], queries: Sequence[LabelledQuery]) -> list[str]:
@@ -93,8 +114,10 @@ def missing_passages(conn: psycopg.Connection[tuple[object, ...]], queries: Sequ
     return sorted(set(wanted) - {str(row[0]) for row in rows})
 
 
-def table(metrics: Mapping[str, Any]) -> str:
-    header = f"{'document':<8} {'mode':<7} " + " ".join(f"{f'hit@{k}':>6}" for k in HIT_CUTOFFS) + f" {'mrr':>6}"
+def table(title: str, metrics: Mapping[str, Any]) -> str:
+    header = (
+        f"{title}\n{'document':<8} {'mode':<7} " + " ".join(f"{f'hit@{k}':>6}" for k in HIT_CUTOFFS) + f" {'mrr':>6}"
+    )
     lines = [header]
     for document in DOCUMENTS:
         for mode in MODES:
@@ -116,11 +139,12 @@ def evaluate_retrieval(
     with psycopg.connect(settings.evaluator_conninfo) as conn:
         missing = missing_passages(conn, queries)
         rankings = {
-            query.query_id: search_rankings(conn, query.text, embedding)
+            query.query_id: scoped_rankings(conn, query.text, embedding)
             for query, embedding in zip(queries, embeddings, strict=True)
         }
         embedded, total = conn.execute("SELECT count(embedding), count(*) FROM corpus.passages").fetchall()[0]
-    metrics, per_query = evaluate_rankings(queries, rankings)
+    metrics_unfiltered = document_metrics(queries, rankings, lambda _: "unfiltered")
+    metrics_per_document = document_metrics(queries, rankings, lambda document: document)
     git_state = GitState.capture()
     document = {
         "database": settings.database,
@@ -134,10 +158,15 @@ def evaluate_retrieval(
         "rrf_k": RRF_K,
         "default_top_k": MAX_PASSAGES,
         "missing_expected_passages": missing,
-        "metrics": metrics,
-        "queries": per_query,
+        "metrics_unfiltered": metrics_unfiltered,
+        "metrics_per_document": metrics_per_document,
+        "queries": first_expected_ranks(queries, rankings),
     }
     path = workspace / RESULTS_DIR / settings.database / "retrieval.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(document, indent=2) + "\n")
-    return path, table(metrics)
+    tables = [
+        table("ranked over all passages", metrics_unfiltered),
+        table("ranked within each document", metrics_per_document),
+    ]
+    return path, "\n\n".join(tables)

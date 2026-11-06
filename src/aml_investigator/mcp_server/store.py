@@ -171,7 +171,9 @@ class CaseStore:
 
     async def regulation_matches(self, query: str, *, top_k: int) -> RegulationMatches:
         async with self.pool.connection() as conn:
-            cursor = await conn.execute(SEARCH_REGULATIONS_SQL, {"query": query, "top_k": clamped(top_k, MAX_PASSAGES)})
+            cursor = await conn.execute(
+                SEARCH_REGULATIONS_SQL, {"query": query, "doc_id": None, "top_k": clamped(top_k, MAX_PASSAGES)}
+            )
             rows = await cursor.fetchall()
         return RegulationMatches(query=query, passages=[PassageMatch(**row) for row in rows])
 
