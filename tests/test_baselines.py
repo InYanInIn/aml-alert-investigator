@@ -201,6 +201,66 @@ async def test_b3_features_ignore_transactions_from_window_end_on(db: Database) 
     assert features["rule_count"] == 1
 
 
+SPENDER_ALERT_DATE = date(2022, 9, 8)
+
+
+def add_spender(conn: psycopg.Connection[tuple[object, ...]], other_accounts: int) -> EvalAlert:
+    add_accounts(conn, "S", "C1", "C2")
+    for index in range(other_accounts):
+        conn.execute("INSERT INTO core.accounts VALUES (%s, 1, 'Bank', 'S', 'Corporation')", (f"S{index}",))
+    alert = add_alert(conn, "S", SPENDER_ALERT_DATE, {"R6_profile_deviation": 5.0})
+    window_start = SPENDER_ALERT_DATE - timedelta(days=2)
+    window_end = SPENDER_ALERT_DATE + timedelta(days=1)
+    add_transaction(conn, 1, at(SPENDER_ALERT_DATE, 10), "S", "C1", 9_000.0, "ACH")
+    add_transaction(conn, 2, at(window_start, 0) - timedelta(hours=1), "C1", "S", 9_000.0, "ACH")
+    add_transaction(conn, 3, at(window_start, 0) - timedelta(hours=1), "S", "S", 500.0, "ACH", "US Dollar")
+    add_transaction(conn, 4, at(window_end, 0), "C2", "S", 1_000.0, "ACH", "US Dollar")
+    add_transaction(conn, 5, at(window_end, 0), "S", "S", 1_000.0, "ACH", "US Dollar")
+    return alert
+
+
+@pytest.mark.anyio
+async def test_b4_closes_when_the_account_spends_its_own_money(db: Database) -> None:
+    with db.owner() as conn:
+        alert = add_spender(conn, other_accounts=3)
+
+    async with open_system("b4", runtime_for(db)) as system:
+        decision = await system.decide(alert)
+
+    assert system.name == "b4"
+    assert (decision.recommendation, decision.risk_score) == ("close", None)
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("sender", "receiver", "received_currency"),
+    [("C2", "S", "Euro"), ("S", "S", "Euro"), ("S", "C2", "US Dollar")],
+    ids=["incoming payment", "payment to itself", "currency change"],
+)
+async def test_b4_escalates_when_money_moves_through_the_account(
+    db: Database, sender: str, receiver: str, received_currency: str
+) -> None:
+    with db.owner() as conn:
+        alert = add_spender(conn, other_accounts=3)
+        add_transaction(conn, 6, at(SPENDER_ALERT_DATE, 11), sender, receiver, 100.0, "Cheque", received_currency)
+
+    async with open_system("b4", runtime_for(db)) as system:
+        decision = await system.decide(alert)
+
+    assert decision.recommendation == "escalate"
+
+
+@pytest.mark.anyio
+async def test_b4_escalates_when_the_customer_holds_fewer_than_three_other_accounts(db: Database) -> None:
+    with db.owner() as conn:
+        alert = add_spender(conn, other_accounts=2)
+
+    async with open_system("b4", runtime_for(db)) as system:
+        decision = await system.decide(alert)
+
+    assert decision.recommendation == "escalate"
+
+
 def test_label_reader_reads_the_train_window_and_refuses_the_app_role(
     db: Database, learnable: tuple[EvalAlert, EvalAlert]
 ) -> None:
@@ -284,7 +344,7 @@ async def test_agent_with_zero_tool_calls_skips_the_loop(
 
 
 def test_unknown_system_lists_the_valid_names(db: Database) -> None:
-    with pytest.raises(ValueError, match="b0, b1, b2, b3, b3_no_age, scripted, local, azure, azure_k0"):
+    with pytest.raises(ValueError, match="b0, b1, b2, b3, b3_no_age, b4, scripted, local, azure, azure_k0"):
         open_system("b9", runtime_for(db))
 
 
