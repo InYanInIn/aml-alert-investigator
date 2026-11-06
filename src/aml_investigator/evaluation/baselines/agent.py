@@ -37,6 +37,11 @@ class AgentInvestigation:
 async def open_agent(settings: RuntimeSettings, model: BaseChatModel, name: str) -> AsyncIterator[AgentInvestigation]:
     async with (
         MCPAdapter(build_server(settings.mcp_conninfo, reference_variant=settings.reference_variant)) as mcp,
-        open_investigation_service(app_conninfo=settings.app_conninfo, mcp=mcp, model=model) as service,
+        open_investigation_service(
+            app_conninfo=settings.app_conninfo,
+            mcp=mcp,
+            model=model,
+            reference_variant=settings.reference_variant,
+        ) as service,
     ):
         yield AgentInvestigation(service, name)

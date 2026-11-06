@@ -205,6 +205,38 @@ def test_rule4_numbers_of_the_claims_cited_ids_are_backed() -> None:
     assert number_errors(decision(what=[cited])) == []
 
 
+def test_rule4_timestamp_date_fact_backs_day_and_hour() -> None:
+    stamped = claim(
+        text="Paid on 2022-09-02 at 10:15.", facts=[Fact(txn_id=11, field="date", value="2022-09-02T10:15:00")]
+    )
+
+    assert errors_of(decision(what=[stamped])) == []
+
+
+def test_rule4_cited_transaction_id_does_not_back_an_amount() -> None:
+    other = {**TXN, "txn_id": 12000, "amount_paid": 5.0}
+    lookalike = claim(text="Account paid 12,000.00 US Dollar in transaction 12000.", txn_ids=[12000])
+
+    result = verify(decision(what=[lookalike]), Provenance(transactions={12000: other}), AS_OF)
+
+    assert result.errors == [
+        "number 12000.00 in claim 'Account paid 12,000.00 US Dollar in transaction 12000.' "
+        "is not backed by a fact or a cited id"
+    ]
+
+
+def test_rule4_cited_passage_id_does_not_back_a_count() -> None:
+    lookalike = claim(text="26 transfers under AMLR art. 26(1)", passage_ids=["AMLR art. 26(1)"])
+    provenance = Provenance(
+        transactions={11: TXN},
+        passages={"AMLR art. 26(1)": {**PASSAGE, "passage_id": "AMLR art. 26(1)"}},
+    )
+
+    assert verify(decision(what=[lookalike]), provenance, AS_OF).errors == [
+        "number 26 in claim '26 transfers under AMLR art. 26(1)' is not backed by a fact or a cited id"
+    ]
+
+
 def test_rule4_facts_of_other_claims_do_not_count() -> None:
     first = claim(text="Paid in Euro.", facts=[Fact(txn_id=11, field="amount_paid", value="2848.96")])
     second = claim(text="Paid 2848.96 in total.")

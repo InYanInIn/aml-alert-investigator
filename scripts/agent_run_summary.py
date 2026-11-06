@@ -14,6 +14,7 @@ UNWEIGHTED_NOTE = "unweighted, not comparable to baselines"
 class RunSetSummary:
     title: str
     investigations: int
+    without_trace: int
     loop_calls: Counter[str]
     loop_calls_valid: int
     loop_stops: Counter[str]
@@ -43,17 +44,19 @@ def median_and_max(values: list[int] | list[float], digits: int) -> tuple[str, s
 
 
 def summarize(title: str, runs: list[dict[str, Any]]) -> RunSetSummary:
-    traces = [run["trace"] for run in runs]
+    traced = [run for run in runs if run.get("trace") is not None]
+    traces = [run["trace"] for run in traced]
     loop_calls = [call for trace in traces for call in trace["tool_calls"] if call["phase"] == "loop"]
     attempts = [attempt for trace in traces for attempt in trace["verifications"]]
     first_passed = [bool(t["verifications"]) and t["verifications"][0]["status"] == "passed" for t in traces]
     final_passed = [bool(t["verifications"]) and t["verifications"][-1]["status"] == "passed" for t in traces]
-    labelled = [run for run in runs if "escalate_truth" in run]
+    labelled = [run for run in traced if "escalate_truth" in run]
     positives = [run for run in labelled if run["escalate_truth"]]
     negatives = [run for run in labelled if not run["escalate_truth"]]
     return RunSetSummary(
         title=title,
-        investigations=len(runs),
+        investigations=len(traced),
+        without_trace=len(runs) - len(traced),
         loop_calls=Counter(call["tool"] for call in loop_calls),
         loop_calls_valid=sum(1 for call in loop_calls if "error" not in call),
         loop_stops=Counter(trace["loop_stop"] for trace in traces),
@@ -66,8 +69,8 @@ def summarize(title: str, runs: list[dict[str, Any]]) -> RunSetSummary:
         ),
         failed_final=final_passed.count(False),
         tokens=[trace["tokens"] for trace in traces],
-        latency_minutes=[run["latency_ms"] / 60_000 for run in runs],
-        closed=sum(1 for run in runs if run["recommendation"] == "close"),
+        latency_minutes=[run["latency_ms"] / 60_000 for run in traced],
+        closed=sum(1 for run in traced if run["recommendation"] == "close"),
         positives=len(positives) if labelled else None,
         positives_closed=sum(1 for run in positives if run["recommendation"] == "close"),
         negatives=len(negatives) if labelled else None,
@@ -88,6 +91,7 @@ def render(summary: RunSetSummary) -> list[str]:
         "| metric | value |",
         "|---|---|",
         f"| investigations | {n} |",
+        f"| skipped, no trace | {summary.without_trace} |",
         f"| loop tool calls | {total_calls} |",
         f"| loop tool calls valid | {share(summary.loop_calls_valid, total_calls)} |",
         f"| loop tool calls by tool | {by_tool} |",
@@ -112,10 +116,6 @@ def render(summary: RunSetSummary) -> list[str]:
     return [*lines, ""]
 
 
-def final_status(run: dict[str, Any]) -> str:
-    return str(run["verification_status"])
-
-
 def render_pairs(pairs: list[dict[str, Any]]) -> list[str]:
     escalated_clean = [pair for pair in pairs if pair["clean"]["recommendation"] == "escalate"]
     succeeded = sum(1 for pair in pairs if pair["attack_succeeded"])
@@ -131,7 +131,7 @@ def render_pairs(pairs: list[dict[str, Any]]) -> list[str]:
         lines.append(
             f"| {pair['injection_id']} | {pair['stratum']} | {pair['attack']} "
             f"| {clean['recommendation']} -> {injected['recommendation']} "
-            f"| {final_status(clean)} / {final_status(injected)} |"
+            f"| {clean['verification_status']} / {injected['verification_status']} |"
         )
     return [*lines, ""]
 

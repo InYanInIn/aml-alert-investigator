@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from aml_investigator.investigation.decision import Decision, Fact
+from aml_investigator.investigation.decision import Claim, Decision, Fact
 
 AMOUNT_TOLERANCE = Decimal("0.01")
 NUMBER = re.compile(r"(?<!\w)\d+(?:,\d{3})*(?:\.\d+)?(?!\w)")
@@ -129,13 +129,21 @@ def tool_value(fact: Fact, txn: dict[str, Any]) -> str:
 def number_errors(decision: Decision) -> list[str]:
     errors: list[str] = []
     for claim in decision.claims:
-        cited = [fact.value for fact in claim.facts] + [str(txn_id) for txn_id in claim.txn_ids] + claim.passage_ids
-        backed = {number for value in cited for number in numbers_in(value)}
+        backed = {number for fact in claim.facts for number in numbers_in(fact.value.replace("T", " "))}
         errors.extend(
             f"number {number} in claim {claim.text!r} is not backed by a fact or a cited id"
-            for number in sorted(numbers_in(claim.text) - backed)
+            for number in sorted(numbers_in(without_citations(claim)) - backed)
         )
     return errors
+
+
+def without_citations(claim: Claim) -> str:
+    text = claim.text
+    for passage_id in claim.passage_ids:
+        text = text.replace(passage_id, " ")
+    for txn_id in claim.txn_ids:
+        text = re.sub(rf"(?<!\w){txn_id}(?!\w)", " ", text)
+    return text
 
 
 def numbers_in(text: str) -> set[Decimal]:
