@@ -1,12 +1,12 @@
 import re
 from collections import Counter
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
 from pypdf import PageObject, PdfReader
 
-from aml_investigator.corpus.passage import Passage
+from aml_investigator.corpus.passage import Passage, split_points
 
 BODY_FONT_SIZE_MIN = 9.5
 BODY_TOP = 785.0
@@ -23,6 +23,7 @@ WORD = re.compile(r"\w+")
 COMPOUND = re.compile(r"\w+-\w+")
 LETTER_PAIR = re.compile(r"(?<!\w)([^\W\d_]+) (?=([^\W\d_]+)(?!\w))")
 STANDALONE_LETTERS = set("aiouwz")
+DEFINITIONS = ("2", "2")
 REPEALED = {"(uchylony)", "(uchylona)", "(uchylone)", "(pominięte)"}
 
 
@@ -34,14 +35,16 @@ def parse_polish_act(path: Path) -> list[Passage]:
     kept = [(unit, repair(text)) for unit, text in drafts if text not in REPEALED]
     return [
         Passage(
-            f"PL-AML art. {unit.article}" + (f" ust. {unit.paragraph}" if unit.paragraph else ""),
+            f"PL-AML art. {unit.article}"
+            + (f" ust. {unit.paragraph}" if unit.paragraph else "")
+            + (f" pkt {point}" if point else ""),
             unit.article,
             unit.paragraph,
             position,
             None,
             text,
         )
-        for position, (unit, text) in enumerate(kept, start=1)
+        for position, (unit, point, text) in enumerate(with_points(kept), start=1)
     ]
 
 
@@ -72,6 +75,15 @@ class Unit:
     article: str
     paragraph: str | None
     lines: list[str]
+
+
+def with_points(units_with_text: list[tuple[Unit, str]]) -> Iterator[tuple[Unit, str | None, str]]:
+    for unit, text in units_with_text:
+        if (unit.article, unit.paragraph) == DEFINITIONS:
+            for point, body in split_points(text):
+                yield unit, point, body
+        else:
+            yield unit, None, text
 
 
 def units(lines: list[str]) -> list[Unit]:

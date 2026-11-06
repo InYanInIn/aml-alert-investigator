@@ -27,7 +27,8 @@ Sources:
 ## Passages
 
 One passage per numbered paragraph; an article without numbered paragraphs is one passage. Points stay inside their
-paragraph. IDs: `AMLR art. 77(1)`, `AMLR art. 3`, `PL-AML art. 74 ust. 1`, `PL-AML art. 67`. Recitals, annexes,
+paragraph, except the two definition lists (`AMLR art. 2(1)`, `PL-AML art. 2 ust. 2`), which are one passage per
+point. IDs: `AMLR art. 77(1)`, `AMLR art. 3`, `PL-AML art. 74 ust. 1`, `PL-AML art. 67`, `AMLR art. 2(1)(28)`, `PL-AML art. 2 ust. 2 pkt 12a`. Recitals, annexes,
 chapter headings, page headers and footnotes are not passages; repealed or omitted provisions (`(uchylony)`,
 `(pominięte)`) are skipped.
 
