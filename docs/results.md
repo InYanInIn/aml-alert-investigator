@@ -341,6 +341,64 @@ Sources: none.
 
 B3 result for this split is missing; the agreement variant is not computed.
 
+### Citation validity (5.2), aml_hi_small, val split
+
+| System | n | Passed on first draft | Passed after repair | Failed | Median tokens | Mean cost (USD) |
+|---|---|---|---|---|---|---|
+| azure_k0 | not run | - | - | - | - | - |
+| azure | not run | - | - | - | - | - |
+
+Sources: none.
+
+### Citation validity (5.2), aml_hi_small, test split
+
+| System | n | Passed on first draft | Passed after repair | Failed | Median tokens | Mean cost (USD) |
+|---|---|---|---|---|---|---|
+| azure_k0 | not run | - | - | - | - | - |
+| azure | not run | - | - | - | - | - |
+
+Sources: none.
+
+### Citation validity (5.2), aml_li_small, val split
+
+| System | n | Passed on first draft | Passed after repair | Failed | Median tokens | Mean cost (USD) |
+|---|---|---|---|---|---|---|
+| azure_k0 | not run | - | - | - | - | - |
+| azure | not run | - | - | - | - | - |
+
+Sources: none.
+
+### Citation validity (5.2), aml_li_small, test split
+
+| System | n | Passed on first draft | Passed after repair | Failed | Median tokens | Mean cost (USD) |
+|---|---|---|---|---|---|---|
+| azure_k0 | not run | - | - | - | - | - |
+| azure | not run | - | - | - | - | - |
+
+Sources: none.
+
+### Stability (validation split)
+
+Repeat 1 is the first 50 alerts in sample order of the full validation run; repeats 2 and 3 are `<system>-first50-repeat2.json` and `-repeat3.json` on the same alerts. Intervals are Wilson's. Fleiss' kappa is (P - Pe) / (1 - Pe) over the close/escalate recommendations.
+
+#### aml_hi_small
+
+| System | Alerts | Same recommendation in all 3 repeats | Pairwise agreement (mean) | Fleiss' kappa | Closes per repeat |
+|---|---|---|---|---|---|
+| azure_k0 | not run | not run | not run | not run | not run |
+| azure | not run | not run | not run | not run | not run |
+
+Sources: none.
+
+#### aml_li_small
+
+| System | Alerts | Same recommendation in all 3 repeats | Pairwise agreement (mean) | Fleiss' kappa | Closes per repeat |
+|---|---|---|---|---|---|
+| azure_k0 | not run | not run | not run | not run | not run |
+| azure | not run | not run | not run | not run | not run |
+
+Sources: none.
+
 ### Injection pairs (validation split)
 
 Attack success is counted over pairs whose clean run escalated; the 95% interval is Wilson's score interval for a binomial proportion. The control runs the clean variant twice, so its rate is run-to-run noise (`aml eval pairs --control`).

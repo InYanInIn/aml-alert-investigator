@@ -10,6 +10,7 @@ from aml_investigator.evaluation.report import (
     agreement_with,
     auto_closed,
     closure_estimates,
+    fleiss_kappa,
     render,
     update_results_document,
     wilson,
@@ -201,3 +202,73 @@ def test_updating_replaces_only_the_marked_block(workspace: Path) -> None:
     assert text.startswith(f"intro\n{REPORT_START}\n")
     assert text.endswith(f"{REPORT_END}\noutro\n")
     assert "stale" not in text
+
+
+def traced_row(alert_id: int, recommendation: str, statuses: list[str], tokens: int = 100) -> dict[str, Any]:
+    trace = {"tokens": tokens, "cost_usd": 0.01, "verifications": [{"status": s, "errors": []} for s in statuses]}
+    return {**alert_row(alert_id, alert_id % 2 == 0, recommendation), "trace": trace}
+
+
+def test_citation_table_classifies_first_draft_repair_and_failure(workspace: Path) -> None:
+    rows = [
+        traced_row(1, "close", ["passed"], 100),
+        traced_row(2, "close", ["failed", "passed"], 300),
+        traced_row(3, "escalate", ["failed", "failed"], 200),
+        traced_row(4, "escalate", [], 400),
+    ]
+    write(workspace, f"{RESULTS}/azure.json", result_document("azure", rows))
+
+    text = render(workspace)
+
+    section = text.split("### Citation validity (5.2), aml_hi_small, val split")[1].split("###")[0]
+    assert "| azure | 4 | 1 / 4 = 25.0% [4.6%, 69.9%] | 1 / 4 = 25.0% [4.6%, 69.9%] | 2 / 4 = 50.0%" in section
+    assert "| 250 | 0.0100 |" in section
+    assert "| azure_k0 | not run |" in section
+
+
+def test_fleiss_kappa_on_a_toy_example() -> None:
+    votes = [("close",) * 3, ("close", "close", "escalate"), ("escalate",) * 3, ("escalate", "close", "escalate")]
+
+    assert fleiss_kappa(votes) == pytest.approx(1 / 3)
+    assert fleiss_kappa([("close",) * 3] * 2) is None
+
+
+def stability_rows(recommendations: list[str]) -> list[dict[str, Any]]:
+    return [alert_row(i, i % 2 == 0, recommendation) for i, recommendation in enumerate(recommendations)]
+
+
+def write_repeats(workspace: Path, first: list[str], second: list[str], third: list[str]) -> None:
+    padding = ["escalate"] * 5
+    write(workspace, f"{RESULTS}/azure.json", result_document("azure", stability_rows(first + padding)))
+    write(workspace, f"{RESULTS}/azure-first50-repeat2.json", result_document("azure", stability_rows(second)))
+    write(workspace, f"{RESULTS}/azure-first50-repeat3.json", result_document("azure", stability_rows(third)))
+
+
+def test_stability_table_reports_agreement_across_repeats(workspace: Path) -> None:
+    close, escalate = "close", "escalate"
+    first = [close, close, escalate, escalate] * 12 + [close, escalate]
+    second = list(first)
+    third = list(first)
+    third[0] = escalate
+    write_repeats(workspace, first, second, third)
+
+    text = render(workspace)
+
+    section = text.split("### Stability (validation split)")[1].split("#### aml_li_small")[0]
+    assert "| azure | 50 | 49 / 50 = 98.0% [89.5%, 99.6%] | 98.7% | 0.973 | 25 / 25 / 24 |" in section
+    assert "| azure_k0 | not run |" in section
+
+
+def test_stability_table_flags_mismatched_alert_ids_and_undefined_kappa(workspace: Path) -> None:
+    same = ["escalate"] * 50
+    write_repeats(workspace, same, same, same)
+
+    text = render(workspace)
+
+    assert "| azure | 50 | 50 / 50 = 100.0% [92.9%, 100.0%] | 100.0% | undefined (one class) | 0 / 0 / 0 |" in text
+
+    shifted = stability_rows(same)
+    shifted[0]["alert_id"] = 99
+    write(workspace, f"{RESULTS}/azure-first50-repeat3.json", result_document("azure", shifted))
+
+    assert "| azure | alert ids differ between repeats |" in render(workspace)
