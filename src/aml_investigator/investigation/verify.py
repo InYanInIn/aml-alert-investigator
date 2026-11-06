@@ -10,8 +10,11 @@ from pydantic import BaseModel
 
 from aml_investigator.investigation.decision import Claim, Decision, Fact
 
+SECTIONS = ("who", "what", "when", "where", "why", "how")
+
 AMOUNT_TOLERANCE = Decimal("0.01")
 NUMBER = re.compile(r"(?<!\w)\d+(?:,\d{3})*(?:\.\d+)?(?!\w)")
+THOUSANDS_SEPARATOR = re.compile(r"(?<=\d)[\s\u00a0\u202f](?=\d{3}(?!\d))")
 TRANSACTION_TOOLS = frozenset({"list_transactions", "get_transactions"})
 
 
@@ -49,6 +52,27 @@ class Verification(BaseModel):
     errors: list[str]
 
 
+def without_whitespace(text: str) -> str:
+    return "".join(text.split())
+
+
+def with_canonical_passage_ids(decision: Decision, provenance: Provenance) -> Decision:
+    canonical = {without_whitespace(passage_id): passage_id for passage_id in reversed(provenance.passages)}
+
+    def canonical_claim(claim: Claim) -> Claim:
+        text = claim.text
+        passage_ids = []
+        for cited in claim.passage_ids:
+            returned = canonical.get(without_whitespace(cited), cited)
+            text = text.replace(cited, returned)
+            passage_ids.append(returned)
+        return claim.model_copy(update={"text": text, "passage_ids": passage_ids})
+
+    return decision.model_copy(
+        update={section: [canonical_claim(claim) for claim in getattr(decision, section)] for section in SECTIONS}
+    )
+
+
 def verify(decision: Decision, provenance: Provenance, as_of: datetime) -> Verification:
     cited = cited_txn_ids(decision)
     errors = [
@@ -56,7 +80,7 @@ def verify(decision: Decision, provenance: Provenance, as_of: datetime) -> Verif
         *transaction_errors(cited, provenance, as_of),
         *passage_errors(decision, provenance),
         *fact_errors(decision, provenance),
-        *number_errors(decision),
+        *number_errors(decision, provenance, as_of),
         *typology_errors(decision),
     ]
     return Verification(status="failed" if errors else "passed", errors=errors)
@@ -126,10 +150,15 @@ def tool_value(fact: Fact, txn: dict[str, Any]) -> str:
     return str(txn[fact.field])
 
 
-def number_errors(decision: Decision) -> list[str]:
+def number_errors(decision: Decision, provenance: Provenance, as_of: datetime) -> list[str]:
     errors: list[str] = []
+    stamp = numbers_in(as_of.isoformat().replace("T", " "))
     for claim in decision.claims:
-        backed = {number for fact in claim.facts for number in numbers_in(fact.value.replace("T", " "))}
+        backed = {number for fact in claim.facts for number in numbers_in(fact.value.replace("T", " "))} | stamp
+        for passage_id in claim.passage_ids:
+            if passage_id in provenance.passages:
+                text = provenance.passages[passage_id]["text"]
+                backed |= numbers_in(text) | numbers_in(THOUSANDS_SEPARATOR.sub("", text))
         errors.extend(
             f"number {number} in claim {claim.text!r} is not backed by a fact or a cited id"
             for number in sorted(numbers_in(without_citations(claim)) - backed)
