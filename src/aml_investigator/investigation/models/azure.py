@@ -9,7 +9,7 @@ from pydantic import BaseModel
 AZURE_MODEL = "gpt-5-mini"
 API_VERSION = "2025-04-01-preview"
 TOKEN_SCOPE = "https://cognitiveservices.azure.com/.default"  # noqa: S105
-REASONING_EFFORT = "low"
+REASONING_EFFORT = "medium"
 
 
 class ToolCallingAzureChatOpenAI(AzureChatOpenAI):
