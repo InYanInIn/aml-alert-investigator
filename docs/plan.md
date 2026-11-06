@@ -93,7 +93,8 @@ investigation and records one decision.
 - Spike: re-check the candidates and their licences, pull the first one into Ollama (`Qwen3.6-35B-A3B` at Q8
   first), and call it through LangChain with tool binding and `with_structured_output(Decision)`.
 - `investigation/models/local.py`; a CLI option selects the model for `api` and `eval run`.
-- Run the agent on 10 validation alerts in both reference variants; record the responses for replay.
+- Run the agent on 10 validation alerts and on injection pairs in both reference variants (recording
+  responses for replay moved to M7, ADR-0022).
 - Iterate on the prompt, `k` and budget against validation only.
 
 Check: recorded in `docs/results.md` as a local-model section: share of valid tool calls,

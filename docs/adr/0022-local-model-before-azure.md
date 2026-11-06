@@ -34,9 +34,14 @@ default. Ollama is installed. Candidates found on 2026-11-05 (to be re-checked b
   `ChatOllama` with thinking off failed both steps too (no tool calls, `Decision` wrapped in markdown).
   `ChatOllama` with thinking on made two valid tool calls (68 s) and returned a parseable `Decision` with the
   default `json_schema` method (152 s); the `function_calling` method also parsed but took 271 s. So the
-  fallback applies: the local model is `ChatOllama(reasoning=True, temperature=0)`.
+  fallback applies: the local model is `ChatOllama` with thinking on.
+- On real alerts (M6.6 run) `json_schema` failed too: Ollama does not enforce the format for this model, and
+  with thinking on the content came back empty. The local model therefore drafts the `Decision` as a tool
+  call (`ToolCallingChatOllama` changes only the default structured-output method), and keeps the model's own
+  sampling with a fixed seed, because greedy decoding produced very long thinking runs.
 - Local runs use the validation split only. The test split is not opened with the local model.
-- Responses recorded from the local model may seed the CI replay evaluation planned for M7.
+- Responses recorded from the local model may seed the CI replay evaluation planned for M7. Recording is
+  deferred to M7: the draft step's raw response is not kept in graph state yet.
 - Whether the local model also appears as its own system in the final results is decided in M8.
 
 ## Consequences
