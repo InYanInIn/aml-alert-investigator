@@ -21,5 +21,5 @@ def test_local_model_drafts_the_decision_as_a_tool_call() -> None:
 
 
 def test_unknown_model_lists_the_valid_names() -> None:
-    with pytest.raises(ValueError, match="rule-score, local"):
+    with pytest.raises(ValueError, match="rule-score, local, azure"):
         chat_model("gpt", "aml_x")

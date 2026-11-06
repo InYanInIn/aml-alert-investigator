@@ -7,6 +7,7 @@ from langchain_core.runnables import Runnable
 
 from aml_investigator.investigation.agent.state import LoopStop
 from aml_investigator.investigation.agent.tools import AlertTools, ToolResult
+from aml_investigator.investigation.agent.usage import TokenUsage
 
 MAX_TOOL_CALLS = 8
 TOKEN_BUDGET = 40_000
@@ -40,6 +41,7 @@ class LoopOutcome:
     messages: list[BaseMessage]
     results: list[ToolResult]
     tokens: int
+    usage: TokenUsage
     stop: LoopStop
 
 
@@ -49,6 +51,7 @@ async def investigation_loop(
     history: list[BaseMessage],
     *,
     tokens: int,
+    usage: TokenUsage,
     budget: LoopBudget,
 ) -> LoopOutcome:
     added: list[BaseMessage] = []
@@ -56,9 +59,10 @@ async def investigation_loop(
     while tokens < budget.tokens:
         reply = await model.ainvoke([*history, *added])
         tokens += total_tokens(reply)
+        usage += TokenUsage.of(reply)
         added.append(reply)
         if not reply.tool_calls:
-            return LoopOutcome(added, results, tokens, "model_done")
+            return LoopOutcome(added, results, tokens, usage, "model_done")
         for call in reply.tool_calls:
             if budget.exhausted(len(results), tokens) is None:
                 results.append(await tools.run(call, "loop"))
@@ -66,8 +70,8 @@ async def investigation_loop(
             else:
                 added.append(not_executed(call))
         if stop := budget.exhausted(len(results), tokens):
-            return LoopOutcome(added, results, tokens, stop)
-    return LoopOutcome(added, results, tokens, "token_budget")
+            return LoopOutcome(added, results, tokens, usage, stop)
+    return LoopOutcome(added, results, tokens, usage, "token_budget")
 
 
 def not_executed(call: ToolCall) -> ToolMessage:

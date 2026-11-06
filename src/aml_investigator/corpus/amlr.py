@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 from pathlib import Path
 
-from aml_investigator.corpus.passage import Passage
+from aml_investigator.corpus.passage import Passage, split_points
 
 XHTML = "{http://www.w3.org/1999/xhtml}"
 ARTICLE_ID = re.compile(r"art_(\d+)")
@@ -11,6 +11,7 @@ PARAGRAPH_ID = re.compile(r"\d{3}\.(\d{3})")
 PARAGRAPH_NUMBER = re.compile(r"(\d+)\.\s+")
 HEADING_CLASSES = {"oj-ti-art", "eli-title"}
 SPACE_BEFORE_PUNCTUATION = re.compile(r" (?=[,.;:)])")
+DEFINITIONS = ("2", "1")
 
 
 def parse_amlr(path: Path) -> list[Passage]:
@@ -20,29 +21,34 @@ def parse_amlr(path: Path) -> list[Passage]:
     ]
     return [
         Passage(
-            f"AMLR art. {article}" + (f"({paragraph})" if paragraph else ""),
+            f"AMLR art. {article}" + (f"({paragraph})" if paragraph else "") + (f"({point})" if point else ""),
             article,
             paragraph,
             position,
             heading,
             text,
         )
-        for position, (article, paragraph, heading, text) in enumerate(
+        for position, (article, paragraph, point, heading, text) in enumerate(
             (passage for article, div in articles for passage in article_passages(article, div)), start=1
         )
     ]
 
 
-def article_passages(article: str, div: ET.Element) -> Iterator[tuple[str, str | None, str | None, str]]:
+def article_passages(article: str, div: ET.Element) -> Iterator[tuple[str, str | None, str | None, str | None, str]]:
     heading = article_heading(div)
     paragraphs = [
         (str(int(match.group(1))), child) for child in div if (match := PARAGRAPH_ID.fullmatch(child.get("id", "")))
     ]
     if not paragraphs:
         body = [child for child in div if child.get("class") not in HEADING_CLASSES]
-        yield article, None, heading, block_text(body)
+        yield article, None, None, heading, block_text(body)
     for paragraph, child in paragraphs:
-        yield article, paragraph, heading, without_paragraph_number(block_text(list(child)), article, paragraph)
+        text = without_paragraph_number(block_text(list(child)), article, paragraph)
+        if (article, paragraph) == DEFINITIONS:
+            for point, definition in split_points(text):
+                yield article, paragraph, point, heading, definition
+        else:
+            yield article, paragraph, None, heading, text
 
 
 def article_heading(div: ET.Element) -> str | None:

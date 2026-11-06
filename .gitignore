@@ -15,6 +15,7 @@ dist/
 *.tfstate
 *.tfstate.*
 .terraform/
+*.tfvars
 
 # Editors and OS
 .idea/

@@ -22,6 +22,7 @@ from aml_investigator.evaluation.metrics import (
 )
 from aml_investigator.evaluation.openings import record_opening, require_reason
 from aml_investigator.evaluation.results import (
+    RECORDINGS_DIR,
     AlertTruth,
     Evaluated,
     EvaluationResult,
@@ -47,10 +48,12 @@ async def evaluate(
     workspace: Path = Path(),
     limit: int | None = None,
     concurrency: int = CONCURRENCY,
+    record: bool = False,
 ) -> EvaluationResult:
     require_reason(split, test_reason)
     train_labels = read_train_labels(settings.evaluator_conninfo) if system in TRAINED_SYSTEMS else None
-    async with open_system(system, RuntimeSettings.of(settings), train_labels=train_labels) as opened:
+    runtime = RuntimeSettings.of(settings, recordings=workspace / RECORDINGS_DIR if record else None)
+    async with open_system(system, runtime, train_labels=train_labels) as opened:
         return await evaluate_system(
             settings,
             opened,

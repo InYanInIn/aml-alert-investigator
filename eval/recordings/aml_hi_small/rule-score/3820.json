@@ -1,0 +1,1481 @@
+{
+  "model": "rule-score",
+  "prompt_version": "65e9b2e08480",
+  "git_commit": "56ebb5c8e6ecd37c00361e586a8c8035e87e9178",
+  "reference_variant": "clean",
+  "alert": {
+    "alert_id": 3820,
+    "account_id": "A18ce0f533203",
+    "alert_date": "2022-09-07",
+    "window_start": "2022-09-06T00:00:00",
+    "window_end": "2022-09-08T00:00:00"
+  },
+  "outcome": {
+    "recommendation": "close",
+    "verification_status": "passed",
+    "route": "auto_closed",
+    "decision": {
+      "recommendation": "close",
+      "typologies": [
+        {
+          "typology": "fan_in",
+          "verdict": "insufficient_evidence",
+          "txn_ids": []
+        },
+        {
+          "typology": "gather_scatter",
+          "verdict": "insufficient_evidence",
+          "txn_ids": []
+        }
+      ],
+      "who": [],
+      "what": [
+        {
+          "text": "The account received 3,038.97 Euro on 2022-09-07.",
+          "txn_ids": [
+            3587627
+          ],
+          "passage_ids": [],
+          "facts": [
+            {
+              "txn_id": 3587627,
+              "field": "amount_received",
+              "value": "3038.97"
+            },
+            {
+              "txn_id": 3587627,
+              "field": "received_currency",
+              "value": "Euro"
+            },
+            {
+              "txn_id": 3587627,
+              "field": "date",
+              "value": "2022-09-07"
+            }
+          ]
+        },
+        {
+          "text": "The account received 2,117.84 Euro on 2022-09-07.",
+          "txn_ids": [
+            3588899
+          ],
+          "passage_ids": [],
+          "facts": [
+            {
+              "txn_id": 3588899,
+              "field": "amount_received",
+              "value": "2117.84"
+            },
+            {
+              "txn_id": 3588899,
+              "field": "received_currency",
+              "value": "Euro"
+            },
+            {
+              "txn_id": 3588899,
+              "field": "date",
+              "value": "2022-09-07"
+            }
+          ]
+        },
+        {
+          "text": "The account received 1,108.39 Euro on 2022-09-07.",
+          "txn_ids": [
+            3589003
+          ],
+          "passage_ids": [],
+          "facts": [
+            {
+              "txn_id": 3589003,
+              "field": "amount_received",
+              "value": "1108.39"
+            },
+            {
+              "txn_id": 3589003,
+              "field": "received_currency",
+              "value": "Euro"
+            },
+            {
+              "txn_id": 3589003,
+              "field": "date",
+              "value": "2022-09-07"
+            }
+          ]
+        }
+      ],
+      "when": [],
+      "where": [],
+      "why": [
+        {
+          "text": "The alert's rule scores, each relative to its calibrated rule threshold, sum to a value below the operating point of the rule-score baseline, so the alert can be closed.",
+          "txn_ids": [
+            3587627,
+            3588899,
+            3589003,
+            3589873,
+            3590292,
+            3590387,
+            3592036,
+            3592487,
+            3593446,
+            3594672,
+            3594955,
+            3594983,
+            3595684
+          ],
+          "passage_ids": [
+            "AMLR art. 69(1)",
+            "PL-AML art. 74 ust. 1",
+            "AMLR art. 34(2)",
+            "PL-AML art. 43 ust. 4"
+          ],
+          "facts": []
+        }
+      ],
+      "how": []
+    }
+  },
+  "model_responses": [
+    {
+      "content": "No further tool calls: the evidence pack decides the recommendation.",
+      "additional_kwargs": {},
+      "response_metadata": {},
+      "type": "ai",
+      "name": null,
+      "id": "lc_run--01a1b080-d726-79a1-87db-05d232211dcb-0",
+      "tool_calls": [],
+      "invalid_tool_calls": [],
+      "usage_metadata": null
+    },
+    {
+      "content": "",
+      "additional_kwargs": {},
+      "response_metadata": {},
+      "type": "ai",
+      "name": null,
+      "id": "lc_run--01a1b080-d781-7e13-8278-fea943ded8d4-0",
+      "tool_calls": [
+        {
+          "name": "Decision",
+          "args": {
+            "recommendation": "close",
+            "typologies": [
+              {
+                "typology": "fan_in",
+                "verdict": "insufficient_evidence",
+                "txn_ids": []
+              },
+              {
+                "typology": "gather_scatter",
+                "verdict": "insufficient_evidence",
+                "txn_ids": []
+              }
+            ],
+            "who": [],
+            "what": [
+              {
+                "text": "The account received 3,038.97 Euro on 2022-09-07.",
+                "txn_ids": [
+                  3587627
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 3587627,
+                    "field": "amount_received",
+                    "value": "3038.97"
+                  },
+                  {
+                    "txn_id": 3587627,
+                    "field": "received_currency",
+                    "value": "Euro"
+                  },
+                  {
+                    "txn_id": 3587627,
+                    "field": "date",
+                    "value": "2022-09-07"
+                  }
+                ]
+              },
+              {
+                "text": "The account received 2,117.84 Euro on 2022-09-07.",
+                "txn_ids": [
+                  3588899
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 3588899,
+                    "field": "amount_received",
+                    "value": "2117.84"
+                  },
+                  {
+                    "txn_id": 3588899,
+                    "field": "received_currency",
+                    "value": "Euro"
+                  },
+                  {
+                    "txn_id": 3588899,
+                    "field": "date",
+                    "value": "2022-09-07"
+                  }
+                ]
+              },
+              {
+                "text": "The account received 1,108.39 Euro on 2022-09-07.",
+                "txn_ids": [
+                  3589003
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 3589003,
+                    "field": "amount_received",
+                    "value": "1108.39"
+                  },
+                  {
+                    "txn_id": 3589003,
+                    "field": "received_currency",
+                    "value": "Euro"
+                  },
+                  {
+                    "txn_id": 3589003,
+                    "field": "date",
+                    "value": "2022-09-07"
+                  }
+                ]
+              }
+            ],
+            "when": [],
+            "where": [],
+            "why": [
+              {
+                "text": "The alert's rule scores, each relative to its calibrated rule threshold, sum to a value below the operating point of the rule-score baseline, so the alert can be closed.",
+                "txn_ids": [
+                  3587627,
+                  3588899,
+                  3589003,
+                  3589873,
+                  3590292,
+                  3590387,
+                  3592036,
+                  3592487,
+                  3593446,
+                  3594672,
+                  3594955,
+                  3594983,
+                  3595684
+                ],
+                "passage_ids": [
+                  "AMLR art. 69(1)",
+                  "PL-AML art. 74 ust. 1",
+                  "AMLR art. 34(2)",
+                  "PL-AML art. 43 ust. 4"
+                ],
+                "facts": []
+              }
+            ],
+            "how": []
+          },
+          "id": "rule-score-decision",
+          "type": "tool_call"
+        }
+      ],
+      "invalid_tool_calls": [],
+      "usage_metadata": null
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "get_alert",
+      "args": {
+        "alert_id": 3820
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"alert_id\":3820,\"account_id\":\"A18ce0f533203\",\"alert_date\":\"2022-09-07\",\"window_start\":\"2022-09-06T00:00:00\",\"window_end\":\"2022-09-08T00:00:00\",\"as_of\":\"2022-09-08T00:00:00\",\"rule_hits\":[{\"rule_id\":\"R1_fan_in\",\"score\":13.0,\"evidence_txn_ids\":[3587627,3588899,3589003,3589873,3590292,3590387,3592036,3592487,3593446,3594672,3594955,3594983,3595684]}]}",
+            "id": "lc_f07c852f-eea8-4ceb-9d06-5f2232e62be0"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_alert",
+        "id": null,
+        "tool_call_id": "alert",
+        "artifact": {
+          "structured_content": {
+            "alert_id": 3820,
+            "account_id": "A18ce0f533203",
+            "alert_date": "2022-09-07",
+            "window_start": "2022-09-06T00:00:00",
+            "window_end": "2022-09-08T00:00:00",
+            "as_of": "2022-09-08T00:00:00",
+            "rule_hits": [
+              {
+                "rule_id": "R1_fan_in",
+                "score": 13.0,
+                "evidence_txn_ids": [
+                  3587627,
+                  3588899,
+                  3589003,
+                  3589873,
+                  3590292,
+                  3590387,
+                  3592036,
+                  3592487,
+                  3593446,
+                  3594672,
+                  3594955,
+                  3594983,
+                  3595684
+                ]
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "get_account_profile",
+      "args": {
+        "account_id": "A18ce0f533203",
+        "alert_id": 3820
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"as_of\":\"2022-09-08T00:00:00\",\"account_id\":\"A18ce0f533203\",\"entity_type\":\"Corporation\",\"first_seen\":\"2022-09-01T00:02:00\",\"active_days\":2,\"incoming_count\":14,\"incoming_eur\":1183260.47,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"self_transfer_count\":2,\"distinct_counterparties\":14,\"payment_format_shares\":[{\"payment_format\":\"ACH\",\"share\":0.875},{\"payment_format\":\"Reinvestment\",\"share\":0.125}],\"outgoing_days\":0,\"daily_outgoing_eur_mean\":null,\"daily_outgoing_eur_median\":null,\"other_accounts_of_entity\":{\"count\":34,\"account_ids\":[\"A01e9a2b2b52a\",\"A027c94015c3d\",\"A04d58c549eae\",\"A05fdca3cd492\",\"A0d82be4849b0\",\"A133f19e87f3c\",\"A1f86a9dda989\",\"A2ac23fde3f49\",\"A2c86a9018981\",\"A2df98abe8a92\"]}}",
+            "id": "lc_bf9e5648-70aa-4f12-83e5-649027172b50"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_account_profile",
+        "id": null,
+        "tool_call_id": "evidence-0",
+        "artifact": {
+          "structured_content": {
+            "as_of": "2022-09-08T00:00:00",
+            "account_id": "A18ce0f533203",
+            "entity_type": "Corporation",
+            "first_seen": "2022-09-01T00:02:00",
+            "active_days": 2,
+            "incoming_count": 14,
+            "incoming_eur": 1183260.47,
+            "outgoing_count": 0,
+            "outgoing_eur": 0.0,
+            "self_transfer_count": 2,
+            "distinct_counterparties": 14,
+            "payment_format_shares": [
+              {
+                "payment_format": "ACH",
+                "share": 0.875
+              },
+              {
+                "payment_format": "Reinvestment",
+                "share": 0.125
+              }
+            ],
+            "outgoing_days": 0,
+            "daily_outgoing_eur_mean": null,
+            "daily_outgoing_eur_median": null,
+            "other_accounts_of_entity": {
+              "count": 34,
+              "account_ids": [
+                "A01e9a2b2b52a",
+                "A027c94015c3d",
+                "A04d58c549eae",
+                "A05fdca3cd492",
+                "A0d82be4849b0",
+                "A133f19e87f3c",
+                "A1f86a9dda989",
+                "A2ac23fde3f49",
+                "A2c86a9018981",
+                "A2df98abe8a92"
+              ]
+            }
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "get_counterparties",
+      "args": {
+        "account_id": "A18ce0f533203",
+        "alert_id": 3820
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"as_of\":\"2022-09-08T00:00:00\",\"counterparty_count\":13,\"truncated\":false,\"counterparties\":[{\"account_id\":\"A8fa239dbf875\",\"incoming_count\":1,\"incoming_eur\":677524.83,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":677524.83,\"first_ts\":\"2022-09-07T16:48:00\",\"last_ts\":\"2022-09-07T16:48:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"A97c98a87867b\",\"incoming_count\":1,\"incoming_eur\":475312.07,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":475312.07,\"first_ts\":\"2022-09-07T16:57:00\",\"last_ts\":\"2022-09-07T16:57:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"A6ba8c1795df6\",\"incoming_count\":1,\"incoming_eur\":4154.36,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":4154.36,\"first_ts\":\"2022-09-07T16:49:00\",\"last_ts\":\"2022-09-07T16:49:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"Ad5b3b461180c\",\"incoming_count\":1,\"incoming_eur\":3207.19,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":3207.19,\"first_ts\":\"2022-09-07T16:59:00\",\"last_ts\":\"2022-09-07T16:59:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"A4b156548c932\",\"incoming_count\":1,\"incoming_eur\":3038.97,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":3038.97,\"first_ts\":\"2022-09-07T16:34:00\",\"last_ts\":\"2022-09-07T16:34:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"A0481dcdf44c9\",\"incoming_count\":1,\"incoming_eur\":3034.5,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":3034.5,\"first_ts\":\"2022-09-07T16:43:00\",\"last_ts\":\"2022-09-07T16:43:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"Aec84e1f42006\",\"incoming_count\":1,\"incoming_eur\":3028.99,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":3028.99,\"first_ts\":\"2022-09-07T16:43:00\",\"last_ts\":\"2022-09-07T16:43:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"A8b925e25b902\",\"incoming_count\":1,\"incoming_eur\":2625.67,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":2625.67,\"first_ts\":\"2022-09-07T16:56:00\",\"last_ts\":\"2022-09-07T16:56:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"Ac842b41862f4\",\"incoming_count\":1,\"incoming_eur\":2482.94,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":2482.94,\"first_ts\":\"2022-09-07T16:52:00\",\"last_ts\":\"2022-09-07T16:52:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"A6e6b2688a271\",\"incoming_count\":1,\"incoming_eur\":2117.84,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":2117.84,\"first_ts\":\"2022-09-07T16:38:00\",\"last_ts\":\"2022-09-07T16:38:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"Acf1bce0237ae\",\"incoming_count\":1,\"incoming_eur\":1353.05,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":1353.05,\"first_ts\":\"2022-09-07T16:57:00\",\"last_ts\":\"2022-09-07T16:57:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"Ad53522666599\",\"incoming_count\":1,\"incoming_eur\":1340.58,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":1340.58,\"first_ts\":\"2022-09-07T16:41:00\",\"last_ts\":\"2022-09-07T16:41:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"A072a398f5fae\",\"incoming_count\":1,\"incoming_eur\":1108.39,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":1108.39,\"first_ts\":\"2022-09-07T16:39:00\",\"last_ts\":\"2022-09-07T16:39:00\",\"payment_formats\":[\"ACH\"]}]}",
+            "id": "lc_6258ebd5-08cc-4183-9523-dc46cd92aac6"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_counterparties",
+        "id": null,
+        "tool_call_id": "evidence-1",
+        "artifact": {
+          "structured_content": {
+            "as_of": "2022-09-08T00:00:00",
+            "counterparty_count": 13,
+            "truncated": false,
+            "counterparties": [
+              {
+                "account_id": "A8fa239dbf875",
+                "incoming_count": 1,
+                "incoming_eur": 677524.83,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 677524.83,
+                "first_ts": "2022-09-07T16:48:00",
+                "last_ts": "2022-09-07T16:48:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "A97c98a87867b",
+                "incoming_count": 1,
+                "incoming_eur": 475312.07,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 475312.07,
+                "first_ts": "2022-09-07T16:57:00",
+                "last_ts": "2022-09-07T16:57:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "A6ba8c1795df6",
+                "incoming_count": 1,
+                "incoming_eur": 4154.36,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 4154.36,
+                "first_ts": "2022-09-07T16:49:00",
+                "last_ts": "2022-09-07T16:49:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "Ad5b3b461180c",
+                "incoming_count": 1,
+                "incoming_eur": 3207.19,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 3207.19,
+                "first_ts": "2022-09-07T16:59:00",
+                "last_ts": "2022-09-07T16:59:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "A4b156548c932",
+                "incoming_count": 1,
+                "incoming_eur": 3038.97,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 3038.97,
+                "first_ts": "2022-09-07T16:34:00",
+                "last_ts": "2022-09-07T16:34:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "A0481dcdf44c9",
+                "incoming_count": 1,
+                "incoming_eur": 3034.5,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 3034.5,
+                "first_ts": "2022-09-07T16:43:00",
+                "last_ts": "2022-09-07T16:43:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "Aec84e1f42006",
+                "incoming_count": 1,
+                "incoming_eur": 3028.99,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 3028.99,
+                "first_ts": "2022-09-07T16:43:00",
+                "last_ts": "2022-09-07T16:43:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "A8b925e25b902",
+                "incoming_count": 1,
+                "incoming_eur": 2625.67,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 2625.67,
+                "first_ts": "2022-09-07T16:56:00",
+                "last_ts": "2022-09-07T16:56:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "Ac842b41862f4",
+                "incoming_count": 1,
+                "incoming_eur": 2482.94,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 2482.94,
+                "first_ts": "2022-09-07T16:52:00",
+                "last_ts": "2022-09-07T16:52:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "A6e6b2688a271",
+                "incoming_count": 1,
+                "incoming_eur": 2117.84,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 2117.84,
+                "first_ts": "2022-09-07T16:38:00",
+                "last_ts": "2022-09-07T16:38:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "Acf1bce0237ae",
+                "incoming_count": 1,
+                "incoming_eur": 1353.05,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 1353.05,
+                "first_ts": "2022-09-07T16:57:00",
+                "last_ts": "2022-09-07T16:57:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "Ad53522666599",
+                "incoming_count": 1,
+                "incoming_eur": 1340.58,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 1340.58,
+                "first_ts": "2022-09-07T16:41:00",
+                "last_ts": "2022-09-07T16:41:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "A072a398f5fae",
+                "incoming_count": 1,
+                "incoming_eur": 1108.39,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 1108.39,
+                "first_ts": "2022-09-07T16:39:00",
+                "last_ts": "2022-09-07T16:39:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "list_transactions",
+      "args": {
+        "account_id": "A18ce0f533203",
+        "alert_id": 3820
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"as_of\":\"2022-09-08T00:00:00\",\"truncated\":false,\"transactions\":[{\"txn_id\":3587627,\"ts\":\"2022-09-07T16:34:00\",\"from_account\":\"A4b156548c932\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":3038.97,\"paid_currency\":\"Euro\",\"amount_received\":3038.97,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Insurance premium 55876\"},{\"txn_id\":3588899,\"ts\":\"2022-09-07T16:38:00\",\"from_account\":\"A6e6b2688a271\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":2117.84,\"paid_currency\":\"Euro\",\"amount_received\":2117.84,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Refund 077856\"},{\"txn_id\":3589003,\"ts\":\"2022-09-07T16:39:00\",\"from_account\":\"A072a398f5fae\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":1108.39,\"paid_currency\":\"Euro\",\"amount_received\":1108.39,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Gift\"},{\"txn_id\":3589873,\"ts\":\"2022-09-07T16:41:00\",\"from_account\":\"Ad53522666599\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":1340.58,\"paid_currency\":\"Euro\",\"amount_received\":1340.58,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Reimbursement BCDD48\"},{\"txn_id\":3590292,\"ts\":\"2022-09-07T16:43:00\",\"from_account\":\"A0481dcdf44c9\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":3034.5,\"paid_currency\":\"Euro\",\"amount_received\":3034.5,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Software license renewal\"},{\"txn_id\":3590387,\"ts\":\"2022-09-07T16:43:00\",\"from_account\":\"Aec84e1f42006\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":3028.99,\"paid_currency\":\"Euro\",\"amount_received\":3028.99,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Invoice 32340 settlement\"},{\"txn_id\":3592036,\"ts\":\"2022-09-07T16:48:00\",\"from_account\":\"A8fa239dbf875\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":677524.83,\"paid_currency\":\"Euro\",\"amount_received\":677524.83,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Salary June\"},{\"txn_id\":3592487,\"ts\":\"2022-09-07T16:49:00\",\"from_account\":\"A6ba8c1795df6\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":4154.36,\"paid_currency\":\"Euro\",\"amount_received\":4154.36,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Order 059475\"},{\"txn_id\":3593446,\"ts\":\"2022-09-07T16:52:00\",\"from_account\":\"Ac842b41862f4\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":2482.94,\"paid_currency\":\"Euro\",\"amount_received\":2482.94,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Payment for services May\"},{\"txn_id\":3594672,\"ts\":\"2022-09-07T16:56:00\",\"from_account\":\"A8b925e25b902\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":2625.67,\"paid_currency\":\"Euro\",\"amount_received\":2625.67,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Consulting fee\"},{\"txn_id\":3594955,\"ts\":\"2022-09-07T16:57:00\",\"from_account\":\"A97c98a87867b\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":475312.07,\"paid_currency\":\"Euro\",\"amount_received\":475312.07,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Deposit for order B4FFE5\"},{\"txn_id\":3594983,\"ts\":\"2022-09-07T16:57:00\",\"from_account\":\"Acf1bce0237ae\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":1353.05,\"paid_currency\":\"Euro\",\"amount_received\":1353.05,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Rent April\"},{\"txn_id\":3595684,\"ts\":\"2022-09-07T16:59:00\",\"from_account\":\"Ad5b3b461180c\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":3207.19,\"paid_currency\":\"Euro\",\"amount_received\":3207.19,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Tuition September\"}]}",
+            "id": "lc_f751fa2a-bae2-4724-b214-7a3fdc11c009"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "list_transactions",
+        "id": null,
+        "tool_call_id": "evidence-2",
+        "artifact": {
+          "structured_content": {
+            "as_of": "2022-09-08T00:00:00",
+            "truncated": false,
+            "transactions": [
+              {
+                "txn_id": 3587627,
+                "ts": "2022-09-07T16:34:00",
+                "from_account": "A4b156548c932",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 3038.97,
+                "paid_currency": "Euro",
+                "amount_received": 3038.97,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Insurance premium 55876"
+              },
+              {
+                "txn_id": 3588899,
+                "ts": "2022-09-07T16:38:00",
+                "from_account": "A6e6b2688a271",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 2117.84,
+                "paid_currency": "Euro",
+                "amount_received": 2117.84,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Refund 077856"
+              },
+              {
+                "txn_id": 3589003,
+                "ts": "2022-09-07T16:39:00",
+                "from_account": "A072a398f5fae",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 1108.39,
+                "paid_currency": "Euro",
+                "amount_received": 1108.39,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Gift"
+              },
+              {
+                "txn_id": 3589873,
+                "ts": "2022-09-07T16:41:00",
+                "from_account": "Ad53522666599",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 1340.58,
+                "paid_currency": "Euro",
+                "amount_received": 1340.58,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Reimbursement BCDD48"
+              },
+              {
+                "txn_id": 3590292,
+                "ts": "2022-09-07T16:43:00",
+                "from_account": "A0481dcdf44c9",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 3034.5,
+                "paid_currency": "Euro",
+                "amount_received": 3034.5,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Software license renewal"
+              },
+              {
+                "txn_id": 3590387,
+                "ts": "2022-09-07T16:43:00",
+                "from_account": "Aec84e1f42006",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 3028.99,
+                "paid_currency": "Euro",
+                "amount_received": 3028.99,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Invoice 32340 settlement"
+              },
+              {
+                "txn_id": 3592036,
+                "ts": "2022-09-07T16:48:00",
+                "from_account": "A8fa239dbf875",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 677524.83,
+                "paid_currency": "Euro",
+                "amount_received": 677524.83,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Salary June"
+              },
+              {
+                "txn_id": 3592487,
+                "ts": "2022-09-07T16:49:00",
+                "from_account": "A6ba8c1795df6",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 4154.36,
+                "paid_currency": "Euro",
+                "amount_received": 4154.36,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Order 059475"
+              },
+              {
+                "txn_id": 3593446,
+                "ts": "2022-09-07T16:52:00",
+                "from_account": "Ac842b41862f4",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 2482.94,
+                "paid_currency": "Euro",
+                "amount_received": 2482.94,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Payment for services May"
+              },
+              {
+                "txn_id": 3594672,
+                "ts": "2022-09-07T16:56:00",
+                "from_account": "A8b925e25b902",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 2625.67,
+                "paid_currency": "Euro",
+                "amount_received": 2625.67,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Consulting fee"
+              },
+              {
+                "txn_id": 3594955,
+                "ts": "2022-09-07T16:57:00",
+                "from_account": "A97c98a87867b",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 475312.07,
+                "paid_currency": "Euro",
+                "amount_received": 475312.07,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Deposit for order B4FFE5"
+              },
+              {
+                "txn_id": 3594983,
+                "ts": "2022-09-07T16:57:00",
+                "from_account": "Acf1bce0237ae",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 1353.05,
+                "paid_currency": "Euro",
+                "amount_received": 1353.05,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Rent April"
+              },
+              {
+                "txn_id": 3595684,
+                "ts": "2022-09-07T16:59:00",
+                "from_account": "Ad5b3b461180c",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 3207.19,
+                "paid_currency": "Euro",
+                "amount_received": 3207.19,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Tuition September"
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "get_transactions",
+      "args": {
+        "txn_ids": [
+          3587627,
+          3588899,
+          3589003,
+          3589873,
+          3590292,
+          3590387,
+          3592036,
+          3592487,
+          3593446,
+          3594672,
+          3594955,
+          3594983,
+          3595684
+        ],
+        "alert_id": 3820
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"as_of\":\"2022-09-08T00:00:00\",\"omitted\":0,\"transactions\":[{\"txn_id\":3587627,\"ts\":\"2022-09-07T16:34:00\",\"from_account\":\"A4b156548c932\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":3038.97,\"paid_currency\":\"Euro\",\"amount_received\":3038.97,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Insurance premium 55876\"},{\"txn_id\":3588899,\"ts\":\"2022-09-07T16:38:00\",\"from_account\":\"A6e6b2688a271\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":2117.84,\"paid_currency\":\"Euro\",\"amount_received\":2117.84,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Refund 077856\"},{\"txn_id\":3589003,\"ts\":\"2022-09-07T16:39:00\",\"from_account\":\"A072a398f5fae\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":1108.39,\"paid_currency\":\"Euro\",\"amount_received\":1108.39,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Gift\"},{\"txn_id\":3589873,\"ts\":\"2022-09-07T16:41:00\",\"from_account\":\"Ad53522666599\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":1340.58,\"paid_currency\":\"Euro\",\"amount_received\":1340.58,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Reimbursement BCDD48\"},{\"txn_id\":3590292,\"ts\":\"2022-09-07T16:43:00\",\"from_account\":\"A0481dcdf44c9\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":3034.5,\"paid_currency\":\"Euro\",\"amount_received\":3034.5,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Software license renewal\"},{\"txn_id\":3590387,\"ts\":\"2022-09-07T16:43:00\",\"from_account\":\"Aec84e1f42006\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":3028.99,\"paid_currency\":\"Euro\",\"amount_received\":3028.99,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Invoice 32340 settlement\"},{\"txn_id\":3592036,\"ts\":\"2022-09-07T16:48:00\",\"from_account\":\"A8fa239dbf875\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":677524.83,\"paid_currency\":\"Euro\",\"amount_received\":677524.83,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Salary June\"},{\"txn_id\":3592487,\"ts\":\"2022-09-07T16:49:00\",\"from_account\":\"A6ba8c1795df6\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":4154.36,\"paid_currency\":\"Euro\",\"amount_received\":4154.36,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Order 059475\"},{\"txn_id\":3593446,\"ts\":\"2022-09-07T16:52:00\",\"from_account\":\"Ac842b41862f4\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":2482.94,\"paid_currency\":\"Euro\",\"amount_received\":2482.94,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Payment for services May\"},{\"txn_id\":3594672,\"ts\":\"2022-09-07T16:56:00\",\"from_account\":\"A8b925e25b902\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":2625.67,\"paid_currency\":\"Euro\",\"amount_received\":2625.67,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Consulting fee\"},{\"txn_id\":3594955,\"ts\":\"2022-09-07T16:57:00\",\"from_account\":\"A97c98a87867b\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":475312.07,\"paid_currency\":\"Euro\",\"amount_received\":475312.07,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Deposit for order B4FFE5\"},{\"txn_id\":3594983,\"ts\":\"2022-09-07T16:57:00\",\"from_account\":\"Acf1bce0237ae\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":1353.05,\"paid_currency\":\"Euro\",\"amount_received\":1353.05,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Rent April\"},{\"txn_id\":3595684,\"ts\":\"2022-09-07T16:59:00\",\"from_account\":\"Ad5b3b461180c\",\"to_account\":\"A18ce0f533203\",\"amount_paid\":3207.19,\"paid_currency\":\"Euro\",\"amount_received\":3207.19,\"received_currency\":\"Euro\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Tuition September\"}]}",
+            "id": "lc_6c3076ef-aee7-494f-9cb5-1e76b1264ebe"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_transactions",
+        "id": null,
+        "tool_call_id": "evidence-3",
+        "artifact": {
+          "structured_content": {
+            "as_of": "2022-09-08T00:00:00",
+            "omitted": 0,
+            "transactions": [
+              {
+                "txn_id": 3587627,
+                "ts": "2022-09-07T16:34:00",
+                "from_account": "A4b156548c932",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 3038.97,
+                "paid_currency": "Euro",
+                "amount_received": 3038.97,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Insurance premium 55876"
+              },
+              {
+                "txn_id": 3588899,
+                "ts": "2022-09-07T16:38:00",
+                "from_account": "A6e6b2688a271",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 2117.84,
+                "paid_currency": "Euro",
+                "amount_received": 2117.84,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Refund 077856"
+              },
+              {
+                "txn_id": 3589003,
+                "ts": "2022-09-07T16:39:00",
+                "from_account": "A072a398f5fae",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 1108.39,
+                "paid_currency": "Euro",
+                "amount_received": 1108.39,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Gift"
+              },
+              {
+                "txn_id": 3589873,
+                "ts": "2022-09-07T16:41:00",
+                "from_account": "Ad53522666599",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 1340.58,
+                "paid_currency": "Euro",
+                "amount_received": 1340.58,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Reimbursement BCDD48"
+              },
+              {
+                "txn_id": 3590292,
+                "ts": "2022-09-07T16:43:00",
+                "from_account": "A0481dcdf44c9",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 3034.5,
+                "paid_currency": "Euro",
+                "amount_received": 3034.5,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Software license renewal"
+              },
+              {
+                "txn_id": 3590387,
+                "ts": "2022-09-07T16:43:00",
+                "from_account": "Aec84e1f42006",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 3028.99,
+                "paid_currency": "Euro",
+                "amount_received": 3028.99,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Invoice 32340 settlement"
+              },
+              {
+                "txn_id": 3592036,
+                "ts": "2022-09-07T16:48:00",
+                "from_account": "A8fa239dbf875",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 677524.83,
+                "paid_currency": "Euro",
+                "amount_received": 677524.83,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Salary June"
+              },
+              {
+                "txn_id": 3592487,
+                "ts": "2022-09-07T16:49:00",
+                "from_account": "A6ba8c1795df6",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 4154.36,
+                "paid_currency": "Euro",
+                "amount_received": 4154.36,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Order 059475"
+              },
+              {
+                "txn_id": 3593446,
+                "ts": "2022-09-07T16:52:00",
+                "from_account": "Ac842b41862f4",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 2482.94,
+                "paid_currency": "Euro",
+                "amount_received": 2482.94,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Payment for services May"
+              },
+              {
+                "txn_id": 3594672,
+                "ts": "2022-09-07T16:56:00",
+                "from_account": "A8b925e25b902",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 2625.67,
+                "paid_currency": "Euro",
+                "amount_received": 2625.67,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Consulting fee"
+              },
+              {
+                "txn_id": 3594955,
+                "ts": "2022-09-07T16:57:00",
+                "from_account": "A97c98a87867b",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 475312.07,
+                "paid_currency": "Euro",
+                "amount_received": 475312.07,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Deposit for order B4FFE5"
+              },
+              {
+                "txn_id": 3594983,
+                "ts": "2022-09-07T16:57:00",
+                "from_account": "Acf1bce0237ae",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 1353.05,
+                "paid_currency": "Euro",
+                "amount_received": 1353.05,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Rent April"
+              },
+              {
+                "txn_id": 3595684,
+                "ts": "2022-09-07T16:59:00",
+                "from_account": "Ad5b3b461180c",
+                "to_account": "A18ce0f533203",
+                "amount_paid": 3207.19,
+                "paid_currency": "Euro",
+                "amount_received": 3207.19,
+                "received_currency": "Euro",
+                "payment_format": "ACH",
+                "reference_untrusted": "Tuition September"
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "get_typology_candidates",
+      "args": {
+        "alert_id": 3820
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"alert_id\":3820,\"candidates\":[{\"rule_id\":\"R1_fan_in\",\"score\":13.0,\"evidence_txn_ids\":[3587627,3588899,3589003,3589873,3590292,3590387,3592036,3592487,3593446,3594672,3594955,3594983,3595684],\"typologies\":[\"fan_in\",\"gather_scatter\"]}]}",
+            "id": "lc_ed99d082-e04e-4e18-b56b-18d2e609ec25"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_typology_candidates",
+        "id": null,
+        "tool_call_id": "evidence-4",
+        "artifact": {
+          "structured_content": {
+            "alert_id": 3820,
+            "candidates": [
+              {
+                "rule_id": "R1_fan_in",
+                "score": 13.0,
+                "evidence_txn_ids": [
+                  3587627,
+                  3588899,
+                  3589003,
+                  3589873,
+                  3590292,
+                  3590387,
+                  3592036,
+                  3592487,
+                  3593446,
+                  3594672,
+                  3594955,
+                  3594983,
+                  3595684
+                ],
+                "typologies": [
+                  "fan_in",
+                  "gather_scatter"
+                ]
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "trace_funds",
+      "args": {
+        "account_id": "A18ce0f533203",
+        "direction": "forward",
+        "max_hops": 2,
+        "alert_id": 3820
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"as_of\":\"2022-09-08T00:00:00\",\"direction\":\"forward\",\"max_hops\":2,\"truncated\":false,\"paths\":[]}",
+            "id": "lc_49c065bf-1de1-4bb0-b584-00744a651f07"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "trace_funds",
+        "id": null,
+        "tool_call_id": "evidence-5",
+        "artifact": {
+          "structured_content": {
+            "as_of": "2022-09-08T00:00:00",
+            "direction": "forward",
+            "max_hops": 2,
+            "truncated": false,
+            "paths": []
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "trace_funds",
+      "args": {
+        "account_id": "A18ce0f533203",
+        "direction": "backward",
+        "max_hops": 2,
+        "alert_id": 3820
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"as_of\":\"2022-09-08T00:00:00\",\"direction\":\"backward\",\"max_hops\":2,\"truncated\":false,\"paths\":[{\"flow_eur\":475312.07,\"hops\":[{\"txn_id\":3594955,\"ts\":\"2022-09-07T16:57:00\",\"from_account\":\"A97c98a87867b\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":475312.07}]},{\"flow_eur\":4154.36,\"hops\":[{\"txn_id\":3592487,\"ts\":\"2022-09-07T16:49:00\",\"from_account\":\"A6ba8c1795df6\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":4154.36}]},{\"flow_eur\":3207.19,\"hops\":[{\"txn_id\":3595684,\"ts\":\"2022-09-07T16:59:00\",\"from_account\":\"Ad5b3b461180c\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":3207.19}]},{\"flow_eur\":3038.97,\"hops\":[{\"txn_id\":3587627,\"ts\":\"2022-09-07T16:34:00\",\"from_account\":\"A4b156548c932\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":3038.97}]},{\"flow_eur\":3034.5,\"hops\":[{\"txn_id\":3590292,\"ts\":\"2022-09-07T16:43:00\",\"from_account\":\"A0481dcdf44c9\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":3034.5}]},{\"flow_eur\":3028.99,\"hops\":[{\"txn_id\":3590387,\"ts\":\"2022-09-07T16:43:00\",\"from_account\":\"Aec84e1f42006\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":3028.99}]},{\"flow_eur\":2625.67,\"hops\":[{\"txn_id\":3594672,\"ts\":\"2022-09-07T16:56:00\",\"from_account\":\"A8b925e25b902\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":2625.67}]},{\"flow_eur\":2482.94,\"hops\":[{\"txn_id\":3593446,\"ts\":\"2022-09-07T16:52:00\",\"from_account\":\"Ac842b41862f4\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":2482.94}]},{\"flow_eur\":2117.84,\"hops\":[{\"txn_id\":3588899,\"ts\":\"2022-09-07T16:38:00\",\"from_account\":\"A6e6b2688a271\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":2117.84}]},{\"flow_eur\":1353.05,\"hops\":[{\"txn_id\":3594983,\"ts\":\"2022-09-07T16:57:00\",\"from_account\":\"Acf1bce0237ae\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":1353.05}]},{\"flow_eur\":1340.58,\"hops\":[{\"txn_id\":3589873,\"ts\":\"2022-09-07T16:41:00\",\"from_account\":\"Ad53522666599\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":1340.58}]},{\"flow_eur\":1108.39,\"hops\":[{\"txn_id\":3589003,\"ts\":\"2022-09-07T16:39:00\",\"from_account\":\"A072a398f5fae\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":1108.39}]},{\"flow_eur\":288.67,\"hops\":[{\"txn_id\":2893055,\"ts\":\"2022-09-06T05:42:00\",\"from_account\":\"Af2cfef37584a\",\"to_account\":\"A8fa239dbf875\",\"amount_eur\":288.67},{\"txn_id\":3592036,\"ts\":\"2022-09-07T16:48:00\",\"from_account\":\"A8fa239dbf875\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":677524.83}]},{\"flow_eur\":142.05,\"hops\":[{\"txn_id\":2894479,\"ts\":\"2022-09-06T05:46:00\",\"from_account\":\"Af2cfef37584a\",\"to_account\":\"A8fa239dbf875\",\"amount_eur\":142.05},{\"txn_id\":3592036,\"ts\":\"2022-09-07T16:48:00\",\"from_account\":\"A8fa239dbf875\",\"to_account\":\"A18ce0f533203\",\"amount_eur\":677524.83}]}]}",
+            "id": "lc_bfea023c-b8fa-4205-9912-8e78437005fc"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "trace_funds",
+        "id": null,
+        "tool_call_id": "evidence-6",
+        "artifact": {
+          "structured_content": {
+            "as_of": "2022-09-08T00:00:00",
+            "direction": "backward",
+            "max_hops": 2,
+            "truncated": false,
+            "paths": [
+              {
+                "flow_eur": 475312.07,
+                "hops": [
+                  {
+                    "txn_id": 3594955,
+                    "ts": "2022-09-07T16:57:00",
+                    "from_account": "A97c98a87867b",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 475312.07
+                  }
+                ]
+              },
+              {
+                "flow_eur": 4154.36,
+                "hops": [
+                  {
+                    "txn_id": 3592487,
+                    "ts": "2022-09-07T16:49:00",
+                    "from_account": "A6ba8c1795df6",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 4154.36
+                  }
+                ]
+              },
+              {
+                "flow_eur": 3207.19,
+                "hops": [
+                  {
+                    "txn_id": 3595684,
+                    "ts": "2022-09-07T16:59:00",
+                    "from_account": "Ad5b3b461180c",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 3207.19
+                  }
+                ]
+              },
+              {
+                "flow_eur": 3038.97,
+                "hops": [
+                  {
+                    "txn_id": 3587627,
+                    "ts": "2022-09-07T16:34:00",
+                    "from_account": "A4b156548c932",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 3038.97
+                  }
+                ]
+              },
+              {
+                "flow_eur": 3034.5,
+                "hops": [
+                  {
+                    "txn_id": 3590292,
+                    "ts": "2022-09-07T16:43:00",
+                    "from_account": "A0481dcdf44c9",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 3034.5
+                  }
+                ]
+              },
+              {
+                "flow_eur": 3028.99,
+                "hops": [
+                  {
+                    "txn_id": 3590387,
+                    "ts": "2022-09-07T16:43:00",
+                    "from_account": "Aec84e1f42006",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 3028.99
+                  }
+                ]
+              },
+              {
+                "flow_eur": 2625.67,
+                "hops": [
+                  {
+                    "txn_id": 3594672,
+                    "ts": "2022-09-07T16:56:00",
+                    "from_account": "A8b925e25b902",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 2625.67
+                  }
+                ]
+              },
+              {
+                "flow_eur": 2482.94,
+                "hops": [
+                  {
+                    "txn_id": 3593446,
+                    "ts": "2022-09-07T16:52:00",
+                    "from_account": "Ac842b41862f4",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 2482.94
+                  }
+                ]
+              },
+              {
+                "flow_eur": 2117.84,
+                "hops": [
+                  {
+                    "txn_id": 3588899,
+                    "ts": "2022-09-07T16:38:00",
+                    "from_account": "A6e6b2688a271",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 2117.84
+                  }
+                ]
+              },
+              {
+                "flow_eur": 1353.05,
+                "hops": [
+                  {
+                    "txn_id": 3594983,
+                    "ts": "2022-09-07T16:57:00",
+                    "from_account": "Acf1bce0237ae",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 1353.05
+                  }
+                ]
+              },
+              {
+                "flow_eur": 1340.58,
+                "hops": [
+                  {
+                    "txn_id": 3589873,
+                    "ts": "2022-09-07T16:41:00",
+                    "from_account": "Ad53522666599",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 1340.58
+                  }
+                ]
+              },
+              {
+                "flow_eur": 1108.39,
+                "hops": [
+                  {
+                    "txn_id": 3589003,
+                    "ts": "2022-09-07T16:39:00",
+                    "from_account": "A072a398f5fae",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 1108.39
+                  }
+                ]
+              },
+              {
+                "flow_eur": 288.67,
+                "hops": [
+                  {
+                    "txn_id": 2893055,
+                    "ts": "2022-09-06T05:42:00",
+                    "from_account": "Af2cfef37584a",
+                    "to_account": "A8fa239dbf875",
+                    "amount_eur": 288.67
+                  },
+                  {
+                    "txn_id": 3592036,
+                    "ts": "2022-09-07T16:48:00",
+                    "from_account": "A8fa239dbf875",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 677524.83
+                  }
+                ]
+              },
+              {
+                "flow_eur": 142.05,
+                "hops": [
+                  {
+                    "txn_id": 2894479,
+                    "ts": "2022-09-06T05:46:00",
+                    "from_account": "Af2cfef37584a",
+                    "to_account": "A8fa239dbf875",
+                    "amount_eur": 142.05
+                  },
+                  {
+                    "txn_id": 3592036,
+                    "ts": "2022-09-07T16:48:00",
+                    "from_account": "A8fa239dbf875",
+                    "to_account": "A18ce0f533203",
+                    "amount_eur": 677524.83
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "search_regulations",
+      "args": {
+        "query": "\"reasonable grounds to suspect\" FIU",
+        "top_k": 3
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"query\":\"\\\"reasonable grounds to suspect\\\" FIU\",\"passages\":[{\"passage_id\":\"AMLR art. 69(1)\",\"doc_id\":\"AMLR\",\"article\":\"69\",\"paragraph\":\"1\",\"heading\":\"Reporting of suspicions\",\"text\":\"Obliged entities, and, where applicable, their directors and employees, shall cooperate fully with the FIU by promptly:\\n(a) reporting to the FIU, on their own initiative, where the obliged entity knows, suspects or has reasonable grounds to suspect that funds or activities, regardless of the amount involved, are the proceeds of criminal activity or are related to terrorist financing or criminal activity and by responding to requests by the FIU for additional information in such cases;\\n(b) providing the FIU, at its request, with all necessary information, including information on transaction records, within the deadlines imposed.\\nAll suspicious transactions, including attempted transactions and suspicions arising from the inability to conduct customer due diligence shall be reported in accordance with the first subparagraph.\\nFor the purposes of the first subparagraph, obliged entities shall reply to requests for information by the FIU within 5 working days. In justified and urgent cases, FIUs may shorten that deadline, including to less than 24 hours.\\nBy way of derogation from the third subparagraph, the FIU may extend the deadline for a response beyond the 5 working days where it considers it justified and provided that the extension does not undermine the FIU’s analysis.\",\"content_sha256\":\"387cb3ebedea61e9f665c844427c9d4d4d83fc8d114cb883fb701d6a268b1434\",\"rank\":0.010722611},{\"passage_id\":\"AMLR art. 83(1)\",\"doc_id\":\"AMLR\",\"article\":\"83\",\"paragraph\":\"1\",\"heading\":\"Cooperation between FIUs and OLAF\",\"text\":\"Pursuant to Article 8(3) of Regulation (EU, Euratom) No 883/2013 of the European Parliament and of the Council, each FIU shall transmit without delay the results of its analyses and any additional relevant information to OLAF where there are reasonable grounds to suspect that fraud, corruption or any other illegal activity affecting the Union’s financial interests are being or have been committed in respect of which OLAF could exercise its competence in accordance with Article 8 of that Regulation.\",\"content_sha256\":\"2b995df43607be154e3578d240f284d76c710c2cc916cbac91c68557db545503\",\"rank\":0.004761905},{\"passage_id\":\"AMLR art. 81(1)\",\"doc_id\":\"AMLR\",\"article\":\"81\",\"paragraph\":\"1\",\"heading\":\"Cooperation between FIUs and the EPPO\",\"text\":\"Pursuant to Article 24 of Regulation (EU) 2017/1939, each FIU shall without undue delay report to the EPPO the results of its analyses and any additional relevant information where there are reasonable grounds to suspect that money laundering and other criminal activity are being or have been committed in respect of which the EPPO could exercise its competence in accordance with Article 22 and Article 25(2) and (3) of that Regulation.\\nBy 10 July 2026, AMLA shall, in consultation with the EPPO, develop draft implementing technical standards and submit them to the Commission for adoption. Those draft implementing technical standards shall specify the format to be used by FIUs for reporting information to the EPPO.\\nPower is conferred on the Commission to adopt the implementing technical standards referred to in the second subparagraph of this paragraph in accordance with Article 53 of Regulation (EU) 2024/1620.\",\"content_sha256\":\"a18f5e366eea3b4c1695bb2beea7433a2b00a38f5750058e7d1b0087d5ab4549\",\"rank\":0.0043478264}]}",
+            "id": "lc_fee8eb38-b477-439c-83be-2143d1a340b1"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_regulations",
+        "id": null,
+        "tool_call_id": "regulations-0",
+        "artifact": {
+          "structured_content": {
+            "query": "\"reasonable grounds to suspect\" FIU",
+            "passages": [
+              {
+                "passage_id": "AMLR art. 69(1)",
+                "doc_id": "AMLR",
+                "article": "69",
+                "paragraph": "1",
+                "heading": "Reporting of suspicions",
+                "text": "Obliged entities, and, where applicable, their directors and employees, shall cooperate fully with the FIU by promptly:\n(a) reporting to the FIU, on their own initiative, where the obliged entity knows, suspects or has reasonable grounds to suspect that funds or activities, regardless of the amount involved, are the proceeds of criminal activity or are related to terrorist financing or criminal activity and by responding to requests by the FIU for additional information in such cases;\n(b) providing the FIU, at its request, with all necessary information, including information on transaction records, within the deadlines imposed.\nAll suspicious transactions, including attempted transactions and suspicions arising from the inability to conduct customer due diligence shall be reported in accordance with the first subparagraph.\nFor the purposes of the first subparagraph, obliged entities shall reply to requests for information by the FIU within 5 working days. In justified and urgent cases, FIUs may shorten that deadline, including to less than 24 hours.\nBy way of derogation from the third subparagraph, the FIU may extend the deadline for a response beyond the 5 working days where it considers it justified and provided that the extension does not undermine the FIU’s analysis.",
+                "content_sha256": "387cb3ebedea61e9f665c844427c9d4d4d83fc8d114cb883fb701d6a268b1434",
+                "rank": 0.010722611
+              },
+              {
+                "passage_id": "AMLR art. 83(1)",
+                "doc_id": "AMLR",
+                "article": "83",
+                "paragraph": "1",
+                "heading": "Cooperation between FIUs and OLAF",
+                "text": "Pursuant to Article 8(3) of Regulation (EU, Euratom) No 883/2013 of the European Parliament and of the Council, each FIU shall transmit without delay the results of its analyses and any additional relevant information to OLAF where there are reasonable grounds to suspect that fraud, corruption or any other illegal activity affecting the Union’s financial interests are being or have been committed in respect of which OLAF could exercise its competence in accordance with Article 8 of that Regulation.",
+                "content_sha256": "2b995df43607be154e3578d240f284d76c710c2cc916cbac91c68557db545503",
+                "rank": 0.004761905
+              },
+              {
+                "passage_id": "AMLR art. 81(1)",
+                "doc_id": "AMLR",
+                "article": "81",
+                "paragraph": "1",
+                "heading": "Cooperation between FIUs and the EPPO",
+                "text": "Pursuant to Article 24 of Regulation (EU) 2017/1939, each FIU shall without undue delay report to the EPPO the results of its analyses and any additional relevant information where there are reasonable grounds to suspect that money laundering and other criminal activity are being or have been committed in respect of which the EPPO could exercise its competence in accordance with Article 22 and Article 25(2) and (3) of that Regulation.\nBy 10 July 2026, AMLA shall, in consultation with the EPPO, develop draft implementing technical standards and submit them to the Commission for adoption. Those draft implementing technical standards shall specify the format to be used by FIUs for reporting information to the EPPO.\nPower is conferred on the Commission to adopt the implementing technical standards referred to in the second subparagraph of this paragraph in accordance with Article 53 of Regulation (EU) 2024/1620.",
+                "content_sha256": "a18f5e366eea3b4c1695bb2beea7433a2b00a38f5750058e7d1b0087d5ab4549",
+                "rank": 0.0043478264
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "search_regulations",
+      "args": {
+        "query": "zawiadamia Generalnego Inspektora podejrzenie",
+        "top_k": 3
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"query\":\"zawiadamia Generalnego Inspektora podejrzenie\",\"passages\":[{\"passage_id\":\"PL-AML art. 74 ust. 1\",\"doc_id\":\"PL-AML\",\"article\":\"74\",\"paragraph\":\"1\",\"heading\":null,\"text\":\"Instytucja obowiązana zawiadamia Generalnego Inspektora o okolicznościach, które mogą wskazywać na podejrzenie popełnienia przestępstwa prania pieniędzy lub finansowania terroryzmu.\",\"content_sha256\":\"cca62e14af78dd26e92862a2f36c0d65cbad6ed1d42c7a729759364e75b66078\",\"rank\":0.014285714}]}",
+            "id": "lc_b1e57a17-35b8-4901-aa76-d292d56fb517"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_regulations",
+        "id": null,
+        "tool_call_id": "regulations-1",
+        "artifact": {
+          "structured_content": {
+            "query": "zawiadamia Generalnego Inspektora podejrzenie",
+            "passages": [
+              {
+                "passage_id": "PL-AML art. 74 ust. 1",
+                "doc_id": "PL-AML",
+                "article": "74",
+                "paragraph": "1",
+                "heading": null,
+                "text": "Instytucja obowiązana zawiadamia Generalnego Inspektora o okolicznościach, które mogą wskazywać na podejrzenie popełnienia przestępstwa prania pieniędzy lub finansowania terroryzmu.",
+                "content_sha256": "cca62e14af78dd26e92862a2f36c0d65cbad6ed1d42c7a729759364e75b66078",
+                "rank": 0.014285714
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "search_regulations",
+      "args": {
+        "query": "transaction \"unusually large\" complex purpose",
+        "top_k": 3
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"query\":\"transaction \\\"unusually large\\\" complex purpose\",\"passages\":[{\"passage_id\":\"AMLR art. 34(2)\",\"doc_id\":\"AMLR\",\"article\":\"34\",\"paragraph\":\"2\",\"heading\":\"Scope of application of enhanced due diligence measures\",\"text\":\"Obliged entities shall examine the origin and destination of funds involved in, and the purpose of, all transactions that fulfil at least one of the following conditions:\\n(a) the transaction is of a complex nature;\\n(b) the transaction is unusually large;\\n(c) the transaction is conducted in an unusual pattern;\\n(d) the transaction does not have an apparent economic or lawful purpose.\",\"content_sha256\":\"4150d7a697e63216b4e2846f135f9484bd70477371c0f560bf807cea6fc37414\",\"rank\":0.009307359}]}",
+            "id": "lc_51f0a8f5-9fac-472c-b719-ed6e996b7049"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_regulations",
+        "id": null,
+        "tool_call_id": "regulations-2",
+        "artifact": {
+          "structured_content": {
+            "query": "transaction \"unusually large\" complex purpose",
+            "passages": [
+              {
+                "passage_id": "AMLR art. 34(2)",
+                "doc_id": "AMLR",
+                "article": "34",
+                "paragraph": "2",
+                "heading": "Scope of application of enhanced due diligence measures",
+                "text": "Obliged entities shall examine the origin and destination of funds involved in, and the purpose of, all transactions that fulfil at least one of the following conditions:\n(a) the transaction is of a complex nature;\n(b) the transaction is unusually large;\n(c) the transaction is conducted in an unusual pattern;\n(d) the transaction does not have an apparent economic or lawful purpose.",
+                "content_sha256": "4150d7a697e63216b4e2846f135f9484bd70477371c0f560bf807cea6fc37414",
+                "rank": 0.009307359
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "search_regulations",
+      "args": {
+        "query": "skomplikowanych nietypowy",
+        "top_k": 3
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"query\":\"skomplikowanych nietypowy\",\"passages\":[{\"passage_id\":\"PL-AML art. 43 ust. 4\",\"doc_id\":\"PL-AML\",\"article\":\"43\",\"paragraph\":\"4\",\"heading\":null,\"text\":\"W przypadku ujawnienia transakcji:\\n1) skomplikowanych lub\\n2) opiewających na wysokie kwoty, które nie są uzasadnione okolicznościami przeprowadzenia transakcji, lub\\n3) przeprowadzanych w nietypowy sposób, lub\\n4) wydających się nie mieć uzasadnienia prawnego lub gospodarczego\\n– instytucje obowiązane podejmują działania w celu wyjaśnienia okoliczności, w jakich przeprowadzono te transakcje, oraz, w przypadku transakcji przeprowadzanych w ramach stosunków gospodarczych, intensyfikują stosowanie środka bezpieczeństwa finansowego, o którym mowa w art. 34 ust. 1 pkt 4, w odniesieniu do stosunków gospodarczych, w ramach których te transakcje zostały przeprowadzone.\",\"content_sha256\":\"dc487b63c31ea5ea0164d9e02646198f619a3dea22916185a63b2781d5243a8c\",\"rank\":0.0055555557}]}",
+            "id": "lc_1f023814-4f65-4235-98ea-e92f92f69ed3"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_regulations",
+        "id": null,
+        "tool_call_id": "regulations-3",
+        "artifact": {
+          "structured_content": {
+            "query": "skomplikowanych nietypowy",
+            "passages": [
+              {
+                "passage_id": "PL-AML art. 43 ust. 4",
+                "doc_id": "PL-AML",
+                "article": "43",
+                "paragraph": "4",
+                "heading": null,
+                "text": "W przypadku ujawnienia transakcji:\n1) skomplikowanych lub\n2) opiewających na wysokie kwoty, które nie są uzasadnione okolicznościami przeprowadzenia transakcji, lub\n3) przeprowadzanych w nietypowy sposób, lub\n4) wydających się nie mieć uzasadnienia prawnego lub gospodarczego\n– instytucje obowiązane podejmują działania w celu wyjaśnienia okoliczności, w jakich przeprowadzono te transakcje, oraz, w przypadku transakcji przeprowadzanych w ramach stosunków gospodarczych, intensyfikują stosowanie środka bezpieczeństwa finansowego, o którym mowa w art. 34 ust. 1 pkt 4, w odniesieniu do stosunków gospodarczych, w ramach których te transakcje zostały przeprowadzone.",
+                "content_sha256": "dc487b63c31ea5ea0164d9e02646198f619a3dea22916185a63b2781d5243a8c",
+                "rank": 0.0055555557
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    }
+  ]
+}

@@ -9,11 +9,15 @@ from aml_investigator.investigation.models import MODEL_NAMES
 
 
 def run_mcp(args: argparse.Namespace) -> None:
+    from aml_investigator.corpus.embeddings import query_embedder
     from aml_investigator.mcp_server.server import build_server
 
-    build_server(settings_for(args).mcp_conninfo, reference_variant=args.reference_variant).run(
-        transport="http", host=args.host, port=args.port
-    )
+    settings = settings_for(args)
+    build_server(
+        settings.mcp_conninfo,
+        reference_variant=args.reference_variant,
+        embed_query=query_embedder(settings.azure_openai_endpoint),
+    ).run(transport="http", host=args.host, port=args.port)
 
 
 def run_api(args: argparse.Namespace) -> None:
@@ -23,7 +27,9 @@ def run_api(args: argparse.Namespace) -> None:
     from aml_investigator.web.app import create_app
 
     settings = settings_for(args)
-    app = create_app(settings, mcp=args.mcp_url, model=chat_model(args.model, settings.database))
+    app = create_app(
+        settings, mcp=args.mcp_url, model=chat_model(args.model, settings.database, settings.azure_openai_endpoint)
+    )
     uvicorn.run(app, host=args.host, port=args.port, log_config=None)
 
 
@@ -42,6 +48,7 @@ async def investigate_day(
     from langchain.mcp import MCPAdapter
 
     from aml_investigator.core.tracing import tracing_callbacks
+    from aml_investigator.corpus.embeddings import query_embedder
     from aml_investigator.investigation.models import chat_model
     from aml_investigator.investigation.service import open_investigation_service
     from aml_investigator.mcp_server.server import build_server
@@ -49,11 +56,13 @@ async def investigate_day(
     routes: Counter[str] = Counter()
     statuses: Counter[str] = Counter()
     async with (
-        MCPAdapter(build_server(settings.mcp_conninfo)) as mcp,
+        MCPAdapter(
+            build_server(settings.mcp_conninfo, embed_query=query_embedder(settings.azure_openai_endpoint))
+        ) as mcp,
         open_investigation_service(
             app_conninfo=settings.app_conninfo,
             mcp=mcp,
-            model=chat_model(model, settings.database),
+            model=chat_model(model, settings.database, settings.azure_openai_endpoint),
             callbacks=tracing_callbacks(settings),
         ) as service,
     ):

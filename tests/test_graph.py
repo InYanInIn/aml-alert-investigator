@@ -179,6 +179,8 @@ async def test_valid_path_stops_at_review_with_a_traced_investigation(db: Databa
     assert (name, prompt_version, recommendation, route) == ("scripted", PROMPT_VERSION, "escalate", "escalated")
     assert verification == {"status": "passed", "errors": []}
     assert (trace["loop_stop"], trace["tokens"], trace["repairs"]) == ("model_done", 100, 0)
+    assert trace["usage"] == {"input_tokens": 100, "cached_input_tokens": 0, "output_tokens": 0}
+    assert trace["cost_usd"] is None
     assert trace["reference_variant"] == "clean"
     assert trace["verifications"] == [{"status": "passed", "errors": []}]
     phases = [(call["phase"], call["tool"]) for call in trace["tool_calls"]]

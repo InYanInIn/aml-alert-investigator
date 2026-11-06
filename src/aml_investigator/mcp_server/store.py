@@ -6,6 +6,7 @@ from psycopg.rows import DictRow
 from aml_investigator.core.db import Pool
 from aml_investigator.core.errors import DomainError
 from aml_investigator.core.sql import load
+from aml_investigator.corpus.embeddings import QueryEmbedder, vector_literal
 from aml_investigator.mcp_server.schemas import (
     AccountProfile,
     Alert,
@@ -37,12 +38,15 @@ MAX_PATHS = 20
 FIRST_HOP_BRANCHING = 20
 LATER_HOP_BRANCHING = 5
 MAX_PASSAGES = 5
+PASSAGES_PER_DOCUMENT = 3
+REGULATION_DOCUMENTS = ("AMLR", "PL-AML")
 ALERT_SQL = load(__package__, "alert")
 RULE_HITS_SQL = load(__package__, "alert_rule_hits")
 ACCOUNT_PROFILE_SQL = load(__package__, "account_profile")
 COUNTERPARTIES_SQL = load(__package__, "counterparties")
 TRACE_SQL = {"forward": load(__package__, "trace_forward"), "backward": load(__package__, "trace_backward")}
 SEARCH_REGULATIONS_SQL = load(__package__, "search_regulations")
+SEARCH_REGULATIONS_VECTOR_SQL = load(__package__, "search_regulations_vector")
 REGULATION_PASSAGE_SQL = load(__package__, "regulation_passage")
 
 
@@ -60,8 +64,11 @@ class InvalidArgumentError(CaseDataError):
 
 
 class CaseStore:
-    def __init__(self, pool: Pool, reference_variant: ReferenceVariant) -> None:
+    def __init__(
+        self, pool: Pool, reference_variant: ReferenceVariant, embed_query: QueryEmbedder | None = None
+    ) -> None:
         self.pool = pool
+        self.embed_query = embed_query
         self.list_transactions_sql = with_reference("list_transactions", reference_variant)
         self.get_transactions_sql = with_reference("get_transactions", reference_variant)
 
@@ -170,9 +177,20 @@ class CaseStore:
         return TypologyCandidates(alert_id=alert_id, candidates=[typology_candidate(hit) for hit in alert.rule_hits])
 
     async def regulation_matches(self, query: str, *, top_k: int) -> RegulationMatches:
+        limit = clamped(top_k, MAX_PASSAGES)
+        if self.embed_query is None:
+            statements = [(SEARCH_REGULATIONS_SQL, {"query": query, "doc_id": None, "top_k": limit})]
+        else:
+            embedding = vector_literal(await self.embed_query(query))
+            statements = [
+                (SEARCH_REGULATIONS_VECTOR_SQL, {"embedding": embedding, "doc_id": doc_id, "top_k": limit})
+                for doc_id in REGULATION_DOCUMENTS
+            ]
+        rows: list[DictRow] = []
         async with self.pool.connection() as conn:
-            cursor = await conn.execute(SEARCH_REGULATIONS_SQL, {"query": query, "top_k": clamped(top_k, MAX_PASSAGES)})
-            rows = await cursor.fetchall()
+            for statement, params in statements:
+                cursor = await conn.execute(statement, params)
+                rows += await cursor.fetchall()
         return RegulationMatches(query=query, passages=[PassageMatch(**row) for row in rows])
 
     async def regulation_passage(self, passage_id: str) -> RegulationPassage:

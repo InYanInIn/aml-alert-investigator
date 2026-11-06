@@ -258,7 +258,7 @@ cannot widen it), and returns compact aggregates with hard limits.
 | `get_counterparties(alert_id, account_id, direction, start, end)` | per-counterparty counts, EUR volumes, first/last ts, formats | top 20, < `as_of` |
 | `trace_funds(alert_id, account_id, direction, max_hops)` | time-ordered paths with txn IDs, EUR, ts | window to `as_of`; ≤ 3 hops, ≤ 20 paths |
 | `get_typology_candidates(alert_id)` | rule hits mapped to candidate typologies with txn IDs | — |
-| `search_regulations(query, top_k)` | passages with IDs and full text (Postgres full-text) | top 5 |
+| `search_regulations(query, top_k)` | passages with IDs and full text; pgvector cosine search, ranked within each of AMLR and PL-AML (measured in `eval/results/<db>/retrieval.json`); Postgres full-text when no Azure endpoint is configured | top 3 per law, ≤ 5 |
 | `get_regulation_passage(passage_id)` | one passage with `content_sha256` | — |
 
 The server runs with `REFERENCE_VARIANT=clean|injected`; only the eval harness starts an `injected`
