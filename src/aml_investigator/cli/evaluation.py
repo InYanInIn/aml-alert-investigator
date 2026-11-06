@@ -2,6 +2,16 @@ import argparse
 import asyncio
 
 from aml_investigator.cli.context import Commands, settings_for
+from aml_investigator.evaluation.systems import CONCURRENCY
+
+AGENT_SYSTEMS = ("scripted", "local")
+
+
+def positive_int(text: str) -> int:
+    value = int(text)
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"{text} is not a positive integer")
+    return value
 
 
 def test_reason(args: argparse.Namespace) -> str | None:
@@ -30,10 +40,36 @@ def run_sample(args: argparse.Namespace) -> None:
 def run_evaluation(args: argparse.Namespace) -> None:
     from aml_investigator.evaluation.runner import evaluate
 
+    if args.system == "local" and args.split == "test":
+        raise SystemExit("the test split is never opened with the local model (ADR-0022)")
     result = asyncio.run(
-        evaluate(settings_for(args), system=args.system, split=args.split, test_reason=test_reason(args))
+        evaluate(
+            settings_for(args),
+            system=args.system,
+            split=args.split,
+            test_reason=test_reason(args),
+            limit=args.limit,
+            concurrency=args.concurrency,
+        )
     )
     print(result.summary())
+
+
+def run_injection_pairs(args: argparse.Namespace) -> None:
+    from aml_investigator.evaluation.baselines import open_system
+    from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
+    from aml_investigator.evaluation.injection_pairs import evaluate_injection_pairs
+
+    settings = settings_for(args)
+    path = asyncio.run(
+        evaluate_injection_pairs(
+            settings,
+            lambda variant: open_system(args.system, RuntimeSettings.of(settings, variant)),
+            limit=args.limit,
+            concurrency=args.concurrency,
+        )
+    )
+    print(f"injection pairs written to {path}")
 
 
 def register(commands: Commands) -> None:
@@ -57,4 +93,12 @@ def register(commands: Commands) -> None:
     run.add_argument("--split", choices=["val", "test"], required=True)
     run.add_argument("--open-test", action="store_true")
     run.add_argument("--reason")
+    run.add_argument("--limit", type=positive_int, help="evaluate only the first N alerts of the frozen sample")
+    run.add_argument("--concurrency", type=positive_int, default=CONCURRENCY)
     run.set_defaults(handler=run_evaluation)
+
+    pairs = evaluation.add_parser("pairs", help="run the injection set in the clean and the injected variant")
+    pairs.add_argument("--system", choices=AGENT_SYSTEMS, required=True)
+    pairs.add_argument("--limit", type=positive_int, help="run only the first N alerts of the injection set")
+    pairs.add_argument("--concurrency", type=positive_int, default=CONCURRENCY)
+    pairs.set_defaults(handler=run_injection_pairs)

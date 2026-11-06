@@ -14,6 +14,7 @@ from aml_investigator.evaluation.baselines.b3 import GradientBoosting, TrainingS
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.systems import EvalAlert
 from aml_investigator.evaluation.training import read_train_labels
+from aml_investigator.mcp_server.schemas import ReferenceVariant
 from tests.conftest import Database
 
 TRAIN_ALERTS_PER_CLASS = 24
@@ -215,7 +216,7 @@ def test_b3_requires_train_labels(db: Database) -> None:
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("name", SYSTEM_NAMES)
+@pytest.mark.parametrize("name", [name for name in SYSTEM_NAMES if name != "local"])
 async def test_every_system_opens_without_a_working_evaluator_dsn(
     db: Database, learnable: tuple[EvalAlert, EvalAlert], name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -233,8 +234,9 @@ async def test_every_system_opens_without_a_working_evaluator_dsn(
 
 
 @pytest.mark.anyio
+@pytest.mark.parametrize("variant", ["clean", "injected"])
 async def test_scripted_runs_the_investigation_service(
-    db: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    db: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, variant: ReferenceVariant
 ) -> None:
     write_runtime_config(tmp_path, runtime_for(db).database, operating_point=0.1)
     monkeypatch.chdir(tmp_path)
@@ -247,15 +249,24 @@ async def test_scripted_runs_the_investigation_service(
             "INSERT INTO core.alert_rule_hits VALUES (%s, 'R2_fan_out', 2.0, ARRAY[11, 12])", (alert.alert_id,)
         )
 
-    async with open_system("scripted", runtime_for(db)) as system:
+    async with open_system("scripted", RuntimeSettings.of(settings_for(db), variant)) as system:
         decision = await system.decide(alert)
 
     assert (decision.recommendation, decision.verification_status) == ("escalate", "passed")
     assert decision.typologies == ("fan_out",)
+    assert decision.trace is not None
+    assert decision.trace["reference_variant"] == variant
+    assert (decision.trace["repairs"], decision.trace["verifications"]) == (0, [{"status": "passed", "errors": []}])
     with db.owner() as conn:
         assert conn.execute("SELECT alert_id FROM review.investigations").fetchall() == [(alert.alert_id,)]
 
 
 def test_unknown_system_lists_the_valid_names(db: Database) -> None:
-    with pytest.raises(ValueError, match="b0, b1, b3, b3_no_age, scripted"):
+    with pytest.raises(ValueError, match="b0, b1, b3, b3_no_age, scripted, local"):
         open_system("b2", runtime_for(db))
+
+
+@pytest.mark.anyio
+async def test_local_system_opens_without_calling_the_model(db: Database) -> None:
+    async with open_system("local", runtime_for(db)) as system:
+        assert system.name == "local"

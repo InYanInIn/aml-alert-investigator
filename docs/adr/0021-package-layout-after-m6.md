@@ -12,7 +12,7 @@ each. The cross-cutting rules of ADR-0018 (settings, pools, logging, errors, SQL
 | Package | Contents |
 |---|---|
 | `investigation/agent/` | `state.py` (typed `InvestigationState`), `nodes.py` (`InvestigationNodes`: one method per node), `graph.py` (wiring only, checkpointer), `loop.py` (bounded tool loop), `evidence.py`, `tools.py`, `conversation.py` + `prompts/` |
-| `investigation/models/` | `rule_score.py`; M7 adds the Azure model beside it |
+| `investigation/models/` | `rule_score.py`; M6.6 adds the local model and M7 the Azure model beside it (ADR-0022) |
 | `investigation/` | `decision.py`, `verify.py`, `routing.py`, `service.py` (commands only: investigate, record decision, record QA review) |
 | `review/` | `records.py` (read models), `repository.py` + `sql/` (all SQL on `review.*`), `pages.py` (`ReviewPages`: queue, auto-closed, alert list, alert page) |
 | `mcp_server/` | `schemas.py` (the tool contract), `store.py` (`CaseStore`: queries, `as_of` clamping, argument checks, `CaseDataError`), `tools.py` (nine module-level tools; docstrings are the LLM-facing descriptions), `server.py` (assembly, health routes) |

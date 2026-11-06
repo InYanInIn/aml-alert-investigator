@@ -22,6 +22,7 @@ from aml_investigator.investigation.agent.tools import AlertTools, Phase, ToolCa
 from aml_investigator.investigation.decision import AnalystReview, Decision
 from aml_investigator.investigation.routing import AUTO_CLOSE_ANALYST, route_for
 from aml_investigator.investigation.verify import Provenance, Verification, verify
+from aml_investigator.mcp_server.schemas import ReferenceVariant
 from aml_investigator.review.repository import ReviewRepository
 
 NO_DECISION = Decision(recommendation="escalate", typologies=[], who=[], what=[], when=[], where=[], why=[], how=[])
@@ -29,7 +30,13 @@ NO_DECISION = Decision(recommendation="escalate", typologies=[], who=[], what=[]
 
 class InvestigationNodes:
     def __init__(
-        self, *, mcp: MCPAdapter, model: BaseChatModel, repository: ReviewRepository, budget: LoopBudget
+        self,
+        *,
+        mcp: MCPAdapter,
+        model: BaseChatModel,
+        repository: ReviewRepository,
+        budget: LoopBudget,
+        reference_variant: ReferenceVariant,
     ) -> None:
         self.mcp = mcp
         self.model = model
@@ -38,6 +45,7 @@ class InvestigationNodes:
         )
         self.repository = repository
         self.budget = budget
+        self.reference_variant = reference_variant
 
     async def load_alert(self, state: InvestigationState) -> InvestigationState:
         tools = await AlertTools.of(self.mcp, state["alert_id"])
@@ -51,6 +59,7 @@ class InvestigationNodes:
             "tool_calls": [],
             "tokens": 0,
             "repairs": 0,
+            "verifications": [],
         }
         return {
             **started,
@@ -87,9 +96,12 @@ class InvestigationNodes:
 
     async def verify_citations(self, state: InvestigationState) -> InvestigationState:
         draft = state["draft"]
-        if draft is None:
-            return {"verification": Verification(status="failed", errors=state["draft_errors"])}
-        return {"verification": verify(draft, state["provenance"], state["alert"].as_of)}
+        verification = (
+            Verification(status="failed", errors=state["draft_errors"])
+            if draft is None
+            else verify(draft, state["provenance"], state["alert"].as_of)
+        )
+        return {"verification": verification, "verifications": [*state["verifications"], verification]}
 
     async def repair(self, state: InvestigationState) -> InvestigationState:
         request = repair_request(state["draft_output"], state["verification"].errors)
@@ -113,10 +125,12 @@ class InvestigationNodes:
             verification=verification,
             route=route,
             trace={
+                "reference_variant": self.reference_variant,
                 "tool_calls": state["tool_calls"],
                 "loop_stop": state["loop_stop"],
                 "tokens": state["tokens"],
                 "repairs": state["repairs"],
+                "verifications": [attempt.model_dump() for attempt in state["verifications"]],
             },
         )
         return {

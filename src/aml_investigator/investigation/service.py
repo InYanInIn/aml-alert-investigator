@@ -18,6 +18,7 @@ from aml_investigator.core.logging import log_context, timed_event
 from aml_investigator.investigation.agent.graph import InvestigationGraph, build_graph, postgres_checkpointer
 from aml_investigator.investigation.decision import AnalystReview, QaReview
 from aml_investigator.investigation.routing import Route
+from aml_investigator.mcp_server.schemas import ReferenceVariant
 from aml_investigator.review.repository import ReviewRepository
 
 logger = logging.getLogger(__name__)
@@ -95,8 +96,15 @@ async def open_investigation_service(
     mcp: MCPAdapter,
     model: BaseChatModel,
     callbacks: Sequence[BaseCallbackHandler] = (),
+    reference_variant: ReferenceVariant = "clean",
 ) -> AsyncIterator[InvestigationService]:
     async with open_app_pool(app_conninfo) as pool:
         repository = ReviewRepository(pool)
-        graph = build_graph(mcp=mcp, model=model, repository=repository, checkpointer=await postgres_checkpointer(pool))
+        graph = build_graph(
+            mcp=mcp,
+            model=model,
+            repository=repository,
+            checkpointer=await postgres_checkpointer(pool),
+            reference_variant=reference_variant,
+        )
         yield InvestigationService(graph=graph, repository=repository, callbacks=callbacks)

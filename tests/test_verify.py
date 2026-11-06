@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 
 from aml_investigator.investigation.decision import Claim, Decision, Fact, FactField, TypologyVerdict
-from aml_investigator.investigation.verify import Provenance, numbers_in, verify
+from aml_investigator.investigation.verify import Provenance, number_errors, numbers_in, verify
 
 AS_OF = datetime(2022, 9, 3)
 TXN: dict[str, Any] = {
@@ -124,6 +124,7 @@ def test_rule2_unknown_passage_fails() -> None:
         ("paid_currency", "Euro"),
         ("received_currency", "US Dollar"),
         ("date", "2022-09-02"),
+        ("date", "2022-09-02T10:15:00"),
     ],
 )
 def test_rule3_matching_fact_passes(field: FactField, value: str) -> None:
@@ -133,21 +134,24 @@ def test_rule3_matching_fact_passes(field: FactField, value: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("field", "value"),
+    ("field", "value", "returned"),
     [
-        ("amount_paid", "2848.98"),
-        ("amount_paid", "about three thousand"),
-        ("amount_paid", "NaN"),
-        ("amount_received", "2848.96"),
-        ("paid_currency", "US Dollar"),
-        ("received_currency", "Euro"),
-        ("date", "2022-09-03"),
+        ("amount_paid", "2848.98", "2848.96"),
+        ("amount_paid", "about three thousand", "2848.96"),
+        ("amount_paid", "NaN", "2848.96"),
+        ("amount_paid", "2848.96 Euro", "2848.96"),
+        ("amount_received", "2848.96", "3100.5"),
+        ("paid_currency", "US Dollar", "Euro"),
+        ("received_currency", "Euro", "US Dollar"),
+        ("date", "2022-09-03", "2022-09-02"),
     ],
 )
-def test_rule3_mismatching_fact_fails(field: FactField, value: str) -> None:
+def test_rule3_mismatching_fact_fails_and_names_the_returned_value(field: FactField, value: str, returned: str) -> None:
     facts = [Fact(txn_id=11, field=field, value=value)]
 
-    assert errors_of(decision(what=[claim(facts=facts)])) == [f"fact {field}={value} does not match transaction 11"]
+    assert errors_of(decision(what=[claim(facts=facts)])) == [
+        f"fact {field}={value} does not match transaction 11, whose {field} is {returned}"
+    ]
 
 
 @pytest.mark.parametrize("field", ["amount_paid", "paid_currency", "amount_received", "received_currency"])
@@ -189,7 +193,47 @@ def test_rule4_unbacked_number_fails() -> None:
     )
 
     assert errors_of(decision(what=[unbacked])) == [
-        "number 7 in claim 'Paid 2848.96 Euro to 7 counterparties.' is not backed by a fact"
+        "number 7 in claim 'Paid 2848.96 Euro to 7 counterparties.' is not backed by a fact or a cited id"
+    ]
+
+
+def test_rule4_numbers_of_the_claims_cited_ids_are_backed() -> None:
+    cited = claim(
+        text="Transaction 11 breaches AMLR art. 77(1).", txn_ids=[11], passage_ids=["AMLR art. 77(1)"], facts=[]
+    )
+
+    assert number_errors(decision(what=[cited])) == []
+
+
+def test_rule4_timestamp_date_fact_backs_day_and_hour() -> None:
+    stamped = claim(
+        text="Paid on 2022-09-02 at 10:15.", facts=[Fact(txn_id=11, field="date", value="2022-09-02T10:15:00")]
+    )
+
+    assert errors_of(decision(what=[stamped])) == []
+
+
+def test_rule4_cited_transaction_id_does_not_back_an_amount() -> None:
+    other = {**TXN, "txn_id": 12000, "amount_paid": 5.0}
+    lookalike = claim(text="Account paid 12,000.00 US Dollar in transaction 12000.", txn_ids=[12000])
+
+    result = verify(decision(what=[lookalike]), Provenance(transactions={12000: other}), AS_OF)
+
+    assert result.errors == [
+        "number 12000.00 in claim 'Account paid 12,000.00 US Dollar in transaction 12000.' "
+        "is not backed by a fact or a cited id"
+    ]
+
+
+def test_rule4_cited_passage_id_does_not_back_a_count() -> None:
+    lookalike = claim(text="26 transfers under AMLR art. 26(1)", passage_ids=["AMLR art. 26(1)"])
+    provenance = Provenance(
+        transactions={11: TXN},
+        passages={"AMLR art. 26(1)": {**PASSAGE, "passage_id": "AMLR art. 26(1)"}},
+    )
+
+    assert verify(decision(what=[lookalike]), provenance, AS_OF).errors == [
+        "number 26 in claim '26 transfers under AMLR art. 26(1)' is not backed by a fact or a cited id"
     ]
 
 
@@ -198,7 +242,7 @@ def test_rule4_facts_of_other_claims_do_not_count() -> None:
     second = claim(text="Paid 2848.96 in total.")
 
     assert errors_of(decision(what=[first, second])) == [
-        "number 2848.96 in claim 'Paid 2848.96 in total.' is not backed by a fact"
+        "number 2848.96 in claim 'Paid 2848.96 in total.' is not backed by a fact or a cited id"
     ]
 
 
