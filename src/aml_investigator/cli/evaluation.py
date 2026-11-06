@@ -72,6 +72,13 @@ def run_injection_pairs(args: argparse.Namespace) -> None:
     print(f"injection pairs written to {path}")
 
 
+def run_retrieval(args: argparse.Namespace) -> None:
+    from aml_investigator.evaluation.retrieval import evaluate_retrieval
+
+    path, table = evaluate_retrieval(settings_for(args))
+    print(f"{table}\nwritten to {path}")
+
+
 def register(commands: Commands) -> None:
     evaluation = commands.add_parser("eval").add_subparsers(required=True)
 
@@ -102,3 +109,8 @@ def register(commands: Commands) -> None:
     pairs.add_argument("--limit", type=positive_int, help="run only the first N alerts of the injection set")
     pairs.add_argument("--concurrency", type=positive_int, default=CONCURRENCY)
     pairs.set_defaults(handler=run_injection_pairs)
+
+    retrieval = evaluation.add_parser(
+        "retrieval", help="hit@k and MRR of full-text, vector and hybrid regulation search"
+    )
+    retrieval.set_defaults(handler=run_retrieval)
