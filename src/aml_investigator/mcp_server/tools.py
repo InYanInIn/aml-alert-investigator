@@ -19,7 +19,7 @@ from aml_investigator.mcp_server.schemas import (
     TransactionSelection,
     TypologyCandidates,
 )
-from aml_investigator.mcp_server.store import MAX_PASSAGES, MAX_TRANSACTIONS, CaseDataError, CaseStore
+from aml_investigator.mcp_server.store import MAX_TRANSACTIONS, PASSAGES_PER_DOCUMENT, CaseDataError, CaseStore
 
 logger = logging.getLogger(__name__)
 
@@ -168,13 +168,15 @@ async def get_typology_candidates(alert_id: int, ctx: Context) -> TypologyCandid
     return candidates
 
 
-async def search_regulations(query: str, ctx: Context, top_k: int = MAX_PASSAGES) -> RegulationMatches:
-    """Full-text search over the regulatory corpus (EU AMLR in English, Polish national law in Polish).
-    query uses web-search syntax: plain words are ANDed, "quoted phrase" matches a phrase, OR between words,
-    -word excludes. Each passage is matched in its own language, so query Polish passages with Polish words.
-    Returns at most 5 passages (top_k clamped to 1..5), best rank first, each with passage_id, doc_id,
-    article, paragraph, heading, the full text, its content_sha256 (the hash of the text, used to verify
-    citations) and its rank. Cite passages by passage_id."""
+async def search_regulations(query: str, ctx: Context, top_k: int = PASSAGES_PER_DOCUMENT) -> RegulationMatches:
+    """Semantic search over the regulatory corpus, run separately in both laws: the EU AMLR (English) and the
+    Polish AML Act (Polish). query is a natural-language question or topic in any language. Returns the top_k
+    best passages from the AMLR followed by the top_k best from the Polish act, so results always come from
+    both laws (top_k defaults to 3 and is clamped to 1..5 per law, so at most 10 passages). Within each law
+    passages are best first by similarity rank. Each passage has passage_id, doc_id, article, paragraph,
+    heading, the full text, its content_sha256 (the hash of the text, used to verify citations) and its rank.
+    Cite passages by passage_id. Passages are returned even when only weakly related; judge relevance from
+    the text."""
     with tool_call("search_regulations") as event:
         matches = await case_store(ctx).regulation_matches(query, top_k=top_k)
         event["rows"] = len(matches.passages)

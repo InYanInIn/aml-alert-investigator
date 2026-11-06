@@ -45,6 +45,12 @@ class Settings(BaseSettings):
         return required(self.evaluator_dsn, "AML_EVALUATOR_DSN")
 
     @property
+    def azure_endpoint(self) -> str:
+        if not self.azure_openai_endpoint:
+            raise MissingSettingError("AML_AZURE_OPENAI_ENDPOINT")
+        return self.azure_openai_endpoint
+
+    @property
     def role_dsns(self) -> tuple[str, ...]:
         return (self.mcp_conninfo, self.app_conninfo, self.evaluator_conninfo)
 
