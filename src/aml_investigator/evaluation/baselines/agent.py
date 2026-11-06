@@ -9,6 +9,7 @@ from aml_investigator.corpus.embeddings import query_embedder
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.recordings import CassetteRecorder
 from aml_investigator.evaluation.systems import EvalAlert, SystemDecision
+from aml_investigator.investigation.agent.loop import MAX_TOOL_CALLS
 from aml_investigator.investigation.service import InvestigationService, open_investigation_service
 from aml_investigator.mcp_server.server import build_server
 
@@ -42,7 +43,9 @@ class AgentInvestigation:
 
 
 @asynccontextmanager
-async def open_agent(settings: RuntimeSettings, model: BaseChatModel, name: str) -> AsyncIterator[AgentInvestigation]:
+async def open_agent(
+    settings: RuntimeSettings, model: BaseChatModel, name: str, *, max_tool_calls: int = MAX_TOOL_CALLS
+) -> AsyncIterator[AgentInvestigation]:
     recorder = (
         None
         if settings.recordings is None
@@ -62,6 +65,7 @@ async def open_agent(settings: RuntimeSettings, model: BaseChatModel, name: str)
             model=model,
             callbacks=[] if recorder is None else [recorder],
             reference_variant=settings.reference_variant,
+            max_tool_calls=max_tool_calls,
         ) as service,
     ):
         yield AgentInvestigation(service, name, recorder)

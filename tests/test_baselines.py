@@ -9,11 +9,13 @@ from pydantic import SecretStr
 from aml_investigator.core.db import open_read_only_pool
 from aml_investigator.core.settings import Settings
 from aml_investigator.evaluation.baselines import SYSTEM_NAMES, open_system
+from aml_investigator.evaluation.baselines.agent import open_agent
 from aml_investigator.evaluation.baselines.b1 import open_rule_score
 from aml_investigator.evaluation.baselines.b3 import GradientBoosting, TrainingSummary, alert_features
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.systems import EvalAlert
 from aml_investigator.evaluation.training import read_train_labels
+from aml_investigator.investigation.models import chat_model
 from aml_investigator.mcp_server.schemas import ReferenceVariant
 from tests.conftest import Database
 
@@ -216,7 +218,7 @@ def test_b3_requires_train_labels(db: Database) -> None:
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("name", [name for name in SYSTEM_NAMES if name not in {"b2", "local", "azure"}])
+@pytest.mark.parametrize("name", [name for name in SYSTEM_NAMES if name not in {"b2", "local", "azure", "azure_k0"}])
 async def test_every_system_opens_without_a_working_evaluator_dsn(
     db: Database, learnable: tuple[EvalAlert, EvalAlert], name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -261,8 +263,28 @@ async def test_scripted_runs_the_investigation_service(
         assert conn.execute("SELECT alert_id FROM review.investigations").fetchall() == [(alert.alert_id,)]
 
 
+@pytest.mark.anyio
+async def test_agent_with_zero_tool_calls_skips_the_loop(
+    db: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    write_runtime_config(tmp_path, runtime_for(db).database, operating_point=0.1)
+    monkeypatch.chdir(tmp_path)
+    with db.owner() as conn:
+        add_accounts(conn, "A1", "A2")
+        add_transaction(conn, 11, datetime(2022, 9, 2, 10, 15), "A1", "A2", 2848.96, "ACH")
+        alert = add_alert(conn, "A1", date(2022, 9, 2), {})
+        conn.execute("INSERT INTO core.alert_rule_hits VALUES (%s, 'R2_fan_out', 2.0, ARRAY[11])", (alert.alert_id,))
+    runtime = RuntimeSettings.of(settings_for(db))
+
+    async with open_agent(runtime, chat_model("rule-score", runtime.database), "k0", max_tool_calls=0) as system:
+        decision = await system.decide(alert)
+
+    assert decision.trace is not None
+    assert decision.trace["loop_stop"] == "skipped"
+
+
 def test_unknown_system_lists_the_valid_names(db: Database) -> None:
-    with pytest.raises(ValueError, match="b0, b1, b2, b3, b3_no_age, scripted, local, azure"):
+    with pytest.raises(ValueError, match="b0, b1, b2, b3, b3_no_age, scripted, local, azure, azure_k0"):
         open_system("b9", runtime_for(db))
 
 

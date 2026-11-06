@@ -16,6 +16,7 @@ from aml_investigator.core.db import open_app_pool
 from aml_investigator.core.errors import NotFoundError
 from aml_investigator.core.logging import log_context, timed_event
 from aml_investigator.investigation.agent.graph import InvestigationGraph, build_graph, postgres_checkpointer
+from aml_investigator.investigation.agent.loop import MAX_TOOL_CALLS
 from aml_investigator.investigation.decision import AnalystReview, QaReview
 from aml_investigator.investigation.routing import Route
 from aml_investigator.mcp_server.schemas import ReferenceVariant
@@ -97,6 +98,7 @@ async def open_investigation_service(
     model: BaseChatModel,
     callbacks: Sequence[BaseCallbackHandler] = (),
     reference_variant: ReferenceVariant = "clean",
+    max_tool_calls: int = MAX_TOOL_CALLS,
 ) -> AsyncIterator[InvestigationService]:
     async with open_app_pool(app_conninfo) as pool:
         repository = ReviewRepository(pool)
@@ -106,5 +108,6 @@ async def open_investigation_service(
             repository=repository,
             checkpointer=await postgres_checkpointer(pool),
             reference_variant=reference_variant,
+            max_tool_calls=max_tool_calls,
         )
         yield InvestigationService(graph=graph, repository=repository, callbacks=callbacks)
