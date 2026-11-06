@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from aml_investigator.investigation.decision import Decision, Fact
+from aml_investigator.investigation.decision import Claim, Decision, Fact
 
 AMOUNT_TOLERANCE = Decimal("0.01")
 NUMBER = re.compile(r"(?<!\w)\d+(?:,\d{3})*(?:\.\d+)?(?!\w)")
@@ -104,28 +104,46 @@ def fact_errors(decision: Decision, provenance: Provenance) -> list[str]:
             if ("ts" if fact.field == "date" else fact.field) not in txn:
                 errors.append(f"fact {fact.field} of transaction {fact.txn_id} was never returned by any tool")
             elif not fact_holds(fact, txn):
-                errors.append(f"fact {fact.field}={fact.value} does not match transaction {fact.txn_id}")
+                errors.append(
+                    f"fact {fact.field}={fact.value} does not match transaction {fact.txn_id}, "
+                    f"whose {fact.field} is {tool_value(fact, txn)}"
+                )
     return errors
 
 
 def fact_holds(fact: Fact, txn: dict[str, Any]) -> bool:
     if fact.field == "date":
-        return fact.value == datetime.fromisoformat(txn["ts"]).date().isoformat()
+        return fact.value in (tool_value(fact, txn), txn["ts"])
     if fact.field in ("paid_currency", "received_currency"):
-        return fact.value == str(txn[fact.field])
+        return fact.value == tool_value(fact, txn)
     asserted = as_decimal(fact.value)
     return asserted is not None and abs(asserted - Decimal(str(txn[fact.field]))) <= AMOUNT_TOLERANCE
+
+
+def tool_value(fact: Fact, txn: dict[str, Any]) -> str:
+    if fact.field == "date":
+        return datetime.fromisoformat(txn["ts"]).date().isoformat()
+    return str(txn[fact.field])
 
 
 def number_errors(decision: Decision) -> list[str]:
     errors: list[str] = []
     for claim in decision.claims:
-        backed = {number for fact in claim.facts for number in numbers_in(fact.value)}
+        backed = {number for fact in claim.facts for number in numbers_in(fact.value.replace("T", " "))}
         errors.extend(
-            f"number {number} in claim {claim.text!r} is not backed by a fact"
-            for number in sorted(numbers_in(claim.text) - backed)
+            f"number {number} in claim {claim.text!r} is not backed by a fact or a cited id"
+            for number in sorted(numbers_in(without_citations(claim)) - backed)
         )
     return errors
+
+
+def without_citations(claim: Claim) -> str:
+    text = claim.text
+    for passage_id in claim.passage_ids:
+        text = text.replace(passage_id, " ")
+    for txn_id in claim.txn_ids:
+        text = re.sub(rf"(?<!\w){txn_id}(?!\w)", " ", text)
+    return text
 
 
 def numbers_in(text: str) -> set[Decimal]:

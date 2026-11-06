@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from datetime import date
-from typing import Literal, Protocol
+from typing import Any, Literal, Protocol
 
 Recommendation = Literal["close", "escalate"]
+CONCURRENCY = 8
 
 
 @dataclass(frozen=True)
@@ -20,6 +21,7 @@ class SystemDecision:
     verification_status: str | None = None
     cost_usd: float | None = None
     latency_ms: float | None = None
+    trace: dict[str, Any] | None = None
 
 
 class System(Protocol):

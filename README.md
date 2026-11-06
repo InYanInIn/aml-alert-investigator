@@ -7,8 +7,22 @@ to confirm or override. The agent is evaluated against labels it never sees and 
 
 Portfolio project on synthetic data (IBM AMLworld). Not a compliance product.
 
-**Status:** M6 — the full agent with a deterministic stand-in model, deployed to local Kubernetes. Phase B (live
-model on Azure) is next. See [docs/plan.md](docs/plan.md).
+**Status:** M6.6 — the full agent runs on a deterministic stand-in model or on a local open-weight model
+(`qwen3.6:35b-a3b` via Ollama, ADR-0022); first results in [docs/results.md](docs/results.md). Next: Phase B
+(live model on Azure). See [docs/plan.md](docs/plan.md).
+
+## Run the agent on the local model
+Needs Ollama serving `qwen3.6:35b-a3b-q8_0` (~38 GB; a 64 GB Apple-silicon Mac) and a migrated, ingested
+database. About 12 minutes per alert.
+
+```bash
+ollama pull qwen3.6:35b-a3b-q8_0
+uv run aml --database aml_hi_small eval run --system local --split val --limit 10 --concurrency 1
+uv run aml --database aml_hi_small eval pairs --system local --limit 6 --concurrency 1
+```
+
+`aml api --model local` and `aml investigate --model local` use the same model in the analyst UI and the
+batch command.
 
 ## Run on local Kubernetes (kind)
 Needs Docker, `kind`, `helm`, `kubectl`, the compose Postgres running and a migrated, ingested database.

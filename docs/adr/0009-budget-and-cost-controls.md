@@ -1,6 +1,6 @@
 # ADR-0009: Budget — $0 development, spend only inside the free-credit window
 
-Status: accepted · 2026-10-28 · deviates from the brief
+Status: accepted · 2026-10-28 · deviates from the brief · amended by ADR-0022 (local model before Azure)
 
 ## Context
 Personal budget is $5 for the whole project. A new Azure account gets $200 credit for 30 days; unused credit

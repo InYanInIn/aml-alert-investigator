@@ -242,6 +242,30 @@ async def test_runner_end_to_end_on_val(populated: Database, workspace: Path) ->
 
 
 @pytest.mark.anyio
+async def test_limit_evaluates_the_first_alerts_of_the_frozen_sample(populated: Database, workspace: Path) -> None:
+    settings = settings_of(populated)
+    sample_file = create_sample(settings, split="val", size=12, seed=7, test_reason=None, workspace=workspace)
+    first = load_sample(sample_file).keys[:5]
+
+    result = await evaluate_system(
+        settings,
+        ScoreByAccount("oracle", VAL_POSITIVES),
+        split="val",
+        test_reason=None,
+        workspace=workspace,
+        limit=5,
+        concurrency=1,
+    )
+
+    assert result.path.name == "oracle-first5.json"
+    document = json.loads(result.path.read_text())
+    assert [AlertKey(row["account_id"], date.fromisoformat(row["alert_date"])) for row in document["alerts"]] == list(
+        first
+    )
+    assert document["system"] == "oracle"
+
+
+@pytest.mark.anyio
 async def test_test_split_is_refused_without_a_reason(populated: Database, workspace: Path) -> None:
     settings = settings_of(populated)
 

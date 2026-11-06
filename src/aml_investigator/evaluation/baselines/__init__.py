@@ -8,7 +8,7 @@ from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.systems import System
 from aml_investigator.monitoring.thresholds import load_thresholds
 
-SYSTEM_NAMES = ("b0", "b1", "b3", "b3_no_age", "scripted")
+SYSTEM_NAMES = ("b0", "b1", "b3", "b3_no_age", "scripted", "local")
 TRAINED_SYSTEMS = frozenset({"b3", "b3_no_age"})
 ACCOUNT_AGE = frozenset({"account_age_days"})
 
@@ -30,7 +30,13 @@ def open_system(
                 settings.app_conninfo, train_labels or {}, name=name, excluded_features=ACCOUNT_AGE
             )
         case "scripted":
-            from aml_investigator.evaluation.baselines.scripted import open_scripted
+            from aml_investigator.evaluation.baselines.agent import open_agent
+            from aml_investigator.investigation.models import chat_model
 
-            return open_scripted(settings)
+            return open_agent(settings, chat_model("rule-score", settings.database), name)
+        case "local":
+            from aml_investigator.evaluation.baselines.agent import open_agent
+            from aml_investigator.investigation.models import chat_model
+
+            return open_agent(settings, chat_model("local", settings.database), name)
     raise ValueError(f"unknown system {name!r}; valid systems: {', '.join(SYSTEM_NAMES)}")
