@@ -8,10 +8,11 @@ How to decide:
   strongest sign is incoming money converted into another currency by a payment to the account itself
   (`from_account` equals `to_account`, `paid_currency` differs from `received_currency`) and paid out at the
   same time. Large inflows passed on almost entirely, or coming back through a cycle, also count.
-- Close when the account only spends its own money: no incoming payment in the alert window, no payment to
-  itself, no currency change, and the customer holds several other accounts (`other_accounts_of_entity`).
-  Card, cheque, cash, wire and reinvestment payments to known counterparties are ordinary.
-- When signs point both ways, escalate if a pass-through or a conversion is present; otherwise close.
+- Close only when the account just spends its own money, which means all four hold: the account received no
+  payment in the alert window; it made no payment to itself; no payment changed currency; and the customer
+  holds at least three other accounts (`other_accounts_of_entity`). Otherwise escalate.
+- Money collected from many senders that has not moved on yet is not a reason to close: collected funds are
+  often moved later. Card, cheque, cash, wire and reinvestment payments do not by themselves make a case.
 
 Examples from other alerts:
 - Close: a partnership paid out about eighteen times its usual daily amount in one day: one ACH payment and a
