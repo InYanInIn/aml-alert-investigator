@@ -141,7 +141,7 @@ HI-Small validation sample as M6.6 (4 positive / 6 negative).
 | Law (queries) | Full-text hit@5 | Vector hit@5 | Vector MRR | Vector hit@5, ranked within the law |
 |---|---|---|---|---|
 | AMLR (11) | 0.18 | 0.82 | 0.72 | 0.82 |
-| PL-AML (18) | 0.00 | 0.06 | 0.06 | 0.47 |
+| PL-AML (17) | 0.00 | 0.06 | 0.06 | 0.47 |
 
 Full-text search ANDs every word, so natural-language questions rarely match. English queries rank English
 passages first, which buries Polish ones until each law is ranked separately; hybrid (reciprocal rank
