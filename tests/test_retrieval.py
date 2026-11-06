@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import pytest
+from fastmcp import Client
 
 from aml_investigator.cli import data, evaluation
 from aml_investigator.core.settings import MissingSettingError, Settings
@@ -16,6 +17,8 @@ from aml_investigator.evaluation.retrieval import (
     first_rank,
     summarise,
 )
+from aml_investigator.mcp_server.schemas import PassageMatch
+from aml_investigator.mcp_server.server import build_server
 from tests.conftest import Database
 from tests.test_evaluation import settings_of
 
@@ -110,8 +113,8 @@ def test_embedding_input_contains_heading_and_text(db: Database, regulations: li
     assert any(text.startswith("Reporting\n\nObliged entities shall report") for text in embedder.inputs)
 
 
-@pytest.mark.usefixtures("regulations")
-def test_retrieval_evaluation_writes_provenance_and_scores(db: Database, tmp_path: Path) -> None:
+@pytest.fixture
+def embedded_corpus(db: Database, regulations: list[str]) -> list[str]:
     with db.owner() as conn:
         for old, new in (("amlr", "AMLR"), ("pl-aml", "PL-AML")):
             conn.execute(
@@ -121,6 +124,11 @@ def test_retrieval_evaluation_writes_provenance_and_scores(db: Database, tmp_pat
             )
             conn.execute("UPDATE corpus.passages SET doc_id = %s WHERE doc_id = %s", (new, old))
         embed_missing(conn, KeywordEmbedder())
+    return regulations
+
+
+@pytest.mark.usefixtures("embedded_corpus")
+def test_retrieval_evaluation_writes_provenance_and_scores(db: Database, tmp_path: Path) -> None:
     queries = tmp_path / "eval" / "retrieval" / "queries.json"
     queries.parent.mkdir(parents=True)
     queries.write_text(
@@ -167,3 +175,30 @@ def test_cli_wires_corpus_embed_and_retrieval_evaluation() -> None:
 
     assert parser.parse_args(["corpus", "embed"]).handler is data.run_corpus_embed
     assert parser.parse_args(["eval", "retrieval"]).handler is evaluation.run_retrieval
+
+
+async def embed_query(query: str) -> list[float]:
+    return keyword_vector(query)
+
+
+@pytest.mark.anyio
+@pytest.mark.usefixtures("embedded_corpus")
+@pytest.mark.parametrize(("top_k", "expected"), [(1, ["AMLR", "PL-AML"]), (2, ["AMLR", "AMLR", "PL-AML"])])
+async def test_search_regulations_returns_top_k_from_each_law(db: Database, top_k: int, expected: list[str]) -> None:
+    async with Client(build_server(db.mcp_dsn, embed_query=embed_query)) as client:
+        result = await client.call_tool("search_regulations", {"query": "report", "top_k": top_k})
+
+    passages = (result.structured_content or {})["passages"]
+    assert [passage["doc_id"] for passage in passages] == expected
+    assert passages[0]["passage_id"] == "AMLR art. 69(1)"
+    assert all(set(passage) == set(PassageMatch.model_fields) for passage in passages)
+
+
+@pytest.mark.anyio
+@pytest.mark.usefixtures("embedded_corpus")
+async def test_search_regulations_without_an_embedder_is_full_text(db: Database) -> None:
+    async with Client(build_server(db.mcp_dsn)) as client:
+        result = await client.call_tool("search_regulations", {"query": "report"})
+
+    passages = (result.structured_content or {})["passages"]
+    assert [passage["passage_id"] for passage in passages] == ["AMLR art. 69(1)"]

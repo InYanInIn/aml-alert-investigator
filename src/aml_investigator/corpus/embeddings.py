@@ -1,3 +1,5 @@
+import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -13,6 +15,9 @@ EMBEDDING_MODEL = "text-embedding-3-small"
 BATCH_SIZE = 64
 PASSAGES_TO_EMBED_SQL = load(__package__, "passages_to_embed")
 SET_EMBEDDING_SQL = load(__package__, "set_embedding")
+
+
+type QueryEmbedder = Callable[[str], Awaitable[list[float]]]
 
 
 class DocumentEmbedder(Protocol):
@@ -37,6 +42,17 @@ def azure_embeddings(endpoint: str) -> AzureOpenAIEmbeddings:
         openai_api_key=None,
         azure_ad_token_provider=get_bearer_token_provider(DefaultAzureCredential(), TOKEN_SCOPE),
     )
+
+
+def query_embedder(endpoint: str | None) -> QueryEmbedder | None:
+    if not endpoint:
+        return None
+    embeddings = azure_embeddings(endpoint)
+
+    async def embed(query: str) -> list[float]:
+        return await asyncio.to_thread(embeddings.embed_query, query)
+
+    return embed
 
 
 def passage_input(heading: str | None, text: str) -> str:

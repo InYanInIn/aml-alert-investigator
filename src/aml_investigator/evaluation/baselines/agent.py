@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from langchain.mcp import MCPAdapter
 from langchain_core.language_models import BaseChatModel
 
+from aml_investigator.corpus.embeddings import query_embedder
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.systems import EvalAlert, SystemDecision
 from aml_investigator.investigation.service import InvestigationService, open_investigation_service
@@ -36,7 +37,13 @@ class AgentInvestigation:
 @asynccontextmanager
 async def open_agent(settings: RuntimeSettings, model: BaseChatModel, name: str) -> AsyncIterator[AgentInvestigation]:
     async with (
-        MCPAdapter(build_server(settings.mcp_conninfo, reference_variant=settings.reference_variant)) as mcp,
+        MCPAdapter(
+            build_server(
+                settings.mcp_conninfo,
+                reference_variant=settings.reference_variant,
+                embed_query=query_embedder(settings.azure_endpoint),
+            )
+        ) as mcp,
         open_investigation_service(
             app_conninfo=settings.app_conninfo,
             mcp=mcp,

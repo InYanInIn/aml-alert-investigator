@@ -8,15 +8,17 @@ from typing import Any
 import psycopg
 
 from aml_investigator.core.settings import Settings
-from aml_investigator.core.sql import load
 from aml_investigator.corpus.embeddings import EMBEDDING_MODEL, azure_embeddings, vector_literal
 from aml_investigator.corpus.search import RRF_K, reciprocal_rank_fusion
 from aml_investigator.evaluation.results import RESULTS_DIR, GitState, sha256
-from aml_investigator.mcp_server.store import MAX_PASSAGES, SEARCH_REGULATIONS_SQL
+from aml_investigator.mcp_server.store import (
+    MAX_PASSAGES,
+    REGULATION_DOCUMENTS,
+    SEARCH_REGULATIONS_SQL,
+    SEARCH_REGULATIONS_VECTOR_SQL,
+)
 
 QUERIES_PATH = Path("eval/retrieval/queries.json")
-VECTOR_SQL = load("aml_investigator.mcp_server", "search_regulations_vector")
-DOCUMENTS = ("AMLR", "PL-AML")
 MODES = ("fts", "vector", "hybrid")
 HIT_CUTOFFS = (1, 3, 5)
 DEPTH = 50
@@ -61,7 +63,7 @@ def search_rankings(
     fts_params = {"query": text, "doc_id": doc_id, "top_k": DEPTH}
     fts = [str(row[0]) for row in conn.execute(SEARCH_REGULATIONS_SQL, fts_params).fetchall()]
     vector_params = {"embedding": vector_literal(embedding), "doc_id": doc_id, "top_k": DEPTH}
-    vector = [str(row[0]) for row in conn.execute(VECTOR_SQL, vector_params).fetchall()]
+    vector = [str(row[0]) for row in conn.execute(SEARCH_REGULATIONS_VECTOR_SQL, vector_params).fetchall()]
     return {"fts": fts, "vector": vector, "hybrid": reciprocal_rank_fusion([fts, vector])}
 
 
@@ -75,7 +77,7 @@ def document_metrics(
     queries: Sequence[LabelledQuery], rankings: Mapping[str, Mapping[str, Rankings]], scope_of: Callable[[str], str]
 ) -> dict[str, Any]:
     metrics: dict[str, Any] = {}
-    for document in DOCUMENTS:
+    for document in REGULATION_DOCUMENTS:
         asked = [query for query in queries if relevant_in(document, query)]
         metrics[document] = {"queries": len(asked)} | {
             mode: summarise(
@@ -98,7 +100,7 @@ def first_expected_ranks(
                         mode: first_rank(rankings[query.query_id][scope][mode], relevant_in(document, query))
                         for mode in MODES
                     }
-                    for document in DOCUMENTS
+                    for document in REGULATION_DOCUMENTS
                     if relevant_in(document, query)
                 }
                 for scope in rankings[query.query_id]
@@ -119,7 +121,7 @@ def table(title: str, metrics: Mapping[str, Any]) -> str:
         f"{title}\n{'document':<8} {'mode':<7} " + " ".join(f"{f'hit@{k}':>6}" for k in HIT_CUTOFFS) + f" {'mrr':>6}"
     )
     lines = [header]
-    for document in DOCUMENTS:
+    for document in REGULATION_DOCUMENTS:
         for mode in MODES:
             scores = metrics[document][mode]
             cells = " ".join(f"{scores[f'hit@{k}']:>6.2f}" for k in HIT_CUTOFFS)
