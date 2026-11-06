@@ -29,7 +29,7 @@ resource "azurerm_cognitive_deployment" "chat" {
 
   sku {
     name     = var.chat_sku
-    capacity = 250
+    capacity = 500
   }
 }
 
