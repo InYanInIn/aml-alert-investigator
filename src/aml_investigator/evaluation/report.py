@@ -1,7 +1,9 @@
 import json
 import math
 import re
+import statistics
 from collections.abc import Callable, Mapping, Sequence
+from itertools import combinations
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +21,8 @@ SPLITS: tuple[EvalSplit, ...] = ("val", "test")
 SYSTEMS = ("b0", "b1", "b2", "b3", "b3_no_age", "azure_k0", "azure")
 AGENTS = ("azure_k0", "azure")
 WILSON_Z = 1.96
+STABILITY_ALERTS = 50
+STABILITY_REPEATS = (1, 2, 3)
 NOT_RUN = "not run"
 MISSING = "-"
 
@@ -40,6 +44,7 @@ OTHER_COLUMNS: tuple[tuple[str, str, Style], ...] = (
     ("typology_hit_rate", "Typology hit rate", PERCENT),
     ("p95_latency_ms", "p95 latency (ms)", MILLISECONDS),
 )
+CITATION_OUTCOMES = ("passed on first draft", "passed after repair", "failed")
 RETRIEVAL_MODES = (("fts", "Full-text"), ("vector", "Vector"), ("hybrid", "Hybrid"))
 
 type Document = dict[str, Any]
@@ -69,6 +74,10 @@ def render(workspace: Path) -> str:
     for database in DATABASES:
         for split in SPLITS:
             parts.append(auto_close_section(workspace, database, split))
+    for database in DATABASES:
+        for split in SPLITS:
+            parts.append(citation_section(workspace, database, split))
+    parts.append(stability_section(workspace))
     parts.append(pairs_section(workspace))
     parts.append(openings_section(workspace))
     parts.append(retrieval_section(workspace))
@@ -197,14 +206,114 @@ def wilson(successes: int, total: int) -> tuple[float, float]:
     return max(0.0, centre - margin), min(1.0, centre + margin)
 
 
+def verification_outcome(row: Mapping[str, Any]) -> str:
+    statuses = [attempt["status"] for attempt in row["trace"]["verifications"]]
+    if not statuses or statuses[-1] != "passed":
+        return CITATION_OUTCOMES[2]
+    return CITATION_OUTCOMES[0] if statuses[0] == "passed" else CITATION_OUTCOMES[1]
+
+
+def citation_section(workspace: Path, database: str, split: EvalSplit) -> str:
+    paths = {system: results_path(workspace, database, split, system) for system in AGENTS}
+    documents = {system: load(path) for system, path in paths.items()}
+    rows = []
+    for system, document in documents.items():
+        traced = [row for row in document["alerts"] if row.get("trace") is not None] if document else []
+        if not traced:
+            rows.append([system, NOT_RUN, *[MISSING] * 5])
+            continue
+        outcomes = [verification_outcome(row) for row in traced]
+        tokens = statistics.median(row["trace"]["tokens"] for row in traced)
+        cost = statistics.fmean(row["trace"]["cost_usd"] for row in traced)
+        rows.append(
+            [
+                system,
+                str(len(traced)),
+                *(format_proportion(outcomes.count(kind), len(traced)) for kind in CITATION_OUTCOMES),
+                f"{tokens:.0f}",
+                f"{cost:.4f}",
+            ]
+        )
+    header = ["System", "n", *(kind.capitalize() for kind in CITATION_OUTCOMES), "Median tokens", "Mean cost (USD)"]
+    sources = sources_lines(workspace, {paths[system]: document for system, document in documents.items()})
+    return f"### Citation validity (5.2), {database}, {split} split\n\n{table(header, rows)}\n\n{sources}"
+
+
+def fleiss_kappa(votes: Sequence[Sequence[str]]) -> float | None:
+    raters = len(votes[0])
+    categories = {vote for alert in votes for vote in alert}
+    agreement = statistics.fmean(
+        (sum(alert.count(c) ** 2 for c in categories) - raters) / (raters * (raters - 1)) for alert in votes
+    )
+    chance = sum((sum(alert.count(c) for alert in votes) / (len(votes) * raters)) ** 2 for c in categories)
+    return None if chance == 1 else (agreement - chance) / (1 - chance)
+
+
+def stability_row(workspace: Path, database: str, system: str) -> tuple[list[str], dict[Path, Document | None]]:
+    paths = [results_path(workspace, database, "val", system)] + [
+        results_path(workspace, database, "val", f"{system}-first{STABILITY_ALERTS}-repeat{repeat}")
+        for repeat in STABILITY_REPEATS[1:]
+    ]
+    documents = [load(path) for path in paths]
+    sources = dict(zip(paths, documents, strict=True))
+    if any(document is None for document in documents):
+        return [system, *[NOT_RUN] * 5], sources
+    repeats = [document["alerts"][:STABILITY_ALERTS] for document in documents if document]
+    ids = [[row["alert_id"] for row in repeat] for repeat in repeats]
+    if len(ids[0]) < STABILITY_ALERTS or any(repeat_ids != ids[0] for repeat_ids in ids[1:]):
+        return [system, "alert ids differ between repeats", *[MISSING] * 4], sources
+    votes = list(zip(*[[row["recommendation"] for row in repeat] for repeat in repeats], strict=True))
+    pairwise = statistics.fmean(statistics.fmean(a == b for a, b in combinations(alert, 2)) for alert in votes)
+    kappa = fleiss_kappa(votes)
+    return [
+        system,
+        str(len(votes)),
+        format_proportion(sum(len(set(alert)) == 1 for alert in votes), len(votes)),
+        f"{pairwise:.1%}",
+        "undefined (one class)" if kappa is None else f"{kappa:.3f}",
+        " / ".join(str(sum(row["recommendation"] == "close" for row in repeat)) for repeat in repeats),
+    ], sources
+
+
+def stability_section(workspace: Path) -> str:
+    sections = []
+    header = [
+        "System",
+        "Alerts",
+        "Same recommendation in all 3 repeats",
+        "Pairwise agreement (mean)",
+        "Fleiss' kappa",
+        "Closes per repeat",
+    ]
+    for database in DATABASES:
+        rows: list[list[str]] = []
+        sources: dict[Path, Document | None] = {}
+        for system in AGENTS:
+            row, system_sources = stability_row(workspace, database, system)
+            rows.append(row)
+            sources |= system_sources
+        sections.append(f"#### {database}\n\n{table(header, rows)}\n\n{sources_lines(workspace, sources)}")
+    return (
+        "### Stability (validation split)\n\n"
+        f"Repeat 1 is the first {STABILITY_ALERTS} alerts in sample order of the full validation run; repeats 2 and 3 "
+        f"are `<system>-first{STABILITY_ALERTS}-repeat2.json` and `-repeat3.json` on the same alerts. Intervals are "
+        "Wilson's. Fleiss' kappa is (P - Pe) / (1 - Pe) over the close/escalate recommendations.\n\n"
+        + "\n\n".join(sections)
+    )
+
+
 def format_flips(document: Document | None) -> str:
     if document is None:
         return NOT_RUN
     flipped, escalated = document["counts"]["attack_succeeded"], document["counts"]["escalated_clean"]
     if not escalated:
         return f"{flipped} / 0"
-    low, high = wilson(flipped, escalated)
-    return f"{flipped} / {escalated} = {flipped / escalated:.1%} [{low:.1%}, {high:.1%}]"
+    return format_proportion(flipped, escalated)
+
+
+def format_proportion(successes: int, total: int) -> str:
+    low, high = wilson(successes, total)
+    return f"{successes} / {total} = {successes / total:.1%} [{low:.1%}, {high:.1%}]"
 
 
 def pairs_section(workspace: Path) -> str:
