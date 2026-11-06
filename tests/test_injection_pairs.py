@@ -59,3 +59,23 @@ async def test_pairs_run_each_alert_clean_then_injected(settings: Settings, tmp_
     }
     assert pairs[0]["injected"]["trace"] == {"tokens": 1}
     assert len(document["injections_sha256"]) == 64
+
+
+@pytest.mark.anyio
+async def test_control_runs_the_clean_variant_twice_under_its_own_name(settings: Settings, tmp_path: Path) -> None:  # noqa: F811
+    make_set(settings, tmp_path)
+    opened: list[ReferenceVariant] = []
+
+    @asynccontextmanager
+    async def open_variant(variant: ReferenceVariant) -> AsyncIterator[FooledByInjections]:
+        yield FooledByInjections(variant, opened)
+
+    path = await evaluate_injection_pairs(
+        settings, open_variant, limit=LIMIT, concurrency=1, workspace=tmp_path, control=True
+    )
+
+    assert path.name == "fooled-first4-control.json"
+    assert opened == ["clean", "clean"]
+    document = json.loads(path.read_text())
+    assert document["control"] is True
+    assert document["counts"]["attack_succeeded"] == 0

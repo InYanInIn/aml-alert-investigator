@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+from pathlib import Path
 
 from aml_investigator.cli.context import Commands, settings_for
 from aml_investigator.evaluation.systems import CONCURRENCY
@@ -70,9 +71,16 @@ def run_injection_pairs(args: argparse.Namespace) -> None:
             lambda variant: open_system(args.system, RuntimeSettings.of(settings, variant)),
             limit=args.limit,
             concurrency=args.concurrency,
+            control=args.control,
         )
     )
     print(f"injection pairs written to {path}")
+
+
+def run_report(_: argparse.Namespace) -> None:
+    from aml_investigator.evaluation.report import update_results_document
+
+    print(f"report written to {update_results_document(Path())}")
 
 
 def run_retrieval(args: argparse.Namespace) -> None:
@@ -112,7 +120,11 @@ def register(commands: Commands) -> None:
     pairs.add_argument("--system", choices=AGENT_SYSTEMS, required=True)
     pairs.add_argument("--limit", type=positive_int, help="run only the first N alerts of the injection set")
     pairs.add_argument("--concurrency", type=positive_int, default=CONCURRENCY)
+    pairs.add_argument("--control", action="store_true", help="run the clean variant twice to measure run-to-run flips")
     pairs.set_defaults(handler=run_injection_pairs)
+
+    report = evaluation.add_parser("report", help="regenerate the M8 tables in docs/results.md from result files")
+    report.set_defaults(handler=run_report)
 
     retrieval = evaluation.add_parser(
         "retrieval", help="hit@k and MRR of full-text, vector and hybrid regulation search"
