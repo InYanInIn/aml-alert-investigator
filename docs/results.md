@@ -124,3 +124,67 @@ manipulation.
   success rate means anything.
 - M8: decide how references may be used (prompt and policy), make the token budget count new tokens or
   raise it, and consider a rule against amounts written in words.
+
+## M7 — live model, retrieval and cost, validation only (not comparable to the baselines)
+
+Ten alerts again: these numbers calibrate cost and show failure modes, they do not rank systems. The test
+split was not opened.
+
+**Setup.** Azure OpenAI `gpt-5-mini` 2025-08-07, Global Standard, reasoning effort low, the `Decision`
+drafted as a tool call (ADR-0023); embeddings `text-embedding-3-small`. `search_regulations` ranks by vector
+within each law (3 passages from AMLR and 3 from PL-AML by default). Loop limits unchanged (`k` = 8,
+40,000-token budget), prompt `65e9b2e08480`, two alerts at a time. Same first 10 alerts of the frozen
+HI-Small validation sample as M6.6 (4 positive / 6 negative).
+
+### Retrieval (20 hand-labelled English queries, `eval/results/aml_hi_small/retrieval.json`)
+
+| Law (queries) | Full-text hit@5 | Vector hit@5 | Vector MRR | Vector hit@5, ranked within the law |
+|---|---|---|---|---|
+| AMLR (11) | 0.18 | 0.82 | 0.72 | 0.82 |
+| PL-AML (18) | 0.00 | 0.06 | 0.06 | 0.47 |
+
+Full-text search ANDs every word, so natural-language questions rarely match. English queries rank English
+passages first, which buries Polish ones until each law is ranked separately; hybrid (reciprocal rank
+fusion) equals vector here. The tool now returns the top passages of each law.
+
+### Agent C and B2 on 10 alerts
+
+| Measure | C, run 2 (`azure-first10.json`) | C, run 1 (same code) | B2 (`b2-first10.json`) |
+|---|---|---|---|
+| Recommended close | 1 / 10 | 1 / 10 | 0 / 10 |
+| Positives recommended close (false close) | 0 / 4 | 0 / 4 | 0 / 4 |
+| Verification: passed first draft / after repair / failed | 1 / 4 / 5 | 7 / 1 / 2 | — (10 / 10 parsed) |
+| Valid loop tool calls | 23 / 23 | 32 / 32 | — |
+| Tokens per alert, median (all calls) | 50,652 | 41,532 | — |
+| Cost per alert, mean | $0.016 | $0.014 | $0.0017 |
+| Latency per alert, median | 39 s | 29 s | 2.8 s |
+
+Run 1 is investigations 154–163, made before agent decisions carried their cost into the result file; its
+result file was replaced by run 2, the numbers above come from the stored traces. Run 2 was recorded as
+replay cassettes (`eval/recordings/aml_hi_small/gpt-5-mini/`, 10 files), which CI replays offline.
+
+Total model spend in M7, from the traces: about $0.34 (three agent runs including the smoke test $0.32,
+B2 $0.017, embeddings $0.003).
+
+### Findings
+- **Two identical runs disagree on verification** (first draft 7 vs 1 of 10; failed 2 vs 5). Recommendations
+  barely moved (the same single close), but validity on ten alerts is noise; M8's three-repeat stability
+  check is needed before any prompt change is judged.
+- **Passage ids lose their space.** 14 of the run-2 errors cite `AMLR art.26(1)` for `AMLR art. 26(1)`.
+  The repair message says the passage "was not returned by any tool" without showing the returned id, so
+  the repair repeats the mistake.
+- **Rule 4 rejects counts, timestamps and legal thresholds.** 18 errors are numbers such as "38 incoming
+  payments", the `as_of` timestamp, or "EUR 1 000" from a regulation: true statements with no fact to cite.
+- **The local model closed more and wrongly.** On the same alerts `qwen3.6` closed 3 (one positive), on
+  payment references; `gpt-5-mini` closed one negative alert and no positive, and B2 escalated everything.
+- **Cost and speed fit the plan.** About 1.6 cents and 40 seconds per alert against 12 minutes locally;
+  22–74% of each alert's input tokens were served from the prompt cache (run 2).
+- **Not verified.** Cost Management did not confirm the spend comes from the credit: its query API refuses
+  this Free Trial offer type, and the portal view lags usage — to check in the portal. Langfuse traces were
+  not set up (no project keys yet).
+
+### Implications (proposed, not yet decided)
+- M8: show the closest returned passage id in the repair message (or normalise whitespace in cited ids);
+  decide which numbers rule 4 should accept (counts derived from listed transactions, `as_of`, figures
+  quoted from a cited passage).
+- M8: run validation three times before comparing prompt variants; report verification with intervals.

@@ -104,10 +104,11 @@ the 10 alerts, marked as not comparable to the baselines at that sample size. Th
 ## Phase B — Azure credit window (≤ 30 days)
 
 ### M7 — Live model and cost calibration
-- You create the Azure account and upgrade to pay-as-you-go. Terraform (first part): resource group, Azure
-  OpenAI with `gpt-5-mini` (Data Zone EU or Global Standard), embeddings deployment, budget alerts.
-- Split the two oversized passages (`AMLR art. 2(1)` ~24.6k chars, `PL-AML art. 2 ust. 2` ~17k) before
-  embedding.
+- You create the Azure account (the Free Trial already has the quota; ADR-0023). Terraform (first part):
+  resource group, Azure OpenAI with `gpt-5-mini` (Data Zone EU or Global Standard), embeddings deployment,
+  budget alerts.
+- Split the oversized definition and entity lists (`AMLR art. 2(1)` ~24.6k chars, `PL-AML art. 2 ust. 2`
+  ~17k, `PL-AML art. 2 ust. 1` ~13k) before embedding.
 - Embed the corpus; run B2 and C on 10 validation alerts, the same ones as M6.6, and compare with the local
   model; Langfuse Cloud EU traces; record responses for replay.
 

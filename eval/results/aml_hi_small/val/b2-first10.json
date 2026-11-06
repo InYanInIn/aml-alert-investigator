@@ -1,0 +1,1260 @@
+{
+  "system": "b2",
+  "split": "val",
+  "database": "aml_hi_small",
+  "created_at": "2026-11-06T11:13:34+00:00",
+  "git_commit": "a4488a682320003f508640e8d8ef03a05381a972",
+  "git_dirty": false,
+  "sample_sha256": "2528a1b9e4b17b555b577b558a33a304e573e6e31531c41f8a50a86d94e701fb",
+  "thresholds_sha256": "e4847a0a36391e237394207d47a6a36f67ca599e69e4061062402a86933b5dd0",
+  "operating_point": null,
+  "bootstrap": {
+    "resamples": 2000,
+    "seed": 20261030
+  },
+  "counts": {
+    "alerts": 10,
+    "population": {
+      "positive": 178,
+      "negative": 1755
+    },
+    "sample": {
+      "positive": 4,
+      "negative": 6
+    },
+    "recommended_close": 0,
+    "recommended_escalate": 10,
+    "total_cost_usd": 0.016584
+  },
+  "metrics": {
+    "weighted": {
+      "false_close_rate": {
+        "value": 0.0,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "escalation_precision": {
+        "value": 0.09208484221417486,
+        "low": 0.09208484221417486,
+        "high": 0.09208484221417486
+      },
+      "close_rate": {
+        "value": 0.0,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "recall_pattern": {
+        "value": 1.0,
+        "low": 1.0,
+        "high": 1.0
+      },
+      "recall_other": {
+        "value": 1.0,
+        "low": 1.0,
+        "high": 1.0
+      },
+      "typology_hit_rate": {
+        "value": 0.0,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "mean_latency_ms": {
+        "value": 2807.857135576215,
+        "low": 2230.527387208141,
+        "high": 3404.8248329057737
+      },
+      "p50_latency_ms": {
+        "value": 2758.5465000011027,
+        "low": 2014.9208750008256,
+        "high": 3819.1756669984898
+      },
+      "p95_latency_ms": {
+        "value": 3819.1756669984898,
+        "low": 3117.8766250013723,
+        "high": 4176.434166998661
+      },
+      "mean_cost_usd": {
+        "value": 0.0013848815312984997,
+        "low": 0.0010621568158303155,
+        "high": 0.001726171689084325
+      }
+    },
+    "unweighted": {
+      "false_close_rate": {
+        "value": 0.0,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "escalation_precision": {
+        "value": 0.4,
+        "low": 0.4,
+        "high": 0.4
+      },
+      "close_rate": {
+        "value": 0.0,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "recall_pattern": {
+        "value": 1.0,
+        "low": 1.0,
+        "high": 1.0
+      },
+      "recall_other": {
+        "value": 1.0,
+        "low": 1.0,
+        "high": 1.0
+      },
+      "typology_hit_rate": {
+        "value": 0.0,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "mean_latency_ms": {
+        "value": 3042.584108399751,
+        "low": 2604.550770800415,
+        "high": 3506.4674043991545
+      },
+      "p50_latency_ms": {
+        "value": 2758.679791004397,
+        "low": 2174.880499995197,
+        "high": 3819.1756669984898
+      },
+      "p95_latency_ms": {
+        "value": 4176.434166998661,
+        "low": 3819.1756669984898,
+        "high": 4176.434166998661
+      },
+      "mean_cost_usd": {
+        "value": 0.0016584000000000002,
+        "low": 0.001277525,
+        "high": 0.002140825
+      }
+    }
+  },
+  "alerts": [
+    {
+      "account_id": "A00b3fb6cdd1b",
+      "alert_date": "2022-09-08",
+      "alert_id": 8408,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "fan_in",
+        "gather_scatter"
+      ],
+      "verification_status": null,
+      "cost_usd": 0.003876,
+      "latency_ms": 4176.434166998661,
+      "trace": {
+        "prompt_version": "64b393f60d5f",
+        "tool_calls": [
+          {
+            "phase": "evidence",
+            "tool": "get_alert",
+            "args": {
+              "alert_id": 8408
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_account_profile",
+            "args": {
+              "account_id": "A00b3fb6cdd1b",
+              "alert_id": 8408
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_counterparties",
+            "args": {
+              "account_id": "A00b3fb6cdd1b",
+              "alert_id": 8408
+            },
+            "rows": 20
+          },
+          {
+            "phase": "evidence",
+            "tool": "list_transactions",
+            "args": {
+              "account_id": "A00b3fb6cdd1b",
+              "alert_id": 8408
+            },
+            "rows": 38
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_transactions",
+            "args": {
+              "txn_ids": [
+                4166336,
+                4166371,
+                4166790,
+                4166903,
+                4167310,
+                4167634,
+                4167715,
+                4167781,
+                4167856,
+                4167982,
+                4168009,
+                4168158,
+                4169141,
+                4169633,
+                4169832,
+                4169909,
+                4170036,
+                4170559,
+                4170778,
+                4170899,
+                4170919,
+                4171024,
+                4171189,
+                4171265,
+                4171282,
+                4171369,
+                4171424,
+                4171506,
+                4172490,
+                4172591,
+                4172732,
+                4173045,
+                4173088,
+                4173325,
+                4173900,
+                4174035,
+                4174185,
+                4175497
+              ],
+              "alert_id": 8408
+            },
+            "rows": 38
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_typology_candidates",
+            "args": {
+              "alert_id": 8408
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A00b3fb6cdd1b",
+              "direction": "forward",
+              "max_hops": 2,
+              "alert_id": 8408
+            },
+            "rows": 0
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A00b3fb6cdd1b",
+              "direction": "backward",
+              "max_hops": 2,
+              "alert_id": 8408
+            },
+            "rows": 20
+          }
+        ],
+        "tokens": 14349,
+        "usage": {
+          "input_tokens": 14184,
+          "cached_input_tokens": 0,
+          "output_tokens": 165
+        },
+        "cost_usd": 0.003876,
+        "parse": "ok",
+        "rationale": "Account A00b3fb6cdd1b received 38 incoming ACH payments from 38 distinct counterparties within a ~30-minute window (2022-09-08T21:30\u201321:59) totaling EUR 81,396.63 and has no outgoing activity as of the alert as_of (2022-09-09). The concentration of many high-value, similarly timed inflows from many sources (fan-in) with no subsequent outflows is atypical for a sole proprietorship with only 2 active days and may indicate aggregation for redistribution or layering; origin of funds and counterparty relationships need review."
+      },
+      "escalate_truth": true,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A03c34748b740",
+      "alert_date": "2022-09-07",
+      "alert_id": 16547,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "cycle",
+        "random"
+      ],
+      "verification_status": null,
+      "cost_usd": 0.00125075,
+      "latency_ms": 3819.1756669984898,
+      "trace": {
+        "prompt_version": "64b393f60d5f",
+        "tool_calls": [
+          {
+            "phase": "evidence",
+            "tool": "get_alert",
+            "args": {
+              "alert_id": 16547
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_account_profile",
+            "args": {
+              "account_id": "A03c34748b740",
+              "alert_id": 16547
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_counterparties",
+            "args": {
+              "account_id": "A03c34748b740",
+              "alert_id": 16547
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "list_transactions",
+            "args": {
+              "account_id": "A03c34748b740",
+              "alert_id": 16547
+            },
+            "rows": 4
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_transactions",
+            "args": {
+              "txn_ids": [
+                2276744,
+                3428301
+              ],
+              "alert_id": 16547
+            },
+            "rows": 2
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_typology_candidates",
+            "args": {
+              "alert_id": 16547
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A03c34748b740",
+              "direction": "forward",
+              "max_hops": 2,
+              "alert_id": 16547
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A03c34748b740",
+              "direction": "backward",
+              "max_hops": 2,
+              "alert_id": 16547
+            },
+            "rows": 8
+          }
+        ],
+        "tokens": 3673,
+        "usage": {
+          "input_tokens": 3483,
+          "cached_input_tokens": 0,
+          "output_tokens": 190
+        },
+        "cost_usd": 0.00125075,
+        "parse": "ok",
+        "rationale": "There is a clear cycle: A03c34748b740 paid A64b4a98f5867 \u20ac2,449.84 on 2022-09-04 (txn 2276744) and received \u20ac3,109.63 from the same counterparty on 2022-09-07 (txn 3428301), creating returning funds and an inflated return amount; forward/backward tracing shows inbound flows to A64b4a98f5867 from multiple accounts and layering-like movements. Counterparty payments have mixed references (\"Software license renewal\", \"Monthly retainer September\") and mismatched amounts, short activity window, and related accounts of the same entity, which are indicators of potentially suspicious circular funds transfer that warrant escalation for analyst review."
+      },
+      "escalate_truth": false,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A09118047bc59",
+      "alert_date": "2022-09-08",
+      "alert_id": 6864,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "profile_deviation"
+      ],
+      "verification_status": null,
+      "cost_usd": 0.0010095,
+      "latency_ms": 3819.048917001055,
+      "trace": {
+        "prompt_version": "64b393f60d5f",
+        "tool_calls": [
+          {
+            "phase": "evidence",
+            "tool": "get_alert",
+            "args": {
+              "alert_id": 6864
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_account_profile",
+            "args": {
+              "account_id": "A09118047bc59",
+              "alert_id": 6864
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_counterparties",
+            "args": {
+              "account_id": "A09118047bc59",
+              "alert_id": 6864
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "list_transactions",
+            "args": {
+              "account_id": "A09118047bc59",
+              "alert_id": 6864
+            },
+            "rows": 6
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_transactions",
+            "args": {
+              "txn_ids": [
+                3769691,
+                3775387,
+                3992377
+              ],
+              "alert_id": 6864
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_typology_candidates",
+            "args": {
+              "alert_id": 6864
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A09118047bc59",
+              "direction": "forward",
+              "max_hops": 2,
+              "alert_id": 6864
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A09118047bc59",
+              "direction": "backward",
+              "max_hops": 2,
+              "alert_id": 6864
+            },
+            "rows": 1
+          }
+        ],
+        "tokens": 3135,
+        "usage": {
+          "input_tokens": 3006,
+          "cached_input_tokens": 0,
+          "output_tokens": 129
+        },
+        "cost_usd": 0.0010095,
+        "parse": "ok",
+        "rationale": "New sole-proprietorship account with high outgoing volume (EUR ~4,834) over 8 active days and large ACH payout (EUR 2,718) on same day as multiple small USD cash/cheque payments; activity deviates from profile and shows rapid outbound flows to few counterparties without clear incoming funding (only EUR 18 credit). Cannot rule out misuse or layering \u2014 escalate for analyst review and KYC verification of counterparties and reason for large ACH payment."
+      },
+      "escalate_truth": false,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A0942593ef162",
+      "alert_date": "2022-09-07",
+      "alert_id": 3150,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "profile_deviation",
+        "fan_out"
+      ],
+      "verification_status": null,
+      "cost_usd": 0.00174475,
+      "latency_ms": 3946.891166997375,
+      "trace": {
+        "prompt_version": "64b393f60d5f",
+        "tool_calls": [
+          {
+            "phase": "evidence",
+            "tool": "get_alert",
+            "args": {
+              "alert_id": 3150
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_account_profile",
+            "args": {
+              "account_id": "A0942593ef162",
+              "alert_id": 3150
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_counterparties",
+            "args": {
+              "account_id": "A0942593ef162",
+              "alert_id": 3150
+            },
+            "rows": 4
+          },
+          {
+            "phase": "evidence",
+            "tool": "list_transactions",
+            "args": {
+              "account_id": "A0942593ef162",
+              "alert_id": 3150
+            },
+            "rows": 10
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_transactions",
+            "args": {
+              "txn_ids": [
+                3289693,
+                3292643,
+                3497010,
+                3537544,
+                3542771
+              ],
+              "alert_id": 3150
+            },
+            "rows": 5
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_typology_candidates",
+            "args": {
+              "alert_id": 3150
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0942593ef162",
+              "direction": "forward",
+              "max_hops": 2,
+              "alert_id": 3150
+            },
+            "rows": 9
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0942593ef162",
+              "direction": "backward",
+              "max_hops": 2,
+              "alert_id": 3150
+            },
+            "rows": 8
+          }
+        ],
+        "tokens": 5887,
+        "usage": {
+          "input_tokens": 5731,
+          "cached_input_tokens": 0,
+          "output_tokens": 156
+        },
+        "cost_usd": 0.00174475,
+        "parse": "ok",
+        "rationale": "Account is a recently opened Partnership with large, concentrated outgoing flows (EUR 62,967,658.51 ACH to Aa4185) that are anomalous versus small incoming volumes (EUR 12,348.86) and short active period; multiple high-value FX and inter-currency transactions route large EUR/US$ amounts and near-immediate payouts to few counterparties, consistent with profile deviation and possible layering via fan-out. Insufficient plain business explanation in references and unusual payment mix (cash, cheque, ACH, credit card) warrant escalation for KYC and source-of-funds checks."
+      },
+      "escalate_truth": true,
+      "truth_typologies": [
+        "gather_scatter"
+      ]
+    },
+    {
+      "account_id": "A0a3ce6ac097d",
+      "alert_date": "2022-09-07",
+      "alert_id": 1205,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "cycle",
+        "random"
+      ],
+      "verification_status": null,
+      "cost_usd": 0.001855,
+      "latency_ms": 2758.5465000011027,
+      "trace": {
+        "prompt_version": "64b393f60d5f",
+        "tool_calls": [
+          {
+            "phase": "evidence",
+            "tool": "get_alert",
+            "args": {
+              "alert_id": 1205
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_account_profile",
+            "args": {
+              "account_id": "A0a3ce6ac097d",
+              "alert_id": 1205
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_counterparties",
+            "args": {
+              "account_id": "A0a3ce6ac097d",
+              "alert_id": 1205
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "list_transactions",
+            "args": {
+              "account_id": "A0a3ce6ac097d",
+              "alert_id": 1205
+            },
+            "rows": 17
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_transactions",
+            "args": {
+              "txn_ids": [
+                1937089,
+                3347630
+              ],
+              "alert_id": 1205
+            },
+            "rows": 2
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_typology_candidates",
+            "args": {
+              "alert_id": 1205
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0a3ce6ac097d",
+              "direction": "forward",
+              "max_hops": 2,
+              "alert_id": 1205
+            },
+            "rows": 11
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0a3ce6ac097d",
+              "direction": "backward",
+              "max_hops": 2,
+              "alert_id": 1205
+            },
+            "rows": 10
+          }
+        ],
+        "tokens": 6160,
+        "usage": {
+          "input_tokens": 5980,
+          "cached_input_tokens": 0,
+          "output_tokens": 180
+        },
+        "cost_usd": 0.001855,
+        "parse": "ok",
+        "rationale": "Multiple back-and-forth ACH transfers between the alerted account (A0a3ce6ac097d) and counterparty A8480137e95f5 (txn 1937089 out on 2022-09-03 and txn 3347630 in on 2022-09-07) form a two-way cycle flagged by rule R4_cycle. The account also shows very large outgoing EUR volume concentrated on two days (daily_outgoing_eur_mean ~336k EUR) and many incoming small payments from a single counterparty (A2ec529811ba5) with mixed reference texts, which could indicate layering or circular movement; evidence insufficient to rule out legitimate business purpose, so escalate for review."
+      },
+      "escalate_truth": false,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A0b37573d11a1",
+      "alert_date": "2022-09-08",
+      "alert_id": 5001,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "cycle",
+        "profile_deviation"
+      ],
+      "verification_status": null,
+      "cost_usd": 0.0015445,
+      "latency_ms": 2758.679791004397,
+      "trace": {
+        "prompt_version": "64b393f60d5f",
+        "tool_calls": [
+          {
+            "phase": "evidence",
+            "tool": "get_alert",
+            "args": {
+              "alert_id": 5001
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_account_profile",
+            "args": {
+              "account_id": "A0b37573d11a1",
+              "alert_id": 5001
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_counterparties",
+            "args": {
+              "account_id": "A0b37573d11a1",
+              "alert_id": 5001
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "list_transactions",
+            "args": {
+              "account_id": "A0b37573d11a1",
+              "alert_id": 5001
+            },
+            "rows": 6
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_transactions",
+            "args": {
+              "txn_ids": [
+                4108888,
+                4167375,
+                3848290,
+                3849883
+              ],
+              "alert_id": 5001
+            },
+            "rows": 4
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_typology_candidates",
+            "args": {
+              "alert_id": 5001
+            },
+            "rows": 2
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0b37573d11a1",
+              "direction": "forward",
+              "max_hops": 2,
+              "alert_id": 5001
+            },
+            "rows": 5
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0b37573d11a1",
+              "direction": "backward",
+              "max_hops": 2,
+              "alert_id": 5001
+            },
+            "rows": 7
+          }
+        ],
+        "tokens": 4918,
+        "usage": {
+          "input_tokens": 4738,
+          "cached_input_tokens": 0,
+          "output_tokens": 180
+        },
+        "cost_usd": 0.0015445,
+        "parse": "ok",
+        "rationale": "There is a near-immediate ACH payment of 3720.16 CAD from the alerted account to A18cd28f13645 (txn 4108888) followed three hours later by a return ACH of 3607.24 CAD from that same counterparty (txn 4167375), creating a cycle between accounts with similar amounts \u2014 this triggered the R4_cycle rule. The account also shows unusual outgoing payments on the same day (small supplier payment and a larger cheque labeled 'Loan repayment') that deviate from its short activity history and profile, and forward/backward tracing shows funds coming from and returning via related third parties, so escalate for analyst review and possible source-of-funds and counterparty checks."
+      },
+      "escalate_truth": true,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A0b61188b454a",
+      "alert_date": "2022-09-07",
+      "alert_id": 15537,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "profile_deviation"
+      ],
+      "verification_status": null,
+      "cost_usd": 0.0008825,
+      "latency_ms": 2014.9208750008256,
+      "trace": {
+        "prompt_version": "64b393f60d5f",
+        "tool_calls": [
+          {
+            "phase": "evidence",
+            "tool": "get_alert",
+            "args": {
+              "alert_id": 15537
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_account_profile",
+            "args": {
+              "account_id": "A0b61188b454a",
+              "alert_id": 15537
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_counterparties",
+            "args": {
+              "account_id": "A0b61188b454a",
+              "alert_id": 15537
+            },
+            "rows": 2
+          },
+          {
+            "phase": "evidence",
+            "tool": "list_transactions",
+            "args": {
+              "account_id": "A0b61188b454a",
+              "alert_id": 15537
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_transactions",
+            "args": {
+              "txn_ids": [
+                3352399,
+                3360161,
+                3442255
+              ],
+              "alert_id": 15537
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_typology_candidates",
+            "args": {
+              "alert_id": 15537
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0b61188b454a",
+              "direction": "forward",
+              "max_hops": 2,
+              "alert_id": 15537
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0b61188b454a",
+              "direction": "backward",
+              "max_hops": 2,
+              "alert_id": 15537
+            },
+            "rows": 0
+          }
+        ],
+        "tokens": 2543,
+        "usage": {
+          "input_tokens": 2402,
+          "cached_input_tokens": 0,
+          "output_tokens": 141
+        },
+        "cost_usd": 0.0008825,
+        "parse": "ok",
+        "rationale": "Account A0b61188b454a triggered a profile deviation rule with three outgoing Bitcoin transfers totaling ~EUR 2,527 within one day to two counterparties, including two quick successive payments to the same counterparty with different business references; there are no incoming funds in the window to explain the outflows and backward tracing shows no sources. The unusual outgoing-only activity, inconsistent references (\"Insurance premium\", \"Software license renewal\", \"Membership fee April\"), and lack of prior history in the alert window warrant escalation for manual review."
+      },
+      "escalate_truth": false,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A0bc4c40d5d7c",
+      "alert_date": "2022-09-07",
+      "alert_id": 10117,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "cycle",
+        "random"
+      ],
+      "verification_status": null,
+      "cost_usd": 0.00160025,
+      "latency_ms": 3117.8766250013723,
+      "trace": {
+        "prompt_version": "64b393f60d5f",
+        "tool_calls": [
+          {
+            "phase": "evidence",
+            "tool": "get_alert",
+            "args": {
+              "alert_id": 10117
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_account_profile",
+            "args": {
+              "account_id": "A0bc4c40d5d7c",
+              "alert_id": 10117
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_counterparties",
+            "args": {
+              "account_id": "A0bc4c40d5d7c",
+              "alert_id": 10117
+            },
+            "rows": 2
+          },
+          {
+            "phase": "evidence",
+            "tool": "list_transactions",
+            "args": {
+              "account_id": "A0bc4c40d5d7c",
+              "alert_id": 10117
+            },
+            "rows": 11
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_transactions",
+            "args": {
+              "txn_ids": [
+                2320086,
+                3724341
+              ],
+              "alert_id": 10117
+            },
+            "rows": 2
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_typology_candidates",
+            "args": {
+              "alert_id": 10117
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0bc4c40d5d7c",
+              "direction": "forward",
+              "max_hops": 2,
+              "alert_id": 10117
+            },
+            "rows": 10
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0bc4c40d5d7c",
+              "direction": "backward",
+              "max_hops": 2,
+              "alert_id": 10117
+            },
+            "rows": 5
+          }
+        ],
+        "tokens": 4910,
+        "usage": {
+          "input_tokens": 4697,
+          "cached_input_tokens": 0,
+          "output_tokens": 213
+        },
+        "cost_usd": 0.00160025,
+        "parse": "ok",
+        "rationale": "Account A0bc4c40d5d7c shows a cycle between itself and A1cc609a87806 (txn 2320086 outgoing 1,275.80 ILS on 2022-09-05 and txn 3724341 incoming 16,036.18 ILS on 2022-09-07) flagged by rule R4_cycle; traced funds show small inflows from other accounts into A1cc609a87806 before returning large value to the alerted account, and the alerted account also makes many large outbound payments (\u224877.8k EUR) over a short active period with mixed payment formats and unrelated references, which could indicate layering or obfuscation. Cannot identify legitimate business purpose for the rapid multiple large outflows and the disparity between small outbound to A1cc... then large inbound return\u2014escalate for analyst review."
+      },
+      "escalate_truth": true,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A0c34b77f94c8",
+      "alert_date": "2022-09-08",
+      "alert_id": 14215,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "cycle",
+        "random"
+      ],
+      "verification_status": null,
+      "cost_usd": 0.00195975,
+      "latency_ms": 2174.880499995197,
+      "trace": {
+        "prompt_version": "64b393f60d5f",
+        "tool_calls": [
+          {
+            "phase": "evidence",
+            "tool": "get_alert",
+            "args": {
+              "alert_id": 14215
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_account_profile",
+            "args": {
+              "account_id": "A0c34b77f94c8",
+              "alert_id": 14215
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_counterparties",
+            "args": {
+              "account_id": "A0c34b77f94c8",
+              "alert_id": 14215
+            },
+            "rows": 8
+          },
+          {
+            "phase": "evidence",
+            "tool": "list_transactions",
+            "args": {
+              "account_id": "A0c34b77f94c8",
+              "alert_id": 14215
+            },
+            "rows": 10
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_transactions",
+            "args": {
+              "txn_ids": [
+                2862454,
+                3985957
+              ],
+              "alert_id": 14215
+            },
+            "rows": 2
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_typology_candidates",
+            "args": {
+              "alert_id": 14215
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0c34b77f94c8",
+              "direction": "forward",
+              "max_hops": 2,
+              "alert_id": 14215
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0c34b77f94c8",
+              "direction": "backward",
+              "max_hops": 2,
+              "alert_id": 14215
+            },
+            "rows": 19
+          }
+        ],
+        "tokens": 6544,
+        "usage": {
+          "input_tokens": 6359,
+          "cached_input_tokens": 0,
+          "output_tokens": 185
+        },
+        "cost_usd": 0.00195975,
+        "parse": "ok",
+        "rationale": "There is a detected cycle: A0c34b77f94c8 sent 1696.29 EUR to A7288deeac4c6 (txn 2862454) and later received 373.28 EUR back from that account (txn 3985957), producing a small return amount (flow 373.28 EUR) flagged by rule R4_cycle. Multiple rapid incoming ACHs from 7 distinct counterparties on 2022-09-08 with varied references and large volumes over a short active period (incoming 19,913.64 EUR in 3 days) plus related forward/backward traces show funds moving among several accounts, which could indicate layering or circular movement that lacks clear ordinary explanation in the data provided."
+      },
+      "escalate_truth": false,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A0cb52bf1aba8",
+      "alert_date": "2022-09-07",
+      "alert_id": 5363,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "profile_deviation"
+      ],
+      "verification_status": null,
+      "cost_usd": 0.000861,
+      "latency_ms": 1839.386874999036,
+      "trace": {
+        "prompt_version": "64b393f60d5f",
+        "tool_calls": [
+          {
+            "phase": "evidence",
+            "tool": "get_alert",
+            "args": {
+              "alert_id": 5363
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_account_profile",
+            "args": {
+              "account_id": "A0cb52bf1aba8",
+              "alert_id": 5363
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_counterparties",
+            "args": {
+              "account_id": "A0cb52bf1aba8",
+              "alert_id": 5363
+            },
+            "rows": 2
+          },
+          {
+            "phase": "evidence",
+            "tool": "list_transactions",
+            "args": {
+              "account_id": "A0cb52bf1aba8",
+              "alert_id": 5363
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_transactions",
+            "args": {
+              "txn_ids": [
+                3518000,
+                3521756,
+                3731089
+              ],
+              "alert_id": 5363
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "get_typology_candidates",
+            "args": {
+              "alert_id": 5363
+            },
+            "rows": 1
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0cb52bf1aba8",
+              "direction": "forward",
+              "max_hops": 2,
+              "alert_id": 5363
+            },
+            "rows": 3
+          },
+          {
+            "phase": "evidence",
+            "tool": "trace_funds",
+            "args": {
+              "account_id": "A0cb52bf1aba8",
+              "direction": "backward",
+              "max_hops": 2,
+              "alert_id": 5363
+            },
+            "rows": 0
+          }
+        ],
+        "tokens": 2639,
+        "usage": {
+          "input_tokens": 2524,
+          "cached_input_tokens": 0,
+          "output_tokens": 115
+        },
+        "cost_usd": 0.000861,
+        "parse": "ok",
+        "rationale": "New partnership account with only outgoing activity (no incoming) moving substantial EUR-equivalent amounts out to two counterparties on the same day; transactions labeled inconsistent references (Tuition November, Refund, Monthly retainer April) and mix of payment formats increase suspicion and unclear business rationale. No prior incoming funds or history to justify these outflows and fund origin cannot be traced backward; escalate for SAR review and customer outreach."
+      },
+      "escalate_truth": false,
+      "truth_typologies": []
+    }
+  ]
+}
