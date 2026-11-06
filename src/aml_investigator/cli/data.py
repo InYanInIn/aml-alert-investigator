@@ -49,6 +49,14 @@ def run_corpus_load(args: argparse.Namespace) -> None:
         print(load_corpus(conn, CORPUS_SOURCES))
 
 
+def run_corpus_embed(args: argparse.Namespace) -> None:
+    from aml_investigator.corpus.embeddings import azure_embeddings, embed_missing
+
+    settings = settings_for(args)
+    with psycopg.connect(settings.owner_conninfo) as conn:
+        print(embed_missing(conn, azure_embeddings(settings.azure_endpoint)))
+
+
 def register(commands: Commands) -> None:
     commands.add_parser("migrate").set_defaults(handler=run_migrate)
 
@@ -64,3 +72,4 @@ def register(commands: Commands) -> None:
     corpus = commands.add_parser("corpus").add_subparsers(required=True)
     corpus.add_parser("fetch").set_defaults(handler=run_corpus_fetch)
     corpus.add_parser("load").set_defaults(handler=run_corpus_load)
+    corpus.add_parser("embed").set_defaults(handler=run_corpus_embed)

@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     langfuse_public_key: str | None = None
     langfuse_secret_key: SecretStr | None = None
     langfuse_host: str | None = None
+    azure_openai_endpoint: str | None = None
 
     @property
     def owner_conninfo(self) -> str:
@@ -42,6 +43,12 @@ class Settings(BaseSettings):
     @property
     def evaluator_conninfo(self) -> str:
         return required(self.evaluator_dsn, "AML_EVALUATOR_DSN")
+
+    @property
+    def azure_endpoint(self) -> str:
+        if not self.azure_openai_endpoint:
+            raise MissingSettingError("AML_AZURE_OPENAI_ENDPOINT")
+        return self.azure_openai_endpoint
 
     @property
     def role_dsns(self) -> tuple[str, ...]:

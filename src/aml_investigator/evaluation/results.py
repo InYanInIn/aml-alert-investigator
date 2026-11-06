@@ -19,6 +19,7 @@ from aml_investigator.evaluation.samples import EvalSplit, Sample, sample_path
 from aml_investigator.evaluation.systems import EvalAlert, Recommendation, SystemDecision
 
 RESULTS_DIR = Path("eval/results")
+RECORDINGS_DIR = Path("eval/recordings")
 THRESHOLDS_DIR = Path("config/thresholds")
 RUN_INPUTS = (":/src", ":/config", ":/pyproject.toml", ":/uv.lock", ":/eval/samples")
 

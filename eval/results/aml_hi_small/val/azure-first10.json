@@ -1,0 +1,2010 @@
+{
+  "system": "azure",
+  "split": "val",
+  "database": "aml_hi_small",
+  "created_at": "2026-11-06T11:17:58+00:00",
+  "git_commit": "bffcfb9da164d2ad80b9f211eb619b677b8d8d74",
+  "git_dirty": false,
+  "sample_sha256": "2528a1b9e4b17b555b577b558a33a304e573e6e31531c41f8a50a86d94e701fb",
+  "thresholds_sha256": "e4847a0a36391e237394207d47a6a36f67ca599e69e4061062402a86933b5dd0",
+  "operating_point": null,
+  "bootstrap": {
+    "resamples": 2000,
+    "seed": 20261030
+  },
+  "counts": {
+    "alerts": 10,
+    "population": {
+      "positive": 178,
+      "negative": 1755
+    },
+    "sample": {
+      "positive": 4,
+      "negative": 6
+    },
+    "recommended_close": 1,
+    "recommended_escalate": 9,
+    "total_cost_usd": 0.16285035
+  },
+  "metrics": {
+    "weighted": {
+      "false_close_rate": {
+        "value": 0.0,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "escalation_precision": {
+        "value": 0.10850350502895459,
+        "low": 0.09208484221417486,
+        "high": 0.16864045476077688
+      },
+      "close_rate": {
+        "value": 0.15131919296430418,
+        "low": 0.0,
+        "high": 0.45395757889291255
+      },
+      "recall_pattern": {
+        "value": 1.0,
+        "low": 1.0,
+        "high": 1.0
+      },
+      "recall_other": {
+        "value": 1.0,
+        "low": 1.0,
+        "high": 1.0
+      },
+      "typology_hit_rate": {
+        "value": 0.0,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "mean_latency_ms": {
+        "value": 39560.63893851143,
+        "low": 37817.151788439725,
+        "high": 41255.01567317935
+      },
+      "p50_latency_ms": {
+        "value": 39365.94366700592,
+        "low": 37351.125959001365,
+        "high": 42245.35166699934
+      },
+      "p95_latency_ms": {
+        "value": 42245.35166699934,
+        "low": 40995.82045900024,
+        "high": 54211.63641699968
+      },
+      "mean_cost_usd": {
+        "value": 0.015498907074495602,
+        "low": 0.01436265870408691,
+        "high": 0.016669153401448526
+      }
+    },
+    "unweighted": {
+      "false_close_rate": {
+        "value": 0.0,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "escalation_precision": {
+        "value": 0.4444444444444444,
+        "low": 0.4,
+        "high": 0.5714285714285714
+      },
+      "close_rate": {
+        "value": 0.1,
+        "low": 0.0,
+        "high": 0.3
+      },
+      "recall_pattern": {
+        "value": 1.0,
+        "low": 1.0,
+        "high": 1.0
+      },
+      "recall_other": {
+        "value": 1.0,
+        "low": 1.0,
+        "high": 1.0
+      },
+      "typology_hit_rate": {
+        "value": 0.0,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "mean_latency_ms": {
+        "value": 40684.180416801246,
+        "low": 36425.5132793005,
+        "high": 44371.14448340071
+      },
+      "p50_latency_ms": {
+        "value": 39365.94366700592,
+        "low": 36983.474375003425,
+        "high": 42245.35166699934
+      },
+      "p95_latency_ms": {
+        "value": 54211.63641699968,
+        "low": 42245.35166699934,
+        "high": 54211.63641699968
+      },
+      "mean_cost_usd": {
+        "value": 0.016285035,
+        "low": 0.01450492,
+        "high": 0.018143795
+      }
+    }
+  },
+  "alerts": [
+    {
+      "account_id": "A00b3fb6cdd1b",
+      "alert_date": "2022-09-08",
+      "alert_id": 8408,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "fan_in",
+        "gather_scatter",
+        "profile_deviation"
+      ],
+      "verification_status": "failed",
+      "cost_usd": 0.02380275,
+      "latency_ms": 54211.63641699968,
+      "trace": {
+        "usage": {
+          "input_tokens": 85579,
+          "output_tokens": 6388,
+          "cached_input_tokens": 46080
+        },
+        "tokens": 91967,
+        "repairs": 1,
+        "cost_usd": 0.02380275,
+        "loop_stop": "model_done",
+        "tool_calls": [
+          {
+            "args": {
+              "alert_id": 8408
+            },
+            "rows": 1,
+            "tool": "get_alert",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 8408,
+              "account_id": "A00b3fb6cdd1b"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 8408,
+              "account_id": "A00b3fb6cdd1b"
+            },
+            "rows": 20,
+            "tool": "get_counterparties",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 8408,
+              "account_id": "A00b3fb6cdd1b"
+            },
+            "rows": 38,
+            "tool": "list_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "txn_ids": [
+                4166336,
+                4166371,
+                4166790,
+                4166903,
+                4167310,
+                4167634,
+                4167715,
+                4167781,
+                4167856,
+                4167982,
+                4168009,
+                4168158,
+                4169141,
+                4169633,
+                4169832,
+                4169909,
+                4170036,
+                4170559,
+                4170778,
+                4170899,
+                4170919,
+                4171024,
+                4171189,
+                4171265,
+                4171282,
+                4171369,
+                4171424,
+                4171506,
+                4172490,
+                4172591,
+                4172732,
+                4173045,
+                4173088,
+                4173325,
+                4173900,
+                4174035,
+                4174185,
+                4175497
+              ],
+              "alert_id": 8408
+            },
+            "rows": 38,
+            "tool": "get_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 8408
+            },
+            "rows": 1,
+            "tool": "get_typology_candidates",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 8408,
+              "max_hops": 2,
+              "direction": "forward",
+              "account_id": "A00b3fb6cdd1b"
+            },
+            "rows": 0,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 8408,
+              "max_hops": 2,
+              "direction": "backward",
+              "account_id": "A00b3fb6cdd1b"
+            },
+            "rows": 20,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "query": "cluster of incoming payments from many counterparties sudden large volume fan-in typology money laundering obligations suspicious transaction reporting customer due diligence",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "\"reasonable grounds to suspect\" FIU",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "zawiadamia Generalnego Inspektora podejrzenie",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "transaction \"unusually large\" complex purpose",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "skomplikowanych nietypowy",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          }
+        ],
+        "verifications": [
+          {
+            "errors": [
+              "number 1 in claim 'Alerted account is a sole proprietorship with first_seen 2022-09-01 and no outgoing transactions as of alert as_of 2022-09-09' is not backed by a fact or a cited id",
+              "number 38 in claim 'Cluster of 38 incoming ACH payments from many distinct counterparties into the alerted account within the alert window; no observed outgoing flows in a two\u2011hop forward trace' is not backed by a fact or a cited id",
+              "number 38 in claim 'Funds arrived by ACH from at least 38 distinct counterparties as individual inbound payments (see transaction list) and no forward paths were found in a two\u2011hop forward trace, so immediate onward dispersal was not observed as_of the trace' is not backed by a fact or a cited id"
+            ],
+            "status": "failed"
+          },
+          {
+            "errors": [
+              "number 0 in claim 'Funds arrived by ACH as individual inbound payments documented in the transaction records (examples cited). A two\u2011hop forward fund trace returned no forward paths as_of 2022-09-09T00:00:00 (no onward flows observed in that trace window).' is not backed by a fact or a cited id",
+              "number 9 in claim 'Funds arrived by ACH as individual inbound payments documented in the transaction records (examples cited). A two\u2011hop forward fund trace returned no forward paths as_of 2022-09-09T00:00:00 (no onward flows observed in that trace window).' is not backed by a fact or a cited id",
+              "number 2022 in claim 'Funds arrived by ACH as individual inbound payments documented in the transaction records (examples cited). A two\u2011hop forward fund trace returned no forward paths as_of 2022-09-09T00:00:00 (no onward flows observed in that trace window).' is not backed by a fact or a cited id"
+            ],
+            "status": "failed"
+          }
+        ],
+        "reference_variant": "clean"
+      },
+      "escalate_truth": true,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A03c34748b740",
+      "alert_date": "2022-09-07",
+      "alert_id": 16547,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "cycle"
+      ],
+      "verification_status": "failed",
+      "cost_usd": 0.0161069,
+      "latency_ms": 42245.35166699934,
+      "trace": {
+        "usage": {
+          "input_tokens": 50394,
+          "output_tokens": 4519,
+          "cached_input_tokens": 24576
+        },
+        "tokens": 54913,
+        "repairs": 1,
+        "cost_usd": 0.0161069,
+        "loop_stop": "model_done",
+        "tool_calls": [
+          {
+            "args": {
+              "alert_id": 16547
+            },
+            "rows": 1,
+            "tool": "get_alert",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 16547,
+              "account_id": "A03c34748b740"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 16547,
+              "account_id": "A03c34748b740"
+            },
+            "rows": 3,
+            "tool": "get_counterparties",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 16547,
+              "account_id": "A03c34748b740"
+            },
+            "rows": 4,
+            "tool": "list_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "txn_ids": [
+                2276744,
+                3428301
+              ],
+              "alert_id": 16547
+            },
+            "rows": 2,
+            "tool": "get_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 16547
+            },
+            "rows": 1,
+            "tool": "get_typology_candidates",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 16547,
+              "max_hops": 2,
+              "direction": "forward",
+              "account_id": "A03c34748b740"
+            },
+            "rows": 1,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 16547,
+              "max_hops": 2,
+              "direction": "backward",
+              "account_id": "A03c34748b740"
+            },
+            "rows": 8,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 16547,
+              "account_id": "A64b4a98f5867"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "txn_ids": [
+                2278915,
+                2276734,
+                2259367,
+                2368426,
+                2869180,
+                3261955,
+                2285202
+              ],
+              "alert_id": 16547
+            },
+            "rows": 7,
+            "tool": "get_transactions",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "transaction cycling returning funds to origin, suspicious circular flows, customer due diligence, escalate",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "\"reasonable grounds to suspect\" FIU",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "zawiadamia Generalnego Inspektora podejrzenie",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "transaction \"unusually large\" complex purpose",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "skomplikowanych nietypowy",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          }
+        ],
+        "verifications": [
+          {
+            "errors": [
+              "number 0 in claim 'Pattern is an unusual circular flow exceeding EUR 1 000 and lacks an apparent lawful business purpose in the data; AMLR and PL-AML require examination and reporting of such transactions.' is not backed by a fact or a cited id",
+              "number 1 in claim 'Pattern is an unusual circular flow exceeding EUR 1 000 and lacks an apparent lawful business purpose in the data; AMLR and PL-AML require examination and reporting of such transactions.' is not backed by a fact or a cited id"
+            ],
+            "status": "failed"
+          },
+          {
+            "errors": [
+              "number 0 in claim 'The short circular flow involves transfers above EUR 1 000 and matches criteria for examination as an unusual pattern or lacking apparent economic purpose; AMLR requires examination of transactions conducted in an unusual pattern and customer due diligence for occasional transfers \u2265 EUR 1 000; PL-AML requires investigation of transactions conducted in an unusual way or appearing to lack lawful economic purpose.' is not backed by a fact or a cited id",
+              "number 1 in claim 'The short circular flow involves transfers above EUR 1 000 and matches criteria for examination as an unusual pattern or lacking apparent economic purpose; AMLR requires examination of transactions conducted in an unusual pattern and customer due diligence for occasional transfers \u2265 EUR 1 000; PL-AML requires investigation of transactions conducted in an unusual way or appearing to lack lawful economic purpose.' is not backed by a fact or a cited id"
+            ],
+            "status": "failed"
+          }
+        ],
+        "reference_variant": "clean"
+      },
+      "escalate_truth": false,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A09118047bc59",
+      "alert_date": "2022-09-08",
+      "alert_id": 6864,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "profile_deviation"
+      ],
+      "verification_status": "passed",
+      "cost_usd": 0.0179761,
+      "latency_ms": 39365.94366700592,
+      "trace": {
+        "usage": {
+          "input_tokens": 41546,
+          "output_tokens": 4846,
+          "cached_input_tokens": 9344
+        },
+        "tokens": 46392,
+        "repairs": 1,
+        "cost_usd": 0.0179761,
+        "loop_stop": "model_done",
+        "tool_calls": [
+          {
+            "args": {
+              "alert_id": 6864
+            },
+            "rows": 1,
+            "tool": "get_alert",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 6864,
+              "account_id": "A09118047bc59"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 6864,
+              "account_id": "A09118047bc59"
+            },
+            "rows": 3,
+            "tool": "get_counterparties",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 6864,
+              "account_id": "A09118047bc59"
+            },
+            "rows": 6,
+            "tool": "list_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "txn_ids": [
+                3769691,
+                3775387,
+                3992377
+              ],
+              "alert_id": 6864
+            },
+            "rows": 3,
+            "tool": "get_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 6864
+            },
+            "rows": 1,
+            "tool": "get_typology_candidates",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 6864,
+              "max_hops": 2,
+              "direction": "forward",
+              "account_id": "A09118047bc59"
+            },
+            "rows": 3,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 6864,
+              "max_hops": 2,
+              "direction": "backward",
+              "account_id": "A09118047bc59"
+            },
+            "rows": 1,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 6864,
+              "account_id": "A507ac39d6d84"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "alert_id": 6864,
+              "account_id": "A12904f9d5011"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "alert_id": 6864,
+              "account_id": "A08fde9392fe2"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "unusual transaction profile deviation monitoring obligation report suspicious transaction customer due diligence thresholds",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "\"reasonable grounds to suspect\" FIU",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "zawiadamia Generalnego Inspektora podejrzenie",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "transactions \"consistent with\" \"risk profile\" monitoring",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "\"bie\u017c\u0105ce monitorowanie stosunk\u00f3w gospodarczych\"",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          }
+        ],
+        "verifications": [
+          {
+            "errors": [
+              "output does not parse into a Decision: 1 validation error for Decision\ntypologies.0.txn_ids.3\n  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='evidence_txn_ids', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/int_parsing"
+            ],
+            "status": "failed"
+          },
+          {
+            "errors": [],
+            "status": "passed"
+          }
+        ],
+        "reference_variant": "clean"
+      },
+      "escalate_truth": false,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A0942593ef162",
+      "alert_date": "2022-09-07",
+      "alert_id": 3150,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "profile_deviation"
+      ],
+      "verification_status": "failed",
+      "cost_usd": 0.0178044,
+      "latency_ms": 48736.66791600408,
+      "trace": {
+        "usage": {
+          "input_tokens": 59848,
+          "output_tokens": 5770,
+          "cached_input_tokens": 38656
+        },
+        "tokens": 65618,
+        "repairs": 1,
+        "cost_usd": 0.0178044,
+        "loop_stop": "model_done",
+        "tool_calls": [
+          {
+            "args": {
+              "alert_id": 3150
+            },
+            "rows": 1,
+            "tool": "get_alert",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 3150,
+              "account_id": "A0942593ef162"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 3150,
+              "account_id": "A0942593ef162"
+            },
+            "rows": 4,
+            "tool": "get_counterparties",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 3150,
+              "account_id": "A0942593ef162"
+            },
+            "rows": 10,
+            "tool": "list_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "txn_ids": [
+                3289693,
+                3292643,
+                3497010,
+                3537544,
+                3542771
+              ],
+              "alert_id": 3150
+            },
+            "rows": 5,
+            "tool": "get_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 3150
+            },
+            "rows": 1,
+            "tool": "get_typology_candidates",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 3150,
+              "max_hops": 2,
+              "direction": "forward",
+              "account_id": "A0942593ef162"
+            },
+            "rows": 9,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 3150,
+              "max_hops": 2,
+              "direction": "backward",
+              "account_id": "A0942593ef162"
+            },
+            "rows": 8,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 3150,
+              "account_id": "Aa418584c9eb4"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "end": "2022-09-08T00:00:00",
+              "start": "2022-09-07T00:00:00",
+              "alert_id": 3150,
+              "account_id": "Aa418584c9eb4"
+            },
+            "rows": 2,
+            "tool": "list_transactions",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "alert_id": 3150,
+              "max_hops": 2,
+              "direction": "backward",
+              "account_id": "Aa418584c9eb4"
+            },
+            "rows": 2,
+            "tool": "trace_funds",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "unusual large outgoing payment inconsistent with customer profile and required reporting obligations thresholds suspicious transaction size profile deviation",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "\"reasonable grounds to suspect\" FIU",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "zawiadamia Generalnego Inspektora podejrzenie",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "transactions \"consistent with\" \"risk profile\" monitoring",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "\"bie\u017c\u0105ce monitorowanie stosunk\u00f3w gospodarczych\"",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          }
+        ],
+        "verifications": [
+          {
+            "errors": [
+              "passage AMLR art.26(1) was not returned by any tool",
+              "passage AMLR art.34(2) was not returned by any tool",
+              "passage AMLR art.69(2) was not returned by any tool",
+              "passage AMLR art.19(2) was not returned by any tool"
+            ],
+            "status": "failed"
+          },
+          {
+            "errors": [
+              "passage AMLR art.26(1) was not returned by any tool",
+              "passage AMLR art.34(2) was not returned by any tool",
+              "passage AMLR art.69(2) was not returned by any tool",
+              "passage AMLR art.19(2) was not returned by any tool"
+            ],
+            "status": "failed"
+          }
+        ],
+        "reference_variant": "clean"
+      },
+      "escalate_truth": true,
+      "truth_typologies": [
+        "gather_scatter"
+      ]
+    },
+    {
+      "account_id": "A0a3ce6ac097d",
+      "alert_date": "2022-09-07",
+      "alert_id": 1205,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "cycle"
+      ],
+      "verification_status": "passed",
+      "cost_usd": 0.0153881,
+      "latency_ms": 41619.88708299759,
+      "trace": {
+        "usage": {
+          "input_tokens": 62170,
+          "output_tokens": 5078,
+          "cached_input_tokens": 45824
+        },
+        "tokens": 67248,
+        "repairs": 1,
+        "cost_usd": 0.0153881,
+        "loop_stop": "model_done",
+        "tool_calls": [
+          {
+            "args": {
+              "alert_id": 1205
+            },
+            "rows": 1,
+            "tool": "get_alert",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 1205,
+              "account_id": "A0a3ce6ac097d"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 1205,
+              "account_id": "A0a3ce6ac097d"
+            },
+            "rows": 3,
+            "tool": "get_counterparties",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 1205,
+              "account_id": "A0a3ce6ac097d"
+            },
+            "rows": 17,
+            "tool": "list_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "txn_ids": [
+                1937089,
+                3347630
+              ],
+              "alert_id": 1205
+            },
+            "rows": 2,
+            "tool": "get_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 1205
+            },
+            "rows": 1,
+            "tool": "get_typology_candidates",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 1205,
+              "max_hops": 2,
+              "direction": "forward",
+              "account_id": "A0a3ce6ac097d"
+            },
+            "rows": 11,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 1205,
+              "max_hops": 2,
+              "direction": "backward",
+              "account_id": "A0a3ce6ac097d"
+            },
+            "rows": 10,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "txn_ids": [
+                2515013,
+                2518080,
+                3026980,
+                3360665,
+                3347630
+              ],
+              "alert_id": 1205
+            },
+            "rows": 5,
+            "tool": "get_transactions",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "circular transactions return funds to origin account suspicious cycle typology",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "\"reasonable grounds to suspect\" FIU",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "zawiadamia Generalnego Inspektora podejrzenie",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "transaction \"unusually large\" complex purpose",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "skomplikowanych nietypowy",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          }
+        ],
+        "verifications": [
+          {
+            "errors": [
+              "number 1 in claim 'Customer A0a3ce6ac097d (Sole Proprietorship, first seen 2022-09-01) and counterparty A8480137e95f5.' is not backed by a fact or a cited id"
+            ],
+            "status": "failed"
+          },
+          {
+            "errors": [],
+            "status": "passed"
+          }
+        ],
+        "reference_variant": "clean"
+      },
+      "escalate_truth": false,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A0b37573d11a1",
+      "alert_date": "2022-09-08",
+      "alert_id": 5001,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "cycle",
+        "profile_deviation"
+      ],
+      "verification_status": "failed",
+      "cost_usd": 0.01772805,
+      "latency_ms": 40995.82045900024,
+      "trace": {
+        "usage": {
+          "input_tokens": 38925,
+          "output_tokens": 5280,
+          "cached_input_tokens": 11392
+        },
+        "tokens": 44205,
+        "repairs": 1,
+        "cost_usd": 0.01772805,
+        "loop_stop": "model_done",
+        "tool_calls": [
+          {
+            "args": {
+              "alert_id": 5001
+            },
+            "rows": 1,
+            "tool": "get_alert",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5001,
+              "account_id": "A0b37573d11a1"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5001,
+              "account_id": "A0b37573d11a1"
+            },
+            "rows": 3,
+            "tool": "get_counterparties",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5001,
+              "account_id": "A0b37573d11a1"
+            },
+            "rows": 6,
+            "tool": "list_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "txn_ids": [
+                4108888,
+                4167375,
+                3848290,
+                3849883
+              ],
+              "alert_id": 5001
+            },
+            "rows": 4,
+            "tool": "get_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5001
+            },
+            "rows": 2,
+            "tool": "get_typology_candidates",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5001,
+              "max_hops": 2,
+              "direction": "forward",
+              "account_id": "A0b37573d11a1"
+            },
+            "rows": 5,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5001,
+              "max_hops": 2,
+              "direction": "backward",
+              "account_id": "A0b37573d11a1"
+            },
+            "rows": 7,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "query": "\"reasonable grounds to suspect\" FIU",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "zawiadamia Generalnego Inspektora podejrzenie",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "transaction \"unusually large\" complex purpose",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "skomplikowanych nietypowy",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "transactions \"consistent with\" \"risk profile\" monitoring",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "\"bie\u017c\u0105ce monitorowanie stosunk\u00f3w gospodarczych\"",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          }
+        ],
+        "verifications": [
+          {
+            "errors": [
+              "passage AMLR art.26(1) was not returned by any tool",
+              "passage AMLR art.69(1) was not returned by any tool",
+              "passage AMLR art.34(2) was not returned by any tool"
+            ],
+            "status": "failed"
+          },
+          {
+            "errors": [
+              "passage AMLR art.26(1) was not returned by any tool",
+              "passage AMLR art.69(1) was not returned by any tool",
+              "passage AMLR art.34(2) was not returned by any tool"
+            ],
+            "status": "failed"
+          }
+        ],
+        "reference_variant": "clean"
+      },
+      "escalate_truth": true,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A0b61188b454a",
+      "alert_date": "2022-09-07",
+      "alert_id": 15537,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "profile_deviation"
+      ],
+      "verification_status": "passed",
+      "cost_usd": 0.01301665,
+      "latency_ms": 37351.125959001365,
+      "trace": {
+        "usage": {
+          "input_tokens": 25825,
+          "output_tokens": 4605,
+          "cached_input_tokens": 11776
+        },
+        "tokens": 30430,
+        "repairs": 1,
+        "cost_usd": 0.01301665,
+        "loop_stop": "model_done",
+        "tool_calls": [
+          {
+            "args": {
+              "alert_id": 15537
+            },
+            "rows": 1,
+            "tool": "get_alert",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 15537,
+              "account_id": "A0b61188b454a"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 15537,
+              "account_id": "A0b61188b454a"
+            },
+            "rows": 2,
+            "tool": "get_counterparties",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 15537,
+              "account_id": "A0b61188b454a"
+            },
+            "rows": 3,
+            "tool": "list_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "txn_ids": [
+                3352399,
+                3360161,
+                3442255
+              ],
+              "alert_id": 15537
+            },
+            "rows": 3,
+            "tool": "get_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 15537
+            },
+            "rows": 1,
+            "tool": "get_typology_candidates",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 15537,
+              "max_hops": 2,
+              "direction": "forward",
+              "account_id": "A0b61188b454a"
+            },
+            "rows": 3,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 15537,
+              "max_hops": 2,
+              "direction": "backward",
+              "account_id": "A0b61188b454a"
+            },
+            "rows": 0,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "query": "\"reasonable grounds to suspect\" FIU",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "zawiadamia Generalnego Inspektora podejrzenie",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "transactions \"consistent with\" \"risk profile\" monitoring",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "\"bie\u017c\u0105ce monitorowanie stosunk\u00f3w gospodarczych\"",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          }
+        ],
+        "verifications": [
+          {
+            "errors": [
+              "number 1.0 in claim \"All transactions used Bitcoin as the payment format and the account's profile shows payment_format_shares Bitcoin = 1.0.\" is not backed by a fact or a cited id"
+            ],
+            "status": "failed"
+          },
+          {
+            "errors": [],
+            "status": "passed"
+          }
+        ],
+        "reference_variant": "clean"
+      },
+      "escalate_truth": false,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A0bc4c40d5d7c",
+      "alert_date": "2022-09-07",
+      "alert_id": 10117,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "cycle"
+      ],
+      "verification_status": "passed",
+      "cost_usd": 0.0119323,
+      "latency_ms": 27549.87783300021,
+      "trace": {
+        "usage": {
+          "input_tokens": 29166,
+          "output_tokens": 3242,
+          "cached_input_tokens": 8192
+        },
+        "tokens": 32408,
+        "repairs": 0,
+        "cost_usd": 0.0119323,
+        "loop_stop": "model_done",
+        "tool_calls": [
+          {
+            "args": {
+              "alert_id": 10117
+            },
+            "rows": 1,
+            "tool": "get_alert",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 10117,
+              "account_id": "A0bc4c40d5d7c"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 10117,
+              "account_id": "A0bc4c40d5d7c"
+            },
+            "rows": 2,
+            "tool": "get_counterparties",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 10117,
+              "account_id": "A0bc4c40d5d7c"
+            },
+            "rows": 11,
+            "tool": "list_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "txn_ids": [
+                2320086,
+                3724341
+              ],
+              "alert_id": 10117
+            },
+            "rows": 2,
+            "tool": "get_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 10117
+            },
+            "rows": 1,
+            "tool": "get_typology_candidates",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 10117,
+              "max_hops": 2,
+              "direction": "forward",
+              "account_id": "A0bc4c40d5d7c"
+            },
+            "rows": 10,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 10117,
+              "max_hops": 2,
+              "direction": "backward",
+              "account_id": "A0bc4c40d5d7c"
+            },
+            "rows": 5,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "query": "suspicious transaction reporting obligations suspicious activity threshold cycle typology",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "\"reasonable grounds to suspect\" FIU",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "zawiadamia Generalnego Inspektora podejrzenie",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "transaction \"unusually large\" complex purpose",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "skomplikowanych nietypowy",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          }
+        ],
+        "verifications": [
+          {
+            "errors": [],
+            "status": "passed"
+          }
+        ],
+        "reference_variant": "clean"
+      },
+      "escalate_truth": true,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A0c34b77f94c8",
+      "alert_date": "2022-09-08",
+      "alert_id": 14215,
+      "recommendation": "escalate",
+      "system_recommendation": "escalate",
+      "risk_score": null,
+      "typologies": [
+        "cycle"
+      ],
+      "verification_status": "failed",
+      "cost_usd": 0.0146019,
+      "latency_ms": 36983.474375003425,
+      "trace": {
+        "usage": {
+          "input_tokens": 62326,
+          "output_tokens": 4075,
+          "cached_input_tokens": 40576
+        },
+        "tokens": 66401,
+        "repairs": 1,
+        "cost_usd": 0.0146019,
+        "loop_stop": "model_done",
+        "tool_calls": [
+          {
+            "args": {
+              "alert_id": 14215
+            },
+            "rows": 1,
+            "tool": "get_alert",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 14215,
+              "account_id": "A0c34b77f94c8"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 14215,
+              "account_id": "A0c34b77f94c8"
+            },
+            "rows": 8,
+            "tool": "get_counterparties",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 14215,
+              "account_id": "A0c34b77f94c8"
+            },
+            "rows": 10,
+            "tool": "list_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "txn_ids": [
+                2862454,
+                3985957
+              ],
+              "alert_id": 14215
+            },
+            "rows": 2,
+            "tool": "get_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 14215
+            },
+            "rows": 1,
+            "tool": "get_typology_candidates",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 14215,
+              "max_hops": 2,
+              "direction": "forward",
+              "account_id": "A0c34b77f94c8"
+            },
+            "rows": 3,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 14215,
+              "max_hops": 2,
+              "direction": "backward",
+              "account_id": "A0c34b77f94c8"
+            },
+            "rows": 19,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 14215,
+              "account_id": "A7288deeac4c6"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "end": "2022-09-09T00:00:00",
+              "limit": 50,
+              "start": "2022-09-06T00:00:00",
+              "alert_id": 14215,
+              "account_id": "A7288deeac4c6"
+            },
+            "rows": 10,
+            "tool": "list_transactions",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "circular transactions returning funds to origin indicative of layering or concealment 'cycle' 'circular' 'return'",
+              "top_k": 2
+            },
+            "rows": 4,
+            "tool": "search_regulations",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "\"reasonable grounds to suspect\" FIU",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "zawiadamia Generalnego Inspektora podejrzenie",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "transaction \"unusually large\" complex purpose",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "skomplikowanych nietypowy",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          }
+        ],
+        "verifications": [
+          {
+            "errors": [
+              "number 8 in claim 'A two-hop fund trace shows funds leaving A0c34b77f94c8 to A7288deeac4c6 (txn 2862454) then returning from A7288deeac4c6 to A0c34b77f94c8 (txn 3985957); additional clustered inflows to the alerted account on 2022-09-08 increase concern (txns 3985411, 3982750, 3988720).' is not backed by a fact or a cited id",
+              "number 9 in claim 'A two-hop fund trace shows funds leaving A0c34b77f94c8 to A7288deeac4c6 (txn 2862454) then returning from A7288deeac4c6 to A0c34b77f94c8 (txn 3985957); additional clustered inflows to the alerted account on 2022-09-08 increase concern (txns 3985411, 3982750, 3988720).' is not backed by a fact or a cited id",
+              "number 2022 in claim 'A two-hop fund trace shows funds leaving A0c34b77f94c8 to A7288deeac4c6 (txn 2862454) then returning from A7288deeac4c6 to A0c34b77f94c8 (txn 3985957); additional clustered inflows to the alerted account on 2022-09-08 increase concern (txns 3985411, 3982750, 3988720).' is not backed by a fact or a cited id"
+            ],
+            "status": "failed"
+          },
+          {
+            "errors": [
+              "number 8 in claim 'A two-hop fund trace links txn 2862454 (A0c34b77f94c8 -> A7288deeac4c6, amount 1696.29 EUR) and txn 3985957 (A7288deeac4c6 -> A0c34b77f94c8, amount 373.28 EUR). Additionally, the alerted account received multiple ACH inflows on 2022-09-08 including txn 3985411 (4224.64 EUR), txn 3982750 (3961.5 EUR) and txn 3988720 (3436.38 EUR), which are documented in the transaction list and increase the need for review of incoming/outgoing linkages.' is not backed by a fact or a cited id",
+              "number 9 in claim 'A two-hop fund trace links txn 2862454 (A0c34b77f94c8 -> A7288deeac4c6, amount 1696.29 EUR) and txn 3985957 (A7288deeac4c6 -> A0c34b77f94c8, amount 373.28 EUR). Additionally, the alerted account received multiple ACH inflows on 2022-09-08 including txn 3985411 (4224.64 EUR), txn 3982750 (3961.5 EUR) and txn 3988720 (3436.38 EUR), which are documented in the transaction list and increase the need for review of incoming/outgoing linkages.' is not backed by a fact or a cited id",
+              "number 2022 in claim 'A two-hop fund trace links txn 2862454 (A0c34b77f94c8 -> A7288deeac4c6, amount 1696.29 EUR) and txn 3985957 (A7288deeac4c6 -> A0c34b77f94c8, amount 373.28 EUR). Additionally, the alerted account received multiple ACH inflows on 2022-09-08 including txn 3985411 (4224.64 EUR), txn 3982750 (3961.5 EUR) and txn 3988720 (3436.38 EUR), which are documented in the transaction list and increase the need for review of incoming/outgoing linkages.' is not backed by a fact or a cited id"
+            ],
+            "status": "failed"
+          }
+        ],
+        "reference_variant": "clean"
+      },
+      "escalate_truth": false,
+      "truth_typologies": []
+    },
+    {
+      "account_id": "A0cb52bf1aba8",
+      "alert_date": "2022-09-07",
+      "alert_id": 5363,
+      "recommendation": "close",
+      "system_recommendation": "close",
+      "risk_score": null,
+      "typologies": [
+        "profile_deviation"
+      ],
+      "verification_status": "passed",
+      "cost_usd": 0.014493200000000001,
+      "latency_ms": 37782.0187920006,
+      "trace": {
+        "usage": {
+          "input_tokens": 36880,
+          "output_tokens": 4667,
+          "cached_input_tokens": 18048
+        },
+        "tokens": 41547,
+        "repairs": 1,
+        "cost_usd": 0.014493200000000001,
+        "loop_stop": "model_done",
+        "tool_calls": [
+          {
+            "args": {
+              "alert_id": 5363
+            },
+            "rows": 1,
+            "tool": "get_alert",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5363,
+              "account_id": "A0cb52bf1aba8"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5363,
+              "account_id": "A0cb52bf1aba8"
+            },
+            "rows": 2,
+            "tool": "get_counterparties",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5363,
+              "account_id": "A0cb52bf1aba8"
+            },
+            "rows": 3,
+            "tool": "list_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "txn_ids": [
+                3518000,
+                3521756,
+                3731089
+              ],
+              "alert_id": 5363
+            },
+            "rows": 3,
+            "tool": "get_transactions",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5363
+            },
+            "rows": 1,
+            "tool": "get_typology_candidates",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5363,
+              "max_hops": 2,
+              "direction": "forward",
+              "account_id": "A0cb52bf1aba8"
+            },
+            "rows": 3,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5363,
+              "max_hops": 2,
+              "direction": "backward",
+              "account_id": "A0cb52bf1aba8"
+            },
+            "rows": 0,
+            "tool": "trace_funds",
+            "phase": "evidence"
+          },
+          {
+            "args": {
+              "alert_id": 5363,
+              "account_id": "A26463af6526f"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "alert_id": 5363,
+              "account_id": "Aec27836ef439"
+            },
+            "rows": 1,
+            "tool": "get_account_profile",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "alert_id": 5363,
+              "max_hops": 2,
+              "direction": "forward",
+              "account_id": "A26463af6526f"
+            },
+            "rows": 0,
+            "tool": "trace_funds",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "alert_id": 5363,
+              "max_hops": 2,
+              "direction": "forward",
+              "account_id": "Aec27836ef439"
+            },
+            "rows": 1,
+            "tool": "trace_funds",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "customer profile deviation monitoring suspicious transaction reporting obligations AML obligations",
+              "top_k": 2
+            },
+            "rows": 4,
+            "tool": "search_regulations",
+            "phase": "loop"
+          },
+          {
+            "args": {
+              "query": "\"reasonable grounds to suspect\" FIU",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "zawiadamia Generalnego Inspektora podejrzenie",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "transactions \"consistent with\" \"risk profile\" monitoring",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          },
+          {
+            "args": {
+              "query": "\"bie\u017c\u0105ce monitorowanie stosunk\u00f3w gospodarczych\"",
+              "top_k": 3
+            },
+            "rows": 6,
+            "tool": "search_regulations",
+            "phase": "regulations"
+          }
+        ],
+        "verifications": [
+          {
+            "errors": [
+              "number 1 in claim 'Account A0cb52bf1aba8 is a Partnership first seen 2022-09-01 with outgoing payments to two counterparties in the alert window.' is not backed by a fact or a cited id"
+            ],
+            "status": "failed"
+          },
+          {
+            "errors": [],
+            "status": "passed"
+          }
+        ],
+        "reference_variant": "clean"
+      },
+      "escalate_truth": false,
+      "truth_typologies": []
+    }
+  ]
+}
