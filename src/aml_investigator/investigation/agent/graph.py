@@ -12,6 +12,7 @@ from aml_investigator.core.db import Pool
 from aml_investigator.investigation.agent.loop import MAX_TOOL_CALLS, TOKEN_BUDGET, LoopBudget
 from aml_investigator.investigation.agent.nodes import InvestigationNodes
 from aml_investigator.investigation.agent.state import CHECKPOINTED_TYPES, InvestigationState
+from aml_investigator.mcp_server.schemas import ReferenceVariant
 from aml_investigator.review.repository import ReviewRepository
 
 InvestigationGraph = CompiledStateGraph[InvestigationState, None, InvestigationState, InvestigationState]
@@ -25,9 +26,14 @@ def build_graph(
     checkpointer: BaseCheckpointSaver[Any],
     max_tool_calls: int = MAX_TOOL_CALLS,
     token_budget: int = TOKEN_BUDGET,
+    reference_variant: ReferenceVariant = "clean",
 ) -> InvestigationGraph:
     nodes = InvestigationNodes(
-        mcp=mcp, model=model, repository=repository, budget=LoopBudget(tool_calls=max_tool_calls, tokens=token_budget)
+        mcp=mcp,
+        model=model,
+        repository=repository,
+        budget=LoopBudget(tool_calls=max_tool_calls, tokens=token_budget),
+        reference_variant=reference_variant,
     )
     builder = StateGraph(InvestigationState)
     for node in (

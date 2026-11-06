@@ -31,12 +31,12 @@ def open_system(
             )
         case "scripted":
             from aml_investigator.evaluation.baselines.agent import open_agent
-            from aml_investigator.investigation.models.rule_score import rule_score_model
+            from aml_investigator.investigation.models import chat_model
 
-            return open_agent(settings, rule_score_model(settings.database), name)
+            return open_agent(settings, chat_model("rule-score", settings.database), name)
         case "local":
             from aml_investigator.evaluation.baselines.agent import open_agent
-            from aml_investigator.investigation.models.local import local_model
+            from aml_investigator.investigation.models import chat_model
 
-            return open_agent(settings, local_model(), name)
+            return open_agent(settings, chat_model("local", settings.database), name)
     raise ValueError(f"unknown system {name!r}; valid systems: {', '.join(SYSTEM_NAMES)}")

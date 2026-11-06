@@ -22,6 +22,7 @@ from aml_investigator.investigation.agent.tools import AlertTools, Phase, ToolCa
 from aml_investigator.investigation.decision import AnalystReview, Decision
 from aml_investigator.investigation.routing import AUTO_CLOSE_ANALYST, route_for
 from aml_investigator.investigation.verify import Provenance, Verification, verify
+from aml_investigator.mcp_server.schemas import ReferenceVariant
 from aml_investigator.review.repository import ReviewRepository
 
 NO_DECISION = Decision(recommendation="escalate", typologies=[], who=[], what=[], when=[], where=[], why=[], how=[])
@@ -29,7 +30,13 @@ NO_DECISION = Decision(recommendation="escalate", typologies=[], who=[], what=[]
 
 class InvestigationNodes:
     def __init__(
-        self, *, mcp: MCPAdapter, model: BaseChatModel, repository: ReviewRepository, budget: LoopBudget
+        self,
+        *,
+        mcp: MCPAdapter,
+        model: BaseChatModel,
+        repository: ReviewRepository,
+        budget: LoopBudget,
+        reference_variant: ReferenceVariant,
     ) -> None:
         self.mcp = mcp
         self.model = model
@@ -38,6 +45,7 @@ class InvestigationNodes:
         )
         self.repository = repository
         self.budget = budget
+        self.reference_variant = reference_variant
 
     async def load_alert(self, state: InvestigationState) -> InvestigationState:
         tools = await AlertTools.of(self.mcp, state["alert_id"])
@@ -117,6 +125,7 @@ class InvestigationNodes:
             verification=verification,
             route=route,
             trace={
+                "reference_variant": self.reference_variant,
                 "tool_calls": state["tool_calls"],
                 "loop_stop": state["loop_stop"],
                 "tokens": state["tokens"],

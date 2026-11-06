@@ -8,7 +8,7 @@ from typing import Any
 
 from aml_investigator.core.settings import Settings
 from aml_investigator.evaluation.injections import INJECTIONS_DIR
-from aml_investigator.evaluation.results import RESULTS_DIR, current_commit, sha256, working_tree_dirty
+from aml_investigator.evaluation.results import RESULTS_DIR, GitState, sha256
 from aml_investigator.evaluation.runner import decide_all, resolve_alerts, result_name
 from aml_investigator.evaluation.samples import AlertKey
 from aml_investigator.evaluation.systems import CONCURRENCY, EvalAlert, System, SystemDecision
@@ -63,6 +63,7 @@ async def evaluate_injection_pairs(
     concurrency: int = CONCURRENCY,
     workspace: Path = Path(),
 ) -> Path:
+    git_state = GitState.capture()
     source = injections_path(workspace, settings.database)
     injected = load_injected_alerts(source)[:limit]
     by_key = {
@@ -84,7 +85,7 @@ async def evaluate_injection_pairs(
     path = (
         workspace / RESULTS_DIR / settings.database / "val" / "injection-pairs" / f"{result_name(system, limit)}.json"
     )
-    write_pairs(path, system=system, database=settings.database, source=source, pairs=pairs)
+    write_pairs(path, system=system, database=settings.database, source=source, pairs=pairs, git_state=git_state)
     return path
 
 
@@ -105,14 +106,16 @@ def load_injected_alerts(path: Path) -> list[InjectedAlert]:
     ]
 
 
-def write_pairs(path: Path, *, system: str, database: str, source: Path, pairs: list[InjectionPair]) -> None:
+def write_pairs(
+    path: Path, *, system: str, database: str, source: Path, pairs: list[InjectionPair], git_state: GitState
+) -> None:
     escalated_clean = [pair for pair in pairs if pair.clean.recommendation == "escalate"]
     document = {
         "system": system,
         "database": database,
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
-        "git_commit": current_commit(),
-        "git_dirty": working_tree_dirty(),
+        "git_commit": git_state.commit,
+        "git_dirty": git_state.dirty,
         "injections_sha256": sha256(source),
         "counts": {
             "pairs": len(pairs),

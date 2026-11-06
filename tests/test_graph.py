@@ -126,7 +126,7 @@ def thread(alert_id: int) -> RunnableConfig:
 
 
 @asynccontextmanager
-async def running_graph(db: Database, model: BaseChatModel, **limits: int) -> AsyncIterator[InvestigationGraph]:
+async def running_graph(db: Database, model: BaseChatModel, **limits: Any) -> AsyncIterator[InvestigationGraph]:
     async with open_app_pool(db.app_dsn) as pool:
         yield build_graph(
             mcp=MCPAdapter(build_server(db.mcp_dsn)),
@@ -179,6 +179,7 @@ async def test_valid_path_stops_at_review_with_a_traced_investigation(db: Databa
     assert (name, prompt_version, recommendation, route) == ("scripted", PROMPT_VERSION, "escalate", "escalated")
     assert verification == {"status": "passed", "errors": []}
     assert (trace["loop_stop"], trace["tokens"], trace["repairs"]) == ("model_done", 100, 0)
+    assert trace["reference_variant"] == "clean"
     assert trace["verifications"] == [{"status": "passed", "errors": []}]
     phases = [(call["phase"], call["tool"]) for call in trace["tool_calls"]]
     assert phases == [

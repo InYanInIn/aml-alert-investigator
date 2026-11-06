@@ -106,7 +106,19 @@ def validation_operating_point(workspace: Path, database: str, system: str) -> O
     return OperatingPoint(**stored)
 
 
-def write_result(result: EvaluationResult, *, sample: Sample, evaluated: Sequence[Evaluated], workspace: Path) -> None:
+@dataclass(frozen=True)
+class GitState:
+    commit: str
+    dirty: bool
+
+    @classmethod
+    def capture(cls) -> "GitState":
+        return cls(commit=git("rev-parse", "HEAD"), dirty=git("status", "--porcelain", "--", *RUN_INPUTS) != "")
+
+
+def write_result(
+    result: EvaluationResult, *, sample: Sample, evaluated: Sequence[Evaluated], workspace: Path, git_state: GitState
+) -> None:
     recommendations = [e.recommendation for e in evaluated]
     costs = [e.decision.cost_usd for e in evaluated if e.decision.cost_usd is not None]
     document = {
@@ -114,8 +126,8 @@ def write_result(result: EvaluationResult, *, sample: Sample, evaluated: Sequenc
         "split": sample.split,
         "database": sample.database,
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
-        "git_commit": current_commit(),
-        "git_dirty": working_tree_dirty(),
+        "git_commit": git_state.commit,
+        "git_dirty": git_state.dirty,
         "sample_sha256": sha256(sample_path(workspace, result.database, result.split)),
         "thresholds_sha256": sha256(workspace / THRESHOLDS_DIR / f"{result.database}.json"),
         "operating_point": asdict(result.operating_point) if result.operating_point else None,
@@ -147,14 +159,6 @@ def estimates_document(estimates: dict[str, Estimate]) -> dict[str, dict[str, fl
 
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def current_commit() -> str:
-    return git("rev-parse", "HEAD")
-
-
-def working_tree_dirty() -> bool:
-    return git("status", "--porcelain", "--", *RUN_INPUTS) != ""
 
 
 def git(*arguments: str) -> str:

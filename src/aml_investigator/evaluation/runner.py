@@ -25,6 +25,7 @@ from aml_investigator.evaluation.results import (
     AlertTruth,
     Evaluated,
     EvaluationResult,
+    GitState,
     results_path,
     validation_operating_point,
     write_result,
@@ -72,6 +73,7 @@ async def evaluate_system(
     concurrency: int = CONCURRENCY,
 ) -> EvaluationResult:
     require_reason(split, test_reason)
+    git_state = GitState.capture()
     sample = load_sample(sample_path(workspace, settings.database, split))
     alerts = await resolve_alerts(settings.app_conninfo, sample.keys[:limit])
     decisions = await decide_all(system, alerts, concurrency)
@@ -97,7 +99,7 @@ async def evaluate_system(
         metrics=report([e.outcome() for e in evaluated], sample.population.by_truth()),
         path=results_path(workspace, settings.database, split, result_name(system.name, limit)),
     )
-    write_result(result, sample=sample, evaluated=evaluated, workspace=workspace)
+    write_result(result, sample=sample, evaluated=evaluated, workspace=workspace, git_state=git_state)
     return result
 
 
