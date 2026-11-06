@@ -8,7 +8,7 @@ from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.systems import System
 from aml_investigator.monitoring.thresholds import load_thresholds
 
-SYSTEM_NAMES = ("b0", "b1", "b3", "b3_no_age", "scripted", "local", "azure")
+SYSTEM_NAMES = ("b0", "b1", "b2", "b3", "b3_no_age", "scripted", "local", "azure")
 TRAINED_SYSTEMS = frozenset({"b3", "b3_no_age"})
 ACCOUNT_AGE = frozenset({"account_age_days"})
 
@@ -44,4 +44,9 @@ def open_system(
             from aml_investigator.investigation.models import chat_model
 
             return open_agent(settings, chat_model("azure", settings.database, settings.azure_endpoint), name)
+        case "b2":
+            from aml_investigator.evaluation.baselines.b2 import open_single_prompt
+            from aml_investigator.investigation.models import chat_model
+
+            return open_single_prompt(settings, chat_model("azure", settings.database, settings.azure_endpoint))
     raise ValueError(f"unknown system {name!r}; valid systems: {', '.join(SYSTEM_NAMES)}")
