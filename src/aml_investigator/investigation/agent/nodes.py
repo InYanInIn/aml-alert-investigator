@@ -19,6 +19,7 @@ from aml_investigator.investigation.agent.evidence import alert_call, evidence_c
 from aml_investigator.investigation.agent.loop import LOOP_TOOLS, LoopBudget, investigation_loop, total_tokens
 from aml_investigator.investigation.agent.state import InvestigatedAlert, InvestigationState
 from aml_investigator.investigation.agent.tools import AlertTools, Phase, ToolCallError, ToolResult
+from aml_investigator.investigation.agent.usage import TokenUsage
 from aml_investigator.investigation.decision import AnalystReview, Decision
 from aml_investigator.investigation.routing import AUTO_CLOSE_ANALYST, route_for
 from aml_investigator.investigation.verify import Provenance, Verification, verify
@@ -58,6 +59,7 @@ class InvestigationNodes:
             "provenance": Provenance(),
             "tool_calls": [],
             "tokens": 0,
+            "usage": TokenUsage(),
             "repairs": 0,
             "verifications": [],
         }
@@ -80,11 +82,13 @@ class InvestigationNodes:
             tools,
             [*state["messages"], request],
             tokens=state["tokens"],
+            usage=state["usage"],
             budget=self.budget,
         )
         return {
             **recorded(state, [request, *outcome.messages], outcome.results),
             "tokens": outcome.tokens,
+            "usage": outcome.usage,
             "loop_stop": outcome.stop,
         }
 
@@ -129,6 +133,8 @@ class InvestigationNodes:
                 "tool_calls": state["tool_calls"],
                 "loop_stop": state["loop_stop"],
                 "tokens": state["tokens"],
+                "usage": state["usage"].model_dump(),
+                "cost_usd": state["usage"].cost_usd(self.model.get_name()),
                 "repairs": state["repairs"],
                 "verifications": [attempt.model_dump() for attempt in state["verifications"]],
             },
@@ -171,6 +177,7 @@ class InvestigationNodes:
         drafted: InvestigationState = {
             "draft_output": json.dumps([call["args"] for call in raw.tool_calls]) if raw.tool_calls else raw.text,
             "tokens": state["tokens"] + total_tokens(raw),
+            "usage": state["usage"] + TokenUsage.of(raw),
         }
         if isinstance(output["parsed"], Decision):
             return {**drafted, "draft": output["parsed"], "draft_errors": []}
