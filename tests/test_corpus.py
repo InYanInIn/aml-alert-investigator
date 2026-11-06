@@ -55,6 +55,52 @@ def test_polish_paragraph_passages() -> None:
     assert polish_act()["PL-AML art. 67"].text == "Rejestr jest jawny."
 
 
+def test_amlr_definitions_are_one_passage_per_point() -> None:
+    points = [passage for passage_id, passage in amlr().items() if passage_id.startswith("AMLR art. 2(1)(")]
+    assert "AMLR art. 2(1)" not in amlr()
+    assert [passage.passage_id for passage in points] == [f"AMLR art. 2(1)({number})" for number in range(1, 58)]
+    assert {(passage.article, passage.paragraph, passage.heading) for passage in points} == {("2", "1", "Definitions")}
+    assert amlr()["AMLR art. 2(1)(1)"].text.startswith(
+        "\u2018money laundering\u2019 means the conduct set out in Article 3"
+    )
+    assert amlr()["AMLR art. 2(1)(28)"].text.startswith("\u2018beneficial owner\u2019 means any natural person")
+    assert "(a) a credit institution as defined" in amlr()["AMLR art. 2(1)(5)"].text
+    assert "(b) a branch of a credit institution" in amlr()["AMLR art. 2(1)(5)"].text
+    assert "(6)" not in amlr()["AMLR art. 2(1)(5)"].text
+    assert max(len(passage.text) for passage in points) <= 4000
+
+
+def test_polish_definitions_are_one_passage_per_point() -> None:
+    points = [
+        passage for passage_id, passage in polish_act().items() if passage_id.startswith("PL-AML art. 2 ust. 2 pkt ")
+    ]
+    assert "PL-AML art. 2 ust. 2" not in polish_act()
+    assert len(points) == 36
+    assert {(passage.article, passage.paragraph) for passage in points} == {("2", "2")}
+    assert polish_act()["PL-AML art. 2 ust. 2 pkt 1"].text.startswith(
+        "beneficjencie rzeczywistym \u2013 rozumie si\u0119 przez to"
+    )
+    assert "b) w przypadku trustu:" in polish_act()["PL-AML art. 2 ust. 2 pkt 1"].text
+    assert polish_act()["PL-AML art. 2 ust. 2 pkt 12a"].text.startswith("pa\u0144stwie cz\u0142onkowskim")
+    assert "pkt 1a" not in polish_act()["PL-AML art. 2 ust. 2 pkt 1"].text
+    assert max(len(passage.text) for passage in points) <= 4000
+
+
+def test_polish_obliged_entities_are_one_passage_per_point() -> None:
+    points = [
+        passage for passage_id, passage in polish_act().items() if passage_id.startswith("PL-AML art. 2 ust. 1 pkt ")
+    ]
+    assert "PL-AML art. 2 ust. 1" not in polish_act()
+    assert len(points) == 31
+    assert polish_act()["PL-AML art. 2 ust. 1 pkt 1"].text.startswith("banki krajowe")
+    assert "e) tworzenia, prowadzenia" in polish_act()["PL-AML art. 2 ust. 1 pkt 14"].text
+    assert "pkt 15" not in polish_act()["PL-AML art. 2 ust. 1 pkt 14"].text
+
+
+def test_no_passage_exceeds_4000_characters() -> None:
+    assert max(len(passage.text) for passage in all_passages()) <= 4000
+
+
 def test_polish_articles_with_letters_parse() -> None:
     assert polish_act()["PL-AML art. 129ka ust. 1"].article == "129ka"
     assert "PL-AML art. 11a ust. 1" in polish_act()
@@ -69,10 +115,12 @@ def test_polish_text_has_no_page_furniture_or_footnotes() -> None:
 
 
 def test_polish_text_repairs_split_words() -> None:
-    article_2 = polish_act()["PL-AML art. 2 ust. 1"].text
-    assert "krajowe instytucje płatnicze, krajowe instytucje pieniądza elektronicznego, oddziały" in article_2
-    assert "kasach oszczędnościowo-kredytowych" in article_2
-    assert "w rozumieniu ustawy" in article_2
+    assert (
+        "krajowe instytucje płatnicze, krajowe instytucje pieniądza elektronicznego, oddziały"
+        in polish_act()["PL-AML art. 2 ust. 1 pkt 3"].text
+    )
+    assert "kasach oszczędnościowo-kredytowych" in polish_act()["PL-AML art. 2 ust. 1 pkt 2"].text
+    assert "w rozumieniu ustawy" in polish_act()["PL-AML art. 2 ust. 1 pkt 1"].text
     assert "spółdzielczych kas oszczędnościowo-kredytowych" in polish_act()["PL-AML art. 130 ust. 2"].text
 
 

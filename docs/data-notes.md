@@ -139,4 +139,4 @@ through transaction currencies.
   injection cannot leak into another's clean run.
 - **Corpus**: AMLR 320 passages (all 90 articles), Polish AML Act 595 passages (236 articles; repealed ones
   skipped); 20 hand-labelled retrieval queries, 9 answerable only from the Polish text. Two passages are very
-  long (`AMLR art. 2(1)` ~24.6k chars, `PL-AML art. 2 ust. 1` ~17k) and are split before embedding in M7.
+  long (`AMLR art. 2(1)` ~24.6k chars, `PL-AML art. 2 ust. 2` ~17k) and are split before embedding in M7.
