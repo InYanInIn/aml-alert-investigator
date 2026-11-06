@@ -49,7 +49,10 @@ def test_azure_model_uses_the_deployment_low_reasoning_and_entra_id_only(
 
     assert isinstance(model, AzureChatOpenAI)
     assert (model.deployment_name, model.model_name, model.get_name()) == ("gpt-5-mini", "gpt-5-mini", "gpt-5-mini")
-    assert (model.reasoning_effort, model.openai_api_version) == (azure_module.REASONING_EFFORT, azure_module.API_VERSION)
+    assert (model.reasoning_effort, model.openai_api_version) == (
+        azure_module.REASONING_EFFORT,
+        azure_module.API_VERSION,
+    )
     assert model.azure_endpoint == ENDPOINT
     assert requested_scopes == [SCOPE]
     assert model.openai_api_key is None
