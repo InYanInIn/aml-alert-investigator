@@ -6,7 +6,13 @@ from typing import Any
 import pytest
 
 from aml_investigator.investigation.decision import Claim, Decision, Fact, FactField, TypologyVerdict
-from aml_investigator.investigation.verify import Provenance, number_errors, numbers_in, verify
+from aml_investigator.investigation.verify import (
+    Provenance,
+    number_errors,
+    numbers_in,
+    verify,
+    with_canonical_passage_ids,
+)
 
 AS_OF = datetime(2022, 9, 3)
 TXN: dict[str, Any] = {
@@ -202,7 +208,7 @@ def test_rule4_numbers_of_the_claims_cited_ids_are_backed() -> None:
         text="Transaction 11 breaches AMLR art. 77(1).", txn_ids=[11], passage_ids=["AMLR art. 77(1)"], facts=[]
     )
 
-    assert number_errors(decision(what=[cited])) == []
+    assert number_errors(decision(what=[cited]), PROVENANCE, AS_OF) == []
 
 
 def test_rule4_timestamp_date_fact_backs_day_and_hour() -> None:
@@ -299,3 +305,63 @@ def test_provenance_keeps_passages_from_search_and_lookup() -> None:
 
     assert set(seen.passages) == {"AMLR-77-1-b", "PL-74-1"}
     assert seen.transactions == {}
+
+
+SPACED = "AMLR art. 26(1)"
+THRESHOLD_TEXT = "Transactions above EUR 10 000 or 1,500 require checks."
+THRESHOLD_PASSAGE: dict[str, Any] = {
+    "passage_id": SPACED,
+    "text": THRESHOLD_TEXT,
+    "content_sha256": hashlib.sha256(THRESHOLD_TEXT.encode()).hexdigest(),
+}
+THRESHOLD_PROVENANCE = Provenance(transactions={11: TXN}, passages={SPACED: THRESHOLD_PASSAGE})
+
+
+def test_whitespace_variant_passage_id_is_canonicalised_and_passes() -> None:
+    cited = decision(what=[claim(text="See AMLR art.26(1).", passage_ids=["AMLR art.26(1)"])])
+
+    canonical = with_canonical_passage_ids(cited, THRESHOLD_PROVENANCE)
+
+    assert canonical.what[0].passage_ids == [SPACED]
+    assert canonical.what[0].text == "See AMLR art. 26(1)."
+    assert verify(canonical, THRESHOLD_PROVENANCE, AS_OF).errors == []
+
+
+def test_unknown_passage_id_is_left_alone_and_still_fails() -> None:
+    cited = decision(what=[claim(passage_ids=["AMLR art.99(1)"])])
+
+    canonical = with_canonical_passage_ids(cited, THRESHOLD_PROVENANCE)
+
+    assert canonical.what[0].passage_ids == ["AMLR art.99(1)"]
+    assert verify(canonical, THRESHOLD_PROVENANCE, AS_OF).errors == [
+        "passage AMLR art.99(1) was not returned by any tool"
+    ]
+
+
+@pytest.mark.parametrize("amount", ["10 000", "10,000", "10000", "1,500"])
+def test_rule4_number_from_cited_passage_text_passes(amount: str) -> None:
+    threshold = claim(text=f"Above EUR {amount}.", passage_ids=[SPACED])
+
+    assert verify(decision(what=[threshold]), THRESHOLD_PROVENANCE, AS_OF).errors == []
+
+
+def test_rule4_number_from_passage_the_claim_does_not_cite_fails() -> None:
+    threshold = claim(text="Above EUR 10000.")
+
+    assert verify(decision(what=[threshold]), THRESHOLD_PROVENANCE, AS_OF).errors == [
+        "number 10000 in claim 'Above EUR 10000.' is not backed by a fact or a cited id"
+    ]
+
+
+def test_rule4_as_of_components_are_backed() -> None:
+    stamped = claim(text="As of 2022-09-03 00:00 and 9 3.")
+
+    assert verify(decision(what=[stamped]), THRESHOLD_PROVENANCE, datetime(2022, 9, 3)).errors == []
+
+
+def test_rule4_count_is_still_unbacked() -> None:
+    counted = claim(text="38 incoming payments.", passage_ids=[SPACED])
+
+    assert verify(decision(what=[counted]), THRESHOLD_PROVENANCE, AS_OF).errors == [
+        "number 38 in claim '38 incoming payments.' is not backed by a fact or a cited id"
+    ]

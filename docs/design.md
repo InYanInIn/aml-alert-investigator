@@ -218,13 +218,16 @@ The agent state keeps a **provenance set**: every `txn_id` and `passage_id` that
 run. A decision passes only if:
 
 1. every cited `txn_id` is in the provenance set and has `ts ≤ as_of`;
-2. every cited `passage_id` is in the provenance set and the sha256 of its returned text equals its
+2. every cited `passage_id` is in the provenance set (ids that differ only in whitespace match and are
+   replaced by the returned id before verification) and the sha256 of its returned text equals its
    `content_sha256`;
 3. every `Fact` matches the record a tool returned (amount within 0.01, same currency, same date or the exact
    `ts`); a fact about
    a field no tool returned for that transaction (for example `amount_paid` of a fund-trace hop, which carries
    only `amount_eur`) fails;
-4. every number appearing in a claim's `text` appears in that claim's `facts`, `txn_ids` or `passage_ids`;
+4. every number appearing in a claim's `text` appears in that claim's `facts`, `txn_ids` or `passage_ids`, in
+   the text of a passage that claim cites (space-separated thousands read as one number), or in the alert's
+   `as_of` timestamp;
 5. each `supported` typology cites at least one transaction.
 
 A second failure does not block the analyst: the investigation is stored with `verification.status = failed`

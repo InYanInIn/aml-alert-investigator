@@ -235,6 +235,18 @@ async def test_invalid_citation_is_repaired(db: Database, alert_id: int) -> None
 
 
 @pytest.mark.anyio
+async def test_whitespace_variant_passage_id_is_canonicalised_before_verification(db: Database, alert_id: int) -> None:
+    drifted = valid_decision()
+    drifted.why[0].passage_ids = ["AMLR art.69(1)"]
+    async with running_graph(db, scripted(text_reply("done"), decision_reply(drifted))) as graph:
+        result = await graph.ainvoke({"alert_id": alert_id}, thread(alert_id))
+
+    assert result["draft"].why[0].passage_ids == ["AMLR art. 69(1)"]
+    assert result["verification"].status == "passed"
+    assert result["repairs"] == 0
+
+
+@pytest.mark.anyio
 async def test_second_failure_is_stored_as_failed_and_escalated(db: Database, alert_id: int) -> None:
     model = scripted(text_reply("done"), decision_reply(citing(999, "close")), decision_reply(citing(998, "close")))
     async with running_graph(db, model) as graph:

@@ -20,4 +20,6 @@ Citation rules for the decision:
   separate fact with field `paid_currency` or `received_currency`.
 - Every number in a claim's text must appear in that claim's facts, `txn_ids` or `passage_ids`. Write counts
   and ratios in words or leave them out.
+- Do not state how many transactions or counterparties there are as a number unless you cite every counted
+  transaction in that claim; otherwise say "several" or "many".
 - A typology is `supported` only if you cite the transactions that show it.
