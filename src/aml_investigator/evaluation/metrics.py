@@ -73,6 +73,7 @@ def measure(outcomes: Sequence[Outcome], weights: Sequence[float]) -> dict[str, 
     rows = list(zip(outcomes, weights, strict=True))
     positives = [(o, w) for o, w in rows if o.escalate_truth]
     escalated = [(o, w) for o, w in rows if not o.closed]
+    closed = [(o, w) for o, w in rows if o.closed]
     pattern = [(o, w) for o, w in positives if o.truth_typologies]
     other = [(o, w) for o, w in positives if not o.truth_typologies]
     emits_typologies = any(o.typologies for o in outcomes)
@@ -82,6 +83,7 @@ def measure(outcomes: Sequence[Outcome], weights: Sequence[float]) -> dict[str, 
         "false_close_rate": share(positives, lambda o: o.closed),
         "escalation_precision": share(escalated, lambda o: o.escalate_truth),
         "close_rate": share(rows, lambda o: o.closed),
+        "closed_positive_share": share(closed, lambda o: o.escalate_truth),
         "recall_pattern": share(pattern, lambda o: not o.closed),
         "recall_other": share(other, lambda o: not o.closed),
         "typology_hit_rate": share(pattern, lambda o: o.typology_hit) if emits_typologies else None,
