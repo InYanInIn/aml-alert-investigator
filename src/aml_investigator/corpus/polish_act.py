@@ -23,7 +23,7 @@ WORD = re.compile(r"\w+")
 COMPOUND = re.compile(r"\w+-\w+")
 LETTER_PAIR = re.compile(r"(?<!\w)([^\W\d_]+) (?=([^\W\d_]+)(?!\w))")
 STANDALONE_LETTERS = set("aiouwz")
-DEFINITIONS = ("2", "2")
+POINT_LISTS = {("2", "1"), ("2", "2")}
 REPEALED = {"(uchylony)", "(uchylona)", "(uchylone)", "(pominięte)"}
 
 
@@ -79,7 +79,7 @@ class Unit:
 
 def with_points(units_with_text: list[tuple[Unit, str]]) -> Iterator[tuple[Unit, str | None, str]]:
     for unit, text in units_with_text:
-        if (unit.article, unit.paragraph) == DEFINITIONS:
+        if (unit.article, unit.paragraph) in POINT_LISTS:
             for point, body in split_points(text):
                 yield unit, point, body
         else:

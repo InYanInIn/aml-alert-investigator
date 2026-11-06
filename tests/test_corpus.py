@@ -86,6 +86,21 @@ def test_polish_definitions_are_one_passage_per_point() -> None:
     assert max(len(passage.text) for passage in points) <= 4000
 
 
+def test_polish_obliged_entities_are_one_passage_per_point() -> None:
+    points = [
+        passage for passage_id, passage in polish_act().items() if passage_id.startswith("PL-AML art. 2 ust. 1 pkt ")
+    ]
+    assert "PL-AML art. 2 ust. 1" not in polish_act()
+    assert len(points) == 31
+    assert polish_act()["PL-AML art. 2 ust. 1 pkt 1"].text.startswith("banki krajowe")
+    assert "e) tworzenia, prowadzenia" in polish_act()["PL-AML art. 2 ust. 1 pkt 14"].text
+    assert "pkt 15" not in polish_act()["PL-AML art. 2 ust. 1 pkt 14"].text
+
+
+def test_no_passage_exceeds_4000_characters() -> None:
+    assert max(len(passage.text) for passage in all_passages()) <= 4000
+
+
 def test_polish_articles_with_letters_parse() -> None:
     assert polish_act()["PL-AML art. 129ka ust. 1"].article == "129ka"
     assert "PL-AML art. 11a ust. 1" in polish_act()
@@ -100,10 +115,12 @@ def test_polish_text_has_no_page_furniture_or_footnotes() -> None:
 
 
 def test_polish_text_repairs_split_words() -> None:
-    article_2 = polish_act()["PL-AML art. 2 ust. 1"].text
-    assert "krajowe instytucje płatnicze, krajowe instytucje pieniądza elektronicznego, oddziały" in article_2
-    assert "kasach oszczędnościowo-kredytowych" in article_2
-    assert "w rozumieniu ustawy" in article_2
+    assert (
+        "krajowe instytucje płatnicze, krajowe instytucje pieniądza elektronicznego, oddziały"
+        in polish_act()["PL-AML art. 2 ust. 1 pkt 3"].text
+    )
+    assert "kasach oszczędnościowo-kredytowych" in polish_act()["PL-AML art. 2 ust. 1 pkt 2"].text
+    assert "w rozumieniu ustawy" in polish_act()["PL-AML art. 2 ust. 1 pkt 1"].text
     assert "spółdzielczych kas oszczędnościowo-kredytowych" in polish_act()["PL-AML art. 130 ust. 2"].text
 
 
