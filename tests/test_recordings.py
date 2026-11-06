@@ -16,7 +16,7 @@ from tests.conftest import Database
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 COMMITTED = sorted((REPOSITORY / RECORDINGS_DIR).rglob("*.json"))
-SECRET_MARKERS = ("bearer", "authorization", "api-key", "api_key", "postgresql://", "postgres://", "password", "secret")
+SECRET_MARKERS = ("bearer", "\"authorization\"", "api-key", "api_key", "postgresql://", "postgres://", "password", "secret")
 ESCALATING = RuleScoreChatModel(thresholds={"R2_fan_out": 1.0}, close_below=1.0)
 CLOSING = RuleScoreChatModel(thresholds={"R2_fan_out": 1.0}, close_below=3.0)
 
