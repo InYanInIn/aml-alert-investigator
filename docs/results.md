@@ -180,8 +180,9 @@ B2 $0.017, embeddings $0.003).
 - **Cost and speed fit the plan.** About 1.6 cents and 40 seconds per alert against 12 minutes locally;
   22–74% of each alert's input tokens were served from the prompt cache (run 2).
 - **Not verified.** Cost Management did not confirm the spend comes from the credit: its query API refuses
-  this Free Trial offer type, and the portal view lags usage — to check in the portal. Langfuse traces were
-  not set up (no project keys yet).
+  this Free Trial offer type, and the portal view lags usage — to check in the portal.
+- **Traces reach Langfuse Cloud EU** from `aml investigate --model azure` (investigation 174: 54 observations,
+  5 model calls, 14 tool calls). `eval run` does not send traces.
 
 ### Implications (proposed, not yet decided)
 - M8: show the closest returned passage id in the repair message (or normalise whitespace in cited ids);
