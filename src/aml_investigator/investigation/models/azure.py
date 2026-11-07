@@ -10,6 +10,7 @@ AZURE_MODEL = "gpt-5-mini"
 API_VERSION = "2025-04-01-preview"
 TOKEN_SCOPE = "https://cognitiveservices.azure.com/.default"  # noqa: S105
 REASONING_EFFORT = "high"
+REQUEST_TIMEOUT_SECONDS = 600
 
 
 class ToolCallingAzureChatOpenAI(AzureChatOpenAI):
@@ -35,4 +36,5 @@ def azure_model(endpoint: str) -> ToolCallingAzureChatOpenAI:
         api_key=None,
         azure_ad_token_provider=get_bearer_token_provider(DefaultAzureCredential(), TOKEN_SCOPE),
         reasoning_effort=REASONING_EFFORT,
+        timeout=REQUEST_TIMEOUT_SECONDS,
     )
