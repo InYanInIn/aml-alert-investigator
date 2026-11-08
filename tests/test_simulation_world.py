@@ -241,6 +241,16 @@ def test_insert_population_writes_accounts_profiles_and_actors(world_db: Databas
     assert rates == (2,)
 
 
+def test_profiles_are_stored_in_entity_order_so_position_shows_no_group(world_db: Database, tmp_path: Path) -> None:
+    world = build_world(7, write_config(tmp_path))
+
+    with world_db.owner() as conn:
+        insert_population(conn, world)
+        stored = [str(row[0]) for row in conn.execute("SELECT entity_id FROM core.customer_profiles").fetchall()]
+
+    assert stored == sorted(stored)
+
+
 def seeded_tape(db: Database, tmp_path: Path, payments: list[Payment]) -> Tape:
     world = build_world(7, write_config(tmp_path))
     accounts = [customer.accounts[0] for customer in world.customers[:3]]

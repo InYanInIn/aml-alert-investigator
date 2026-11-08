@@ -553,7 +553,7 @@ def insert_population(conn: psycopg.Connection[Any], world: World) -> None:
         conn,
         "core",
         "customer_profiles",
-        pl.DataFrame([asdict(profile) for profile in world.profiles], schema=PROFILE_SCHEMA),
+        pl.DataFrame([asdict(profile) for profile in world.profiles], schema=PROFILE_SCHEMA).sort("entity_id"),
     )
     copy_frame(conn, "truth", "sim_actors", pl.DataFrame(sorted(actors), schema=ACTOR_SCHEMA, orient="row"))
 
