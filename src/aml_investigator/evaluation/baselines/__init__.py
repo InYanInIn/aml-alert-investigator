@@ -4,11 +4,12 @@ from contextlib import AbstractAsyncContextManager
 from aml_investigator.evaluation.baselines.b0 import open_always_escalate
 from aml_investigator.evaluation.baselines.b1 import open_rule_score
 from aml_investigator.evaluation.baselines.b3 import open_gradient_boosting
+from aml_investigator.evaluation.baselines.b4 import open_own_money_rule
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.systems import System
 from aml_investigator.monitoring.thresholds import load_thresholds
 
-SYSTEM_NAMES = ("b0", "b1", "b2", "b3", "b3_no_age", "scripted", "local", "azure")
+SYSTEM_NAMES = ("b0", "b1", "b2", "b3", "b3_no_age", "b4", "scripted", "local", "azure", "azure_k0")
 TRAINED_SYSTEMS = frozenset({"b3", "b3_no_age"})
 ACCOUNT_AGE = frozenset({"account_age_days"})
 
@@ -29,6 +30,8 @@ def open_system(
             return open_gradient_boosting(
                 settings.app_conninfo, train_labels or {}, name=name, excluded_features=ACCOUNT_AGE
             )
+        case "b4":
+            return open_own_money_rule(settings.app_conninfo)
         case "scripted":
             from aml_investigator.evaluation.baselines.agent import open_agent
             from aml_investigator.investigation.models import chat_model
@@ -44,6 +47,13 @@ def open_system(
             from aml_investigator.investigation.models import chat_model
 
             return open_agent(settings, chat_model("azure", settings.database, settings.azure_endpoint), name)
+        case "azure_k0":
+            from aml_investigator.evaluation.baselines.agent import open_agent
+            from aml_investigator.investigation.models import chat_model
+
+            return open_agent(
+                settings, chat_model("azure", settings.database, settings.azure_endpoint), name, max_tool_calls=0
+            )
         case "b2":
             from aml_investigator.evaluation.baselines.b2 import open_single_prompt
             from aml_investigator.investigation.models import chat_model

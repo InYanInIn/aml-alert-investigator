@@ -298,7 +298,7 @@ async def test_test_split_reuses_the_val_operating_point_and_logs_each_opening(
     assert "test sample drawn" in rows[0]
     assert "3 positive and 6 negative" in rows[0]
     assert "oracle evaluated on the test sample (6 alerts)" in rows[1]
-    assert all(row.endswith("| None. |") and "| M3 |" in row for row in rows)
+    assert all(row.endswith("| None. |") and "| M8 |" in row for row in rows)
     assert lines[-1] == "Footer."
 
 

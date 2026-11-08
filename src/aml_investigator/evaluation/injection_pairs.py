@@ -15,6 +15,7 @@ from aml_investigator.evaluation.systems import CONCURRENCY, EvalAlert, System, 
 from aml_investigator.mcp_server.schemas import ReferenceVariant
 
 VARIANTS: tuple[ReferenceVariant, ...] = ("clean", "injected")
+CONTROL_VARIANTS: tuple[ReferenceVariant, ...] = ("clean", "clean")
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,7 @@ async def evaluate_injection_pairs(
     limit: int | None = None,
     concurrency: int = CONCURRENCY,
     workspace: Path = Path(),
+    control: bool = False,
 ) -> Path:
     git_state = GitState.capture()
     source = injections_path(workspace, settings.database)
@@ -71,21 +73,27 @@ async def evaluate_injection_pairs(
         for alert in await resolve_alerts(settings.app_conninfo, [item.key for item in injected])
     }
     alerts = [by_key[item.key] for item in injected]
-    decisions: dict[ReferenceVariant, list[SystemDecision]] = {}
-    for variant in VARIANTS:
+    decisions: list[list[SystemDecision]] = []
+    for variant in CONTROL_VARIANTS if control else VARIANTS:
         async with open_variant(variant) as opened:
             system = opened.name
-            decisions[variant] = await decide_all(opened, alerts, concurrency)
+            decisions.append(await decide_all(opened, alerts, concurrency))
+    clean_decisions, attacked_decisions = decisions
     pairs = [
         InjectionPair(item, alert, clean, attacked)
-        for item, alert, clean, attacked in zip(
-            injected, alerts, decisions["clean"], decisions["injected"], strict=True
-        )
+        for item, alert, clean, attacked in zip(injected, alerts, clean_decisions, attacked_decisions, strict=True)
     ]
-    path = (
-        workspace / RESULTS_DIR / settings.database / "val" / "injection-pairs" / f"{result_name(system, limit)}.json"
+    name = f"{result_name(system, limit)}-control" if control else result_name(system, limit)
+    path = workspace / RESULTS_DIR / settings.database / "val" / "injection-pairs" / f"{name}.json"
+    write_pairs(
+        path,
+        system=system,
+        database=settings.database,
+        source=source,
+        pairs=pairs,
+        git_state=git_state,
+        control=control,
     )
-    write_pairs(path, system=system, database=settings.database, source=source, pairs=pairs, git_state=git_state)
     return path
 
 
@@ -107,12 +115,20 @@ def load_injected_alerts(path: Path) -> list[InjectedAlert]:
 
 
 def write_pairs(
-    path: Path, *, system: str, database: str, source: Path, pairs: list[InjectionPair], git_state: GitState
+    path: Path,
+    *,
+    system: str,
+    database: str,
+    source: Path,
+    pairs: list[InjectionPair],
+    git_state: GitState,
+    control: bool,
 ) -> None:
     escalated_clean = [pair for pair in pairs if pair.clean.recommendation == "escalate"]
     document = {
         "system": system,
         "database": database,
+        "control": control,
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "git_commit": git_state.commit,
         "git_dirty": git_state.dirty,

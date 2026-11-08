@@ -118,7 +118,7 @@ traces visible; CI replay evaluation passes on the recorded responses.
 
 ### M8 — Evaluation and results
 - Iterate on validation (prompt, `k`, budget) with the 3-repeat stability check.
-- Open test once: C, A (`k = 0`), B0–B3 on HI-Small and LI-Small; injection pairs on C.
+- Open test once: C, A (`k = 0`), B0–B4 on HI-Small and LI-Small; injection pairs on C.
 - Auto-close cost (ADR-0017): share auto-closed, false-close rate among auto-closed, attack success on the
   auto-close path, and the agent + B3 agreement variant.
 - Error analysis of 20 wrong decisions; manual grading of 30 regulation citations.

@@ -4,7 +4,7 @@ from pathlib import Path
 from aml_investigator.core.errors import DomainError
 
 TEST_SPLIT_LOG = Path("docs/test-split-log.md")
-MILESTONE = "M3"
+MILESTONE = "M8"
 
 
 class ClosedTestSplitError(DomainError):
