@@ -199,6 +199,20 @@ def test_suppression_looks_back_before_the_day_range(db: Database) -> None:
     assert alert_days(db) == [BASE]
 
 
+def test_alert_ids_follow_account_order_whatever_the_insertion_order(db: Database) -> None:
+    add_accounts(db, "A", "B", "C")
+    for account in ("C", "A", "B"):
+        add_candidate(db, "R2_fan_out", account, 0, 5)
+
+    ids = build_days(db, {"R2_fan_out": 3}, 0, 0)
+
+    assert rows(db, "SELECT account_id FROM core.alerts WHERE alert_id = ANY(%s) ORDER BY alert_id", ids) == [
+        ("A",),
+        ("B",),
+        ("C",),
+    ]
+
+
 def test_refuses_when_alerts_already_exist(db: Database) -> None:
     add_accounts(db, "A")
     add_candidate(db, "R2_fan_out", "A", 0, 5)

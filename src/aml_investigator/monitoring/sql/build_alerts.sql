@@ -2,6 +2,7 @@ created AS (
     INSERT INTO core.alerts (account_id, alert_date, window_start, window_end)
     SELECT account_id, alert_date, window_start, window_end
     FROM account_days
+    ORDER BY account_id, alert_date
     RETURNING alert_id, account_id, alert_date
 ),
 hits AS (
