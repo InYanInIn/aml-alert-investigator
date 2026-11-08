@@ -1,0 +1,237 @@
+fx_rates:
+  Euro: 1.0
+  US Dollar: 0.92
+  UK Pound: 1.17
+  Swiss Franc: 1.04
+externals:
+  employer: {count: 30, entity_type: Corporation}
+  landlord: {count: 40, entity_type: Individual}
+  mortgage_lender: {count: 4, entity_type: Corporation}
+  utility: {count: 6, entity_type: Corporation}
+  merchant: {count: 60, entity_type: Corporation}
+  cash_desk: {count: 3, entity_type: Corporation}
+  university: {count: 4, entity_type: Corporation}
+  grant_office: {count: 3, entity_type: Corporation}
+  parent: {count: 150, entity_type: Individual}
+  tax_office: {count: 2, entity_type: Corporation}
+  business_client: {count: 80, entity_type: Corporation}
+  business_supplier: {count: 60, entity_type: Corporation}
+  private_buyer: {count: 30, entity_type: Individual}
+  relative: {count: 20, entity_type: Individual}
+personas:
+  student:
+    accounts: 200
+    entity_types: [Individual]
+    accounts_per_customer: [1, 2]
+    opening_balance: {median: 450.0, sigma: 0.6}
+    declared_monthly: {low: 400.0, high: 1200.0}
+    monthly:
+      - {direction: in, counterparty: grant_office, day_of_month: 3, amount: {median: 420.0, sigma: 0.2}, format: ACH, reference: stipend}
+      - {direction: in, counterparty: parent, day_of_month: 5, amount: {median: 300.0, sigma: 0.4}, format: ACH, reference: family_support}
+      - {direction: out, counterparty: landlord, day_of_month: 7, amount: {median: 380.0, sigma: 0.2}, format: ACH, reference: rent}
+    recurring:
+      - {direction: out, counterparty: merchant, rate_per_day: 0.6, amount: {median: 14.0, sigma: 0.7}, format: Credit Card, reference: groceries}
+      - {direction: out, counterparty: merchant, rate_per_day: 0.3, amount: {median: 24.0, sigma: 0.8}, format: Credit Card, reference: card_purchase}
+    peers: {rate_per_day: 0.06, amount: {median: 25.0, sigma: 0.7}, format: ACH, reference: peer_transfer}
+    confounders:
+      - name: split_rent
+        rate_per_day: 0.02
+        amount: {median: 760.0, sigma: 0.2}
+        legs:
+          - {from: peer, to: self, share: 0.5, format: ACH, reference: rent_share}
+          - {from: self, to: landlord, format: ACH, reference: rent}
+      - name: parent_paid_tuition
+        rate_per_day: 0.012
+        amount: {median: 1400.0, sigma: 0.3}
+        legs:
+          - {from: parent, to: self, format: ACH, reference: family_support}
+          - {from: self, to: university, format: ACH, reference: tuition}
+      - name: currency_exchange_before_travel
+        rate_per_day: 0.006
+        amount: {median: 250.0, sigma: 0.5}
+        legs:
+          - {from: self, to: self, format: ACH, reference: currency_exchange, received_currency: UK Pound}
+    mismatches:
+      - name: sold_a_car
+        rate_per_day: 0.03
+        amount: {median: 6500.0, sigma: 0.4}
+        legs:
+          - {from: private_buyer, to: self, format: Wire, reference: vehicle_sale}
+      - name: inheritance
+        rate_per_day: 0.01
+        amount: {median: 15000.0, sigma: 0.6}
+        legs:
+          - {from: relative, to: self, format: Wire, reference: inheritance}
+      - name: tutoring_side_income
+        rate_per_day: 0.08
+        amount: {median: 900.0, sigma: 0.5}
+        legs:
+          - {from: business_client, to: self, format: ACH, reference: consulting_invoice}
+      - name: freelance_work_invoiced
+        rate_per_day: 0.02
+        amount: {median: 700.0, sigma: 0.5}
+        legs:
+          - {from: business_client, to: self, format: ACH, reference: supplier_invoice}
+      - name: laptop_for_studies
+        rate_per_day: 0.01
+        amount: {median: 1100.0, sigma: 0.4}
+        legs:
+          - {from: self, to: merchant, format: Credit Card, reference: large_purchase}
+  worker:
+    accounts: 200
+    entity_types: [Individual]
+    accounts_per_customer: [1, 2]
+    opening_balance: {median: 1100.0, sigma: 0.7}
+    declared_monthly: {low: 1500.0, high: 2800.0}
+    monthly:
+      - {direction: in, counterparty: employer, day_of_month: 27, amount: {median: 2100.0, sigma: 0.15}, format: ACH, reference: wage}
+      - {direction: out, counterparty: landlord, day_of_month: 2, amount: {median: 650.0, sigma: 0.2}, format: ACH, reference: rent}
+      - {direction: out, counterparty: utility, day_of_month: 12, amount: {median: 95.0, sigma: 0.3}, format: ACH, reference: utility_bill}
+    recurring:
+      - {direction: out, counterparty: merchant, rate_per_day: 0.7, amount: {median: 22.0, sigma: 0.7}, format: Credit Card, reference: groceries}
+      - {direction: out, counterparty: cash_desk, rate_per_day: 0.08, amount: {median: 90.0, sigma: 0.5}, format: Cash, reference: cash_withdrawal}
+    peers: {rate_per_day: 0.05, amount: {median: 45.0, sigma: 0.8}, format: ACH, reference: peer_transfer}
+    confounders:
+      - name: split_rent
+        rate_per_day: 0.012
+        amount: {median: 1100.0, sigma: 0.2}
+        legs:
+          - {from: peer, to: self, share: 0.5, format: ACH, reference: rent_share}
+          - {from: self, to: landlord, format: ACH, reference: rent}
+      - name: one_off_purchase
+        rate_per_day: 0.01
+        amount: {median: 1800.0, sigma: 0.6}
+        legs:
+          - {from: self, to: merchant, format: Cheque, reference: large_purchase}
+      - name: currency_exchange_before_travel
+        rate_per_day: 0.005
+        amount: {median: 400.0, sigma: 0.5}
+        legs:
+          - {from: self, to: self, format: ACH, reference: currency_exchange, received_currency: US Dollar}
+    mismatches:
+      - name: sold_a_car
+        rate_per_day: 0.03
+        amount: {median: 7500.0, sigma: 0.4}
+        legs:
+          - {from: private_buyer, to: self, format: Wire, reference: vehicle_sale}
+      - name: cash_jobs_invoiced
+        rate_per_day: 0.08
+        amount: {median: 1200.0, sigma: 0.5}
+        legs:
+          - {from: business_client, to: self, format: ACH, reference: supplier_invoice}
+      - name: weekend_consulting
+        rate_per_day: 0.02
+        amount: {median: 800.0, sigma: 0.5}
+        legs:
+          - {from: business_client, to: self, format: ACH, reference: consulting_invoice}
+      - name: relative_helps_out
+        rate_per_day: 0.015
+        amount: {median: 500.0, sigma: 0.5}
+        legs:
+          - {from: parent, to: self, format: ACH, reference: family_support}
+  office_employee:
+    accounts: 200
+    entity_types: [Individual]
+    accounts_per_customer: [1, 3]
+    opening_balance: {median: 3200.0, sigma: 0.8}
+    declared_monthly: {low: 2800.0, high: 5200.0}
+    monthly:
+      - {direction: in, counterparty: employer, day_of_month: 25, amount: {median: 3600.0, sigma: 0.2}, format: ACH, reference: salary}
+      - {direction: out, counterparty: mortgage_lender, day_of_month: 3, amount: {median: 1050.0, sigma: 0.25}, format: ACH, reference: mortgage}
+      - {direction: out, counterparty: utility, day_of_month: 14, amount: {median: 130.0, sigma: 0.3}, format: ACH, reference: utility_bill}
+    recurring:
+      - {direction: out, counterparty: merchant, rate_per_day: 0.9, amount: {median: 32.0, sigma: 0.8}, format: Credit Card, reference: card_purchase}
+      - {direction: out, counterparty: merchant, rate_per_day: 0.4, amount: {median: 45.0, sigma: 0.6}, format: Credit Card, reference: groceries}
+    peers: {rate_per_day: 0.03, amount: {median: 80.0, sigma: 0.9}, format: ACH, reference: peer_transfer}
+    confounders:
+      - name: savings_transfer
+        rate_per_day: 0.05
+        amount: {median: 500.0, sigma: 0.5}
+        legs:
+          - {from: self, to: sibling, format: ACH, reference: own_transfer}
+      - name: one_off_purchase
+        rate_per_day: 0.012
+        amount: {median: 4200.0, sigma: 0.7}
+        legs:
+          - {from: self, to: merchant, format: Wire, reference: large_purchase}
+      - name: currency_exchange_before_travel
+        rate_per_day: 0.008
+        amount: {median: 900.0, sigma: 0.5}
+        legs:
+          - {from: self, to: self, format: ACH, reference: currency_exchange, received_currency: Swiss Franc}
+    mismatches:
+      - name: side_business_income
+        rate_per_day: 0.12
+        amount: {median: 1600.0, sigma: 0.6}
+        legs:
+          - {from: business_client, to: self, format: Wire, reference: consulting_invoice}
+      - name: side_business_costs
+        rate_per_day: 0.06
+        amount: {median: 500.0, sigma: 0.5}
+        legs:
+          - {from: self, to: business_supplier, format: ACH, reference: supplier_invoice}
+  business_owner:
+    accounts: 150
+    entity_types: [Sole Proprietorship, Partnership]
+    accounts_per_customer: [2, 4]
+    opening_balance: {median: 14000.0, sigma: 0.9}
+    declared_monthly: {low: 15000.0, high: 60000.0}
+    monthly:
+      - {direction: out, counterparty: tax_office, day_of_month: 20, amount: {median: 2400.0, sigma: 0.5}, format: ACH, reference: tax_payment}
+      - {direction: out, counterparty: relative, day_of_month: 28, amount: {median: 2500.0, sigma: 0.4}, format: ACH, reference: owners_drawing}
+    recurring:
+      - {direction: in, counterparty: business_client, rate_per_day: 1.1, amount: {median: 1400.0, sigma: 1.0}, format: Wire, reference: revenue_invoice}
+      - {direction: out, counterparty: business_supplier, rate_per_day: 0.8, amount: {median: 900.0, sigma: 1.0}, format: ACH, reference: supplier_invoice}
+      - {direction: in, counterparty: business_client, rate_per_day: 0.25, amount: {median: 1100.0, sigma: 0.8}, format: Cheque, reference: consulting_invoice}
+    peers: null
+    confounders:
+      - name: transfer_between_own_accounts
+        rate_per_day: 0.08
+        amount: {median: 3000.0, sigma: 0.7}
+        legs:
+          - {from: self, to: sibling, format: ACH, reference: own_transfer}
+      - name: seasonal_revenue_spike
+        rate_per_day: 0.25
+        first_day_index: 28
+        last_day_index: 38
+        amount: {median: 5200.0, sigma: 0.7}
+        legs:
+          - {from: business_client, to: self, format: Wire, reference: seasonal_revenue}
+    mismatches:
+      - name: large_private_sale
+        rate_per_day: 0.03
+        amount: {median: 22000.0, sigma: 0.5}
+        legs:
+          - {from: private_buyer, to: self, format: Wire, reference: vehicle_sale}
+  corporation:
+    accounts: 80
+    entity_types: [Corporation]
+    accounts_per_customer: [3, 6]
+    opening_balance: {median: 120000.0, sigma: 1.0}
+    declared_monthly: {low: 150000.0, high: 900000.0}
+    monthly:
+      - {direction: out, counterparty: employer, day_of_month: 26, amount: {median: 42000.0, sigma: 0.5}, format: ACH, reference: payroll}
+      - {direction: out, counterparty: tax_office, day_of_month: 18, amount: {median: 16000.0, sigma: 0.6}, format: ACH, reference: tax_payment}
+    recurring:
+      - {direction: in, counterparty: business_client, rate_per_day: 2.2, amount: {median: 5200.0, sigma: 1.1}, format: Wire, reference: revenue_invoice}
+      - {direction: out, counterparty: business_supplier, rate_per_day: 1.7, amount: {median: 3800.0, sigma: 1.1}, format: ACH, reference: supplier_invoice}
+    peers: null
+    confounders:
+      - name: intra_group_transfer
+        rate_per_day: 0.2
+        amount: {median: 26000.0, sigma: 0.9}
+        legs:
+          - {from: self, to: sibling, format: Wire, reference: intra_group}
+      - name: seasonal_revenue_spike
+        rate_per_day: 0.3
+        first_day_index: 28
+        last_day_index: 38
+        amount: {median: 22000.0, sigma: 0.8}
+        legs:
+          - {from: business_client, to: self, format: Wire, reference: seasonal_revenue}
+    mismatches:
+      - name: one_off_asset_disposal
+        rate_per_day: 0.03
+        amount: {median: 90000.0, sigma: 0.6}
+        legs:
+          - {from: business_client, to: self, format: Wire, reference: large_purchase}
