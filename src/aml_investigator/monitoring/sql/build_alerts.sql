@@ -10,4 +10,4 @@ hits AS (
     FROM first_days f
     JOIN created c ON c.account_id = f.account_id AND c.alert_date = f.alert_date
 )
-SELECT alert_id FROM created
+SELECT alert_id FROM created ORDER BY alert_id
