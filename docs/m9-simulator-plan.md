@@ -15,7 +15,7 @@
 - Purpose: the point of the simulator is the text AMLworld lacks; no word may mark a payment as laundering; the signal is the fit between story and customer.
 - World: about 850 monitored accounts at one bank; external accounts exist so payments have counterparties and are never monitored.
 - Personas (accounts, `entity_type`, accounts per customer): Student ~200, Individual, 1–2; Worker ~200, Individual, 1–2; Office employee ~200, Individual, 1–3; Business owner ~150, Sole Proprietorship or Partnership, 2–4; Corporation ~80, Corporation, 3–6; Laundering group member ~20, as the persona it hides among, as that persona.
-- Scenarios: six to eight groups, one scenario each, about 20 accounts in total, covering student money mules, structuring below thresholds, a shell company as pass-through, a funnel account, a cycle through several accounts, payments disguised as supplier invoices, slow layering over several weeks.
+- Scenarios: seven or eight groups, one scenario each, about 20 accounts in total, covering student money mules, structuring below thresholds, a shell company as pass-through, a funnel account, a cycle through several accounts, payments disguised as supplier invoices, slow layering over several weeks.
 - `config/simulation/scenarios.yaml` and the text pools are written by a blind subagent and committed before the first alert of any world.
 - Timeline: 21 days of history, then 28 live days (4 weekly rounds in the report); only live days produce alerts.
 - Monitoring cadence: nightly (1) for the agent; 1, 3 and 7 days compared on free systems.
@@ -30,13 +30,15 @@
 - `txn_id` follows `(ts, sha256(seed, row))` within a day; account ids are pseudonymised.
 - `truth.sim_actors` is readable by `aml_evaluator` only.
 - Results: one JSON file per run in `eval/results/aml_sim_*/sim/`; agent results are counts without intervals; free systems get percentile ranges over the 20 seeds; zeros are reported.
-- Agent spending in M9 stops at $15. The corpus is copied from `aml_hi_small`, so no embedding calls are made to build it.
+- Agent spending in M9 stops at $15, checked by hand from the result files before each paid step; the code enforces only the 60 cap. The corpus is copied from `aml_hi_small`, so no embedding calls are made to build it.
 - Code rules: smallest change, deep modules, no forwarding layers, no abstraction before a second caller, reuse before writing, no comments in production code (test code is exempt; `# noqa` directives are fine), SQL in `.sql` files loaded with `aml_investigator.core.sql.load`.
 - Tooling: Python 3.12, `uv run ruff check .`, `uv run ruff format --check .`, `uv run mypy`, `uv run pytest`. CLI database selection is `uv run aml --database <name> ...`; never source `.env`; never print DSNs, passwords or keys.
 
 ---
 
 ## File structure
+
+**Execution order: Task 5 runs before Task 4.** Task 4 runs every committed scenario through the interpreter of Task 5; every other task runs in number order.
 
 | Path | Responsibility | Task |
 |---|---|---|
@@ -62,7 +64,7 @@
 Resolved points where the spec leaves a choice; every task follows these:
 
 - The spec's `simulation/` modules are used as listed. Database helpers live in `world.py`; there is no sixth module.
-- Reference vocabulary is enforced in code: `load_config` refuses any scenario `reference` key that no honest event uses, so laundering text cannot be a vocabulary of its own.
+- Reference vocabulary is enforced in code, per persona: `load_config` refuses any scenario `reference` key that no honest event uses, and any key that no honest customer of a member's persona uses, so laundering text cannot be a vocabulary of its own and persona plus key is not a label.
 - A group member is a customer of its persona with that persona's number of accounts. It runs the persona's normal behaviour on all of them and the scenario on the first one. Blocking a sibling account counts as finding the group but does not disturb the scenario.
 - `count` in a role counts customers. Step payments are assigned round-robin over the active accounts of the sender and receiver roles.
 - "Blocked from the next day": decided on day D, the account has no transactions from D+1. "Replaced after two days": D+1 and D+2 pass without it, the reserve acts from D+3, and the group pauses meanwhile. Money held by a blocked member is frozen, so it never reaches the sink.
@@ -71,7 +73,8 @@ Resolved points where the spec leaves a choice; every task follows these:
 - `aml sim corpus --from <database>` is added so the corpus copy runs through `Settings`, never exposing a DSN on a command line.
 - `aml sim run --limit N` (default and maximum 60) exists because the tuning iterations are 30 investigations each, and follows `aml eval run --limit`.
 - A rule with no train-window candidates is switched off with a warning (left out of the thresholds file) instead of raising; a small world can lack, say, structuring candidates, and a rule without a threshold already produces no alerts.
-- The held-out world is opened once: `aml sim run` refuses an agent system on `aml_sim_heldout` if its result file already exists.
+- The held-out world is opened once: `aml sim run` refuses an agent system on `aml_sim_heldout` if any result file of that system exists there, whatever its seed, cadence or limit; a legitimate rerun needs that file deleted by hand.
+- A group member's normal spending and the scenario share one `Balances`, so a member's ordinary payments can spend laundered money while the scenario tracks its own pots separately.
 
 ---
 ### Task 1: Migration 0006, world database setup, the `aml_sim_*` guard and reset
@@ -515,7 +518,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `ExternalAccount(account_id, entity_id, entity_type, bank_id)`, `CustomerProfile(...)` (one row of `core.customer_profiles`)
   - `World(seed, config, customers, externals, external_accounts: dict[str, tuple[str, ...]], persona_accounts: dict[str, tuple[str, ...]], rosters: tuple[GroupRoster, ...], profiles, opening_balances: dict[str, float])`
   - `build_world(seed: int, config: SimulationConfig) -> World`, `insert_population(conn, world: World) -> None`
-  - `Payment` (frozen dataclass: `ts, from_account, to_account, amount_paid, paid_currency, amount_received, received_currency, payment_format, amount_paid_eur, reference, attempt_id: int | None, typology: str | None`), property `is_laundering: bool`
+  - `Payment` (frozen dataclass: `ts, from_account, to_account, amount_paid, paid_currency, amount_received, received_currency, payment_format, amount_paid_eur, reference, attempt_id: int | None, typology: str | None`), properties `is_laundering: bool`, `line: str`
   - `make_payment(world, rng, day, sender, receiver, eur, payment_format, reference, *, received_currency=EURO, attempt_id=None, typology=None) -> Payment`
   - `Balances(opening: Mapping[str, float])` with `affordable(account: str, eur: float) -> float`, `settle(payment: Payment) -> None`, `amounts: dict[str, float]`
   - `Tape(seed: int)` with `append(conn, payments: Iterable[Payment]) -> None` and `sha256: str` property
@@ -745,6 +748,7 @@ from aml_investigator.simulation.world import (
     live_days,
     load_config,
     make_payment,
+    reset_world,
 )
 from tests.conftest import Database
 from tests.simulation_fixtures import SCENARIO, write_config
@@ -856,6 +860,18 @@ def test_a_reference_key_used_only_by_launderers_is_refused(tmp_path: Path) -> N
     )
 
     with pytest.raises(ValueError, match="payroll_secret"):
+        load_config(tmp_path)
+
+
+def test_a_reference_key_no_honest_customer_of_the_persona_uses_is_refused(tmp_path: Path) -> None:
+    write_config(tmp_path)
+    outsider = {**SCENARIO["steps"][0], "reference": "payroll"}
+    scenario: dict[str, Any] = {**SCENARIO, "steps": [outsider, SCENARIO["steps"][1]]}
+    (tmp_path / "scenarios.yaml").write_text(
+        yaml.safe_dump({"honest_profile_mismatch_share": 0.1, "scenarios": [scenario]})
+    )
+
+    with pytest.raises(ValueError, match="student:payroll"):
         load_config(tmp_path)
 
 
@@ -971,7 +987,7 @@ def test_transaction_ids_do_not_depend_on_generation_order(world_db: Database, t
 
     forward = seeded_tape(world_db, tmp_path, payments).sha256
     with world_db.owner() as conn:
-        conn.execute("TRUNCATE core.accounts, core.fx_rates, core.customer_profiles CASCADE")
+        reset_world(conn)
     backward = seeded_tape(world_db, tmp_path, list(reversed(payments))).sha256
 
     assert forward == backward
@@ -1088,6 +1104,16 @@ personas:
         amount: {median: 900.0, sigma: 0.5}
         legs:
           - {from: business_client, to: self, format: ACH, reference: consulting_invoice}
+      - name: freelance_work_invoiced
+        rate_per_day: 0.02
+        amount: {median: 700.0, sigma: 0.5}
+        legs:
+          - {from: business_client, to: self, format: ACH, reference: supplier_invoice}
+      - name: laptop_for_studies
+        rate_per_day: 0.01
+        amount: {median: 1100.0, sigma: 0.4}
+        legs:
+          - {from: self, to: merchant, format: Credit Card, reference: large_purchase}
   worker:
     accounts: 200
     entity_types: [Individual]
@@ -1130,6 +1156,16 @@ personas:
         amount: {median: 1200.0, sigma: 0.5}
         legs:
           - {from: business_client, to: self, format: ACH, reference: supplier_invoice}
+      - name: weekend_consulting
+        rate_per_day: 0.02
+        amount: {median: 800.0, sigma: 0.5}
+        legs:
+          - {from: business_client, to: self, format: ACH, reference: consulting_invoice}
+      - name: relative_helps_out
+        rate_per_day: 0.015
+        amount: {median: 500.0, sigma: 0.5}
+        legs:
+          - {from: parent, to: self, format: ACH, reference: family_support}
   office_employee:
     accounts: 200
     entity_types: [Individual]
@@ -1556,23 +1592,37 @@ def load_config(directory: Path = CONFIG_DIR) -> SimulationConfig:
     return config
 
 
-def honest_reference_keys(personas: PersonaFile) -> set[str]:
-    keys: set[str] = set()
-    for persona in personas.personas.values():
-        keys |= {event.reference for event in persona.monthly}
-        keys |= {event.reference for event in persona.recurring}
-        keys |= {persona.peers.reference} if persona.peers else set()
-        keys |= {leg.reference for event in (*persona.confounders, *persona.mismatches) for leg in event.legs}
+def persona_reference_keys(persona: Persona) -> set[str]:
+    keys = {event.reference for event in (*persona.monthly, *persona.recurring)}
+    keys |= {persona.peers.reference} if persona.peers else set()
+    keys |= {leg.reference for event in (*persona.confounders, *persona.mismatches) for leg in event.legs}
     return keys
+
+
+def honest_reference_keys(personas: PersonaFile) -> set[str]:
+    return {key for persona in personas.personas.values() for key in persona_reference_keys(persona)}
 
 
 def require_shared_vocabulary(config: SimulationConfig) -> None:
     honest = honest_reference_keys(config.personas)
-    used = {step.reference for scenario in config.scenarios.scenarios for step in scenario.steps}
-    private = sorted(used - honest)
+    steps = [(scenario, step) for scenario in config.scenarios.scenarios for step in scenario.steps]
+    private = sorted({step.reference for _, step in steps} - honest)
     if private:
         raise ValueError(f"reference keys used only by launderers: {', '.join(private)}")
-    missing = sorted((honest | used) - set(config.pools.references))
+    keys = {name: persona_reference_keys(persona) for name, persona in config.personas.personas.items()}
+    foreign = sorted(
+        {
+            f"{role.persona}:{step.reference}"
+            for scenario, step in steps
+            for role in scenario.roles
+            if role.persona is not None
+            and role.name in (step.sender, step.receiver)
+            and step.reference not in keys[role.persona]
+        }
+    )
+    if foreign:
+        raise ValueError(f"reference keys no honest customer of that persona uses: {', '.join(foreign)}")
+    missing = sorted((honest | {step.reference for _, step in steps}) - set(config.pools.references))
     if missing:
         raise ValueError(f"reference keys without texts: {', '.join(missing)}")
 
@@ -1813,6 +1863,10 @@ class Payment:
     def row(self) -> tuple[object, ...]:
         return astuple(self)[:10]
 
+    @property
+    def line(self) -> str:
+        return "|".join(str(field) for field in self.row)
+
 
 def make_payment(
     world: World,
@@ -1873,7 +1927,7 @@ class Tape:
         return self.digest.hexdigest()
 
     def order_key(self, payment: Payment) -> tuple[datetime, str]:
-        text = "|".join(str(field) for field in (self.seed, *payment.row))
+        text = f"{self.seed}|{payment.line}"
         return payment.ts, hashlib.sha256(text.encode()).hexdigest()
 
     def append(self, conn: psycopg.Connection[Any], payments: Iterable[Payment]) -> None:
@@ -1881,7 +1935,7 @@ class Tape:
         numbered = list(enumerate(ordered, start=self.next_txn_id))
         self.next_txn_id += len(ordered)
         for txn_id, payment in numbered:
-            self.digest.update(f"{txn_id}|{'|'.join(str(field) for field in payment.row)}\n".encode())
+            self.digest.update(f"{txn_id}|{payment.line}\n".encode())
         transactions = [(txn_id, *payment.row) for txn_id, payment in numbered]
         labels = [(txn_id, payment.is_laundering) for txn_id, payment in numbered]
         attempts = [(p.attempt_id, p.typology, txn_id) for txn_id, p in numbered if p.is_laundering]
@@ -2192,7 +2246,8 @@ class AccountDay:
             sender, receiver = self.party(leg.sender), self.party(leg.receiver)
             if sender is None or receiver is None:
                 return
-            self.pay(sender, receiver, amount * leg.share, leg.format, leg.reference, leg.received_currency)
+            if not self.pay(sender, receiver, amount * leg.share, leg.format, leg.reference, leg.received_currency):
+                return
 
     def party(self, name: str) -> str | None:
         if name == SELF:
@@ -2207,10 +2262,10 @@ class AccountDay:
 
     def pay(
         self, sender: str, receiver: str, eur: float, payment_format: str, reference: str, received_currency: str = EURO
-    ) -> None:
+    ) -> bool:
         paid = self.balances.affordable(sender, eur)
         if paid < MIN_PAYMENT_EUR or receiver in self.blocked:
-            return
+            return False
         payment = make_payment(
             self.world,
             self.rng,
@@ -2224,6 +2279,7 @@ class AccountDay:
         )
         self.balances.settle(payment)
         self.made.append(payment)
+        return True
 ```
 
 - [ ] **Step 4: Run the tests to verify they pass**
@@ -2245,6 +2301,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 4: Blind authoring of scenarios and text pools — dispatch to an isolated blind subagent
 
+**Execution order: Task 5 runs before Task 4.** The check below runs every committed scenario through the interpreter written in Task 5, so Task 5 must be committed first.
+
 This task is **dispatched to an isolated blind subagent**. It is a safeguard against circularity, so the controller does not write these files, does not edit their content, and does not fork this conversation into the author. It must finish, and its output must be committed, before any alert is built in any `aml_sim_*` world.
 
 **Files:**
@@ -2252,8 +2310,8 @@ This task is **dispatched to an isolated blind subagent**. It is a safeguard aga
 - Test (by the controller, before dispatch): `tests/test_simulation_config_files.py`
 
 **Interfaces:**
-- Consumes from Task 2: `load_config(directory) -> SimulationConfig`; the pydantic models `ScenarioFile`, `TextPools`. `config/simulation/personas.yaml` fixes the required reference keys, restated in the prompt below.
-- Produces: two YAML files that `load_config()` accepts. The schema and worked example are in the prompt below. `honest_profile_mismatch_share` is set by the author.
+- Consumes from Task 2: `load_config(directory) -> SimulationConfig`; the pydantic models `ScenarioFile`, `TextPools`. `config/simulation/personas.yaml` fixes the reference keys of each persona, restated in the prompt below. From Task 5: `Laundering`.
+- Produces: two YAML files that `load_config()` accepts. The schema and worked example are in the prompt below. `honest_profile_mismatch_share` is set by the author. A scenario the interpreter cannot run goes back to the blind author: a broken scenario would show as a false zero.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2263,7 +2321,8 @@ This task is **dispatched to an isolated blind subagent**. It is a safeguard aga
 import re
 from pathlib import Path
 
-from aml_investigator.simulation.world import SimulationConfig, build_world, load_config
+from aml_investigator.simulation.laundering import Laundering
+from aml_investigator.simulation.world import Balances, SimulationConfig, build_world, live_days, load_config
 
 CONFIG = Path("config/simulation")
 REQUIRED_TYPOLOGIES = {
@@ -2278,7 +2337,9 @@ REQUIRED_TYPOLOGIES = {
 MIN_REFERENCE_TEXTS = 8
 MIN_PROFILE_TEXTS = 12
 MIN_COMPANY_NAMES = 80
-LABEL_WORDS = re.compile(r"launder|mule|smurf|shell|structur|layering|suspicious|fraud|illegal|dirty", re.IGNORECASE)
+LABEL_WORDS = re.compile(
+    r"\b(?:launder\w*|mules?|smurf\w*|shells?|structuring|layering|suspicious|fraud\w*|illegal|dirty)\b", re.IGNORECASE
+)
 
 
 def config() -> SimulationConfig:
@@ -2291,10 +2352,23 @@ def test_committed_config_loads_and_builds_a_world() -> None:
     assert 800 <= sum(len(c.accounts) for c in world.customers if c.group_id is None) <= 880
 
 
-def test_six_to_eight_groups_cover_every_named_typology() -> None:
+def test_every_committed_scenario_runs_through_the_interpreter() -> None:
+    loaded = config()
+    for seed in (1, 2, 3):
+        world = build_world(seed, loaded)
+        laundering = Laundering(world)
+        book = Balances(world.opening_balances)
+        payments = [payment for day in live_days() for payment in laundering.payments_on(day, book)]
+
+        assert {payment.attempt_id for payment in payments} == {roster.group_id for roster in world.rosters}
+        assert all(payment.from_account != payment.to_account for payment in payments)
+        assert all(group.planned_sink_eur > 0 for group in laundering.progress())
+
+
+def test_seven_or_eight_groups_cover_every_named_typology() -> None:
     scenarios = config().scenarios.scenarios
 
-    assert 6 <= len(scenarios) <= 8
+    assert 7 <= len(scenarios) <= 8
     assert {scenario.typology for scenario in scenarios} >= REQUIRED_TYPOLOGIES
     assert len({scenario.id for scenario in scenarios}) == len(scenarios)
 
@@ -2377,14 +2451,16 @@ You author the configuration of a synthetic bank simulator for anti-money-launde
 a public research project. You write two YAML files and nothing else.
 
 ISOLATION RULES, which come before everything else
-- Do not read, list or search any file of the repository at /Users/janju/personal/aml-alert-investigator. Everything
-  you need about the project is in this message.
+- Work only inside OUTPUT_DIR. Do not read, list or search any file outside it, in particular the repository at
+  /Users/janju/personal/aml-alert-investigator. Everything you need about the project is in this message.
+- Do not fetch, search or browse the project's public GitHub repository (aml-alert-investigator) or any page of it.
 - In particular you must not open: src/aml_investigator/monitoring/, src/aml_investigator/investigation/agent/prompts/,
   docs/results.md, docs/m8-*.md, config/thresholds/, eval/. Nor docs/m9-*, docs/adr/, docs/design.md, tests/.
 - Your purpose is to describe how laundering works in the world, as public sources describe it. You do not know how it
   will be detected, and you must not try to find out or to guess at it. Do not aim scenarios at, or away from, any
   detector. A scenario that is hard to see stays in; it is reported honestly as a zero.
 - Write to these two paths only: OUTPUT_DIR/scenarios.yaml and OUTPUT_DIR/text_pools.yaml.
+- Every tool call you make is audited against these rules after you finish.
 
 PUBLIC SOURCES
 Use the web. Base the scenarios on published typologies, for example FATF money laundering typologies and risk
@@ -2433,7 +2509,7 @@ scenarios:
         count: <positive integer, default 1: payments in this step, assigned round-robin over sender and receiver accounts>
         delay: <non-negative integer, default 0: days after the previous step; within a day several steps may follow>
         format: <one of the payment formats>
-        reference: <one key from the reference key list below>
+        reference: <one key from the list of each member persona in this step, see Reference keys below>
 
 Typologies, each at least once, seven or eight scenarios in total: money_mule (students), structuring (below reporting
 thresholds), shell_pass_through, funnel_account, cycle (through several accounts), invoice_disguise (payments disguised
@@ -2449,11 +2525,18 @@ selling a car or receiving an inheritance, an office employee with a side busine
 what you read about how often stated purpose and activity differ in practice; it must be large enough that a mismatch
 is not a label in disguise. State your reasoning in a one-line YAML comment.
 
-Reference keys. A scenario may use only these keys, and it must not assume anything else about them; honest customers
-use the same keys:
-stipend, family_support, rent, rent_share, groceries, card_purchase, peer_transfer, tuition, currency_exchange,
-vehicle_sale, inheritance, consulting_invoice, wage, utility_bill, cash_withdrawal, large_purchase, supplier_invoice,
-salary, mortgage, own_transfer, tax_payment, owners_drawing, revenue_invoice, seasonal_revenue, payroll, intra_group
+Reference keys. Each persona has its own list: the keys honest customers of that persona actually use. A step may use
+only a key that is in the list of every member persona sending or receiving in that step; a source or sink role has no
+list. Do not assume anything else about the keys; honest customers of the persona use the same keys in the same pools.
+- student: stipend, family_support, rent, rent_share, groceries, card_purchase, peer_transfer, tuition,
+  currency_exchange, vehicle_sale, inheritance, consulting_invoice, supplier_invoice, large_purchase
+- worker: wage, rent, rent_share, utility_bill, groceries, cash_withdrawal, peer_transfer, large_purchase,
+  currency_exchange, vehicle_sale, supplier_invoice, consulting_invoice, family_support
+- office_employee: salary, mortgage, utility_bill, card_purchase, groceries, peer_transfer, own_transfer,
+  large_purchase, currency_exchange, consulting_invoice, supplier_invoice
+- business_owner: tax_payment, owners_drawing, revenue_invoice, supplier_invoice, consulting_invoice, own_transfer,
+  seasonal_revenue, vehicle_sale
+- corporation: payroll, tax_payment, revenue_invoice, supplier_invoice, intra_group, seasonal_revenue, large_purchase
 
 Worked example of one scenario (shape only; do not reuse its numbers or roles):
   - id: example_group
@@ -2477,7 +2560,7 @@ is an ordinary sentence: "consulting invoice" is normal for a consultancy and st
 must arise only from who sends it.
 Exact schema:
 references:
-  <each of the reference keys above>: [<at least 8 short payment purposes>]
+  <each key of any persona list above>: [<at least 8 short payment purposes>]
 profiles:
   <each of: student, worker, office_employee, business_owner, corporation>:
     occupation: [<at least 12>]
@@ -2494,10 +2577,22 @@ Reply with: the two file paths; the honest_profile_mismatch_share and your reaso
 public source it rests on (name and URL); and a list of every file you read and every URL you opened.
 ````
 
-- [ ] **Step 4: Install the files and validate them**
+- [ ] **Step 4: Audit the transcript, install the files and validate them**
+
+The controller audits the subagent's own tool calls, not its self-reported list. Find its transcript with the agent id the Agent tool result reports, list the tool calls and search them for the forbidden paths:
+
+```bash
+TRANSCRIPT=$(find "$HOME/.claude/projects" -name "agent-AGENT_ID.jsonl" | head -n 1)
+jq -c 'select(.type == "assistant") | .message.content[]? | select(.type == "tool_use") | {name, input}' "$TRANSCRIPT" > "OUTPUT_DIR.calls"
+grep -E 'aml-alert-investigator|janju/personal|monitoring/|agent/prompts|docs/(results|m8|m9|adr|design)|config/thresholds|eval/|tests/' "OUTPUT_DIR.calls"
+```
+
+Substitute the agent id for `AGENT_ID`. Expected: no output. Any hit that is a path outside `OUTPUT_DIR` or a fetch of the project's public repository means the isolation failed: discard the output and dispatch a new agent. A hit that is only part of a public-source URL is judged by the controller and recorded in the commit message.
+
+Then install and validate:
 
 Run: `cp "OUTPUT_DIR/scenarios.yaml" "OUTPUT_DIR/text_pools.yaml" config/simulation/ && uv run pytest tests/test_simulation_config_files.py -v`
-Expected: PASS. If a check fails, send only the failure text back to the same agent with SendMessage and let it correct its own files. Do not give it rule, prompt or result information, and do not edit the YAML yourself. Check its reported list of files read; if it opened any path in the repository, discard the output and dispatch a new agent.
+Expected: PASS. If a check fails, including the interpreter check, send only the failure text back to the same agent with SendMessage and let it correct its own files. Do not give it rule, prompt or result information, and do not edit the YAML yourself. Check its reported list of files read against the audit too.
 
 - [ ] **Step 5: Commit before any alert exists**
 
@@ -2508,12 +2603,16 @@ git add config/simulation/scenarios.yaml config/simulation/text_pools.yaml
 git commit -m "M9: blind-authored scenarios and text pools
 
 Written by an isolated subagent from public typologies, without access to monitoring, the prompts or the M8 results.
-Committed before the first alert of any world.
+Committed before the first alert of any world. The subagent's tool calls were audited against the forbidden paths.
+Limitation: the subagent inherited the controller's CLAUDE.md and project memory, which cannot be removed, so the
+blindness is partial.
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ### Task 5: Scenario interpreter with reserve replacement
+
+**Execution order: Task 5 runs before Task 4.** Its tests use the fixture scenario `SCENARIO` from `tests/simulation_fixtures.py`, never the blind-authored `config/simulation/scenarios.yaml`, which does not exist yet.
 
 **Files:**
 - Create: `src/aml_investigator/simulation/laundering.py`
@@ -2914,7 +3013,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Files:**
 - Modify: `src/aml_investigator/monitoring/alerts.py`
-- Modify: `src/aml_investigator/monitoring/calibration.py`
+- Modify: `src/aml_investigator/monitoring/calibration.py`, `src/aml_investigator/monitoring/sql/build_alerts.sql`
 - Create: `src/aml_investigator/simulation/loop.py`, `src/aml_investigator/simulation/sql/delete_external_candidates.sql`
 - Modify: `tests/test_alerts.py`, `tests/test_calibrate.py`
 - Test: `tests/test_simulation_monitoring.py`
@@ -2922,7 +3021,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Interfaces:**
 - Consumes: `first_days_parameters`, `BUILD_SQL`, `ALERTS_EXIST_SQL`, `ALL_DAYS` in `monitoring/alerts.py`; `aml_investigator.monitoring.rules.generate_candidates(conn)`; from Tasks 2, 3, 5: `build_world`, `insert_population`, `Tape`, `Balances`, `history_days`, `live_days`, `MONITORED_BANK_ID`, `normal_day`, `Laundering`.
 - Produces:
-  - `build_alerts_for_days(conn: psycopg.Connection[Any], thresholds: Mapping[str, float], days: DayRange, *, suppression_days: int) -> list[int]` (new alert ids, ordered as created; works on a non-empty table; suppression looks back before `days.first`)
+  - `build_alerts_for_days(conn: psycopg.Connection[Any], thresholds: Mapping[str, float], days: DayRange, *, suppression_days: int) -> list[int]` (new alert ids, ordered by `alert_id`; works on a non-empty table; suppression looks back before `days.first`)
   - `choose_thresholds` no longer raises for a rule without train-window candidates: it warns and leaves that rule out of the returned thresholds
   - `regenerate_candidates(conn: psycopg.Connection[Any]) -> None` in `simulation/loop.py` (rescans all rules, then deletes the candidates of accounts outside the monitored bank)
 
@@ -3138,6 +3237,18 @@ def build_alerts_for_days(
         return [int(row[0]) for row in conn.execute(BUILD_SQL, parameters)]
 ```
 
+In `src/aml_investigator/monitoring/sql/build_alerts.sql`, replace:
+
+```sql
+SELECT alert_id FROM created
+```
+
+with:
+
+```sql
+SELECT alert_id FROM created ORDER BY alert_id
+```
+
 In `src/aml_investigator/monitoring/calibration.py`, replace:
 
 ```python
@@ -3201,7 +3312,7 @@ Run: `uv run ruff check . && uv run ruff format --check . && uv run mypy`
 Expected: clean.
 
 ```bash
-git add src/aml_investigator/monitoring/alerts.py src/aml_investigator/monitoring/calibration.py src/aml_investigator/simulation/loop.py src/aml_investigator/simulation/sql/delete_external_candidates.sql tests/test_alerts.py tests/test_calibrate.py tests/test_simulation_monitoring.py
+git add src/aml_investigator/monitoring/alerts.py src/aml_investigator/monitoring/calibration.py src/aml_investigator/monitoring/sql/build_alerts.sql src/aml_investigator/simulation/loop.py src/aml_investigator/simulation/sql/delete_external_candidates.sql tests/test_alerts.py tests/test_calibrate.py tests/test_simulation_monitoring.py
 git commit -m "M9: alerts by day range, external candidates removed, no look-ahead test
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
@@ -3307,15 +3418,26 @@ def prepare_workspace(root: Path, database: str, *, scenarios: list[dict[str, An
 `tests/test_simulation_loop.py` (new file):
 
 ```python
+import json
 from datetime import timedelta
 from pathlib import Path
 
+import psycopg
 import pytest
 
 from aml_investigator.core.settings import Settings
+from aml_investigator.evaluation.results import THRESHOLDS_DIR
+from aml_investigator.evaluation.systems import EvalAlert, Recommendation, SystemDecision
 from aml_investigator.simulation import MAX_INVESTIGATIONS
-from aml_investigator.simulation.loop import SimulationRun, monitoring_day, simulate
-from aml_investigator.simulation.world import NotASimulationDatabaseError, live_days
+from aml_investigator.simulation.loop import (
+    DailyLoop,
+    SimulationRun,
+    WorldDays,
+    monitoring_day,
+    read_actors,
+    simulate,
+)
+from aml_investigator.simulation.world import NotASimulationDatabaseError, build_world, live_days, load_config
 from tests.conftest import Database, load_regulations
 from tests.simulation_fixtures import prepare_workspace, settings_for
 
@@ -3346,6 +3468,28 @@ async def b4_run(settings: Settings, cadence: int = 1, seed: int = 31) -> Simula
     return await simulate(settings, seed=seed, system="b4", cadence=cadence)
 
 
+class Fixed:
+    def __init__(self, name: str, recommendation: Recommendation) -> None:
+        self.name = name
+        self.recommendation = recommendation
+
+    async def decide(self, alert: EvalAlert) -> SystemDecision:
+        return SystemDecision(self.recommendation)
+
+
+async def drive(
+    settings: Settings, name: str, recommendation: Recommendation, limit: int = MAX_INVESTIGATIONS
+) -> DailyLoop:
+    file = json.loads((THRESHOLDS_DIR / f"{settings.database}.json").read_text())
+    with psycopg.connect(settings.owner_conninfo, autocommit=True) as conn:
+        days = WorldDays(conn, build_world(31, load_config()))
+        days.populate()
+        actors = read_actors(settings.evaluator_conninfo)
+        loop = DailyLoop(days, actors, file["thresholds"], file["suppression_days"], 1, limit)
+        await loop.run(Fixed(name, recommendation), Fixed("b4", "close"), None)
+    return loop
+
+
 @pytest.mark.anyio
 async def test_the_same_seed_and_system_give_the_same_transaction_hash(settings: Settings) -> None:
     assert (await b4_run(settings)).tape_sha256 == (await b4_run(settings)).tape_sha256
@@ -3373,12 +3517,12 @@ async def test_only_live_days_produce_alerts_and_externals_never_do(settings: Se
 async def test_escalated_group_accounts_are_blocked_and_stop_transacting(
     settings: Settings, world_db: Database
 ) -> None:
-    run = await b4_run(settings)
+    loop = await drive(settings, "b4", "escalate")
 
-    assert run.blocked
-    assert any(group.first_block_day is not None for group in run.groups)
+    assert loop.days.blocked
+    assert any(group.first_block_day is not None for group in loop.days.laundering.progress())
     with world_db.owner() as conn:
-        for account, first_blocked_day in run.blocked.items():
+        for account, first_blocked_day in loop.days.blocked.items():
             later = conn.execute(
                 "SELECT count(*) FROM core.transactions WHERE (from_account = %s OR to_account = %s) AND ts >= %s",
                 (account, account, first_blocked_day),
@@ -3388,24 +3532,23 @@ async def test_escalated_group_accounts_are_blocked_and_stop_transacting(
 
 @pytest.mark.anyio
 async def test_a_block_starts_the_day_after_the_decision(settings: Settings) -> None:
-    run = await b4_run(settings)
-    decided = {
-        case.alert.account_id: case.decided_on for case in reversed(run.cases) if case.recommendation == "escalate"
-    }
+    loop = await drive(settings, "b4", "escalate")
+    decided = {item.alert.account_id: item.decided_on for item in reversed(loop.decided)}
 
-    for account, first_blocked_day in run.blocked.items():
+    assert loop.days.blocked
+    for account, first_blocked_day in loop.days.blocked.items():
         assert first_blocked_day == decided[account] + timedelta(days=1)
 
 
 @pytest.mark.anyio
 async def test_only_group_accounts_are_blocked(settings: Settings) -> None:
-    run = await b4_run(settings)
+    loop = await drive(settings, "b4", "escalate")
     honest_escalated = {
-        case.alert.account_id for case in run.cases if case.recommendation == "escalate" and case.actor.group_id is None
+        item.alert.account_id for item in loop.decided if loop.actors[item.alert.account_id].group_id is None
     }
 
     assert honest_escalated
-    assert not honest_escalated & set(run.blocked)
+    assert not honest_escalated & set(loop.days.blocked)
 
 
 @pytest.mark.anyio
@@ -3440,13 +3583,13 @@ async def test_b1_turns_scores_into_recommendations_at_the_stored_operating_poin
 
 @pytest.mark.anyio
 async def test_an_agent_stops_at_the_cap_and_marks_the_run_truncated(settings: Settings) -> None:
-    run = await simulate(settings, seed=31, system="scripted", cadence=1, limit=2)
+    loop = await drive(settings, "scripted", "close", limit=2)
 
-    assert len(run.cases) == 2
-    assert run.truncated
-    assert run.undecided_alerts >= 1
-    assert run.last_day < live_days()[-1]
-    assert {case.shadow for case in run.cases} <= {"close", "escalate"}
+    assert len(loop.decided) == 2
+    assert loop.truncated
+    assert loop.undecided_alerts >= 1
+    assert loop.last_day < live_days()[-1]
+    assert {item.shadow for item in loop.decided} == {"close"}
 
 
 @pytest.mark.anyio
@@ -3460,6 +3603,8 @@ async def test_any_other_database_is_refused(db: Database) -> None:
     with pytest.raises(NotASimulationDatabaseError):
         await simulate(settings_for(db), seed=31, system="b4", cadence=1)
 ```
+
+The tests that need blocks, honest escalations or a truncated run do not rely on what B4 or the scripted agent happen to decide in the tiny world. They drive `DailyLoop` with `Fixed`, a stub system that always gives one recommendation, on the fixture thresholds (`R1_fan_in` 2.0 and `R3_pass_through` 1500.0), which the fixture scenario meets by construction: its mule receives from three payers on one day and passes on 90% of about 10,000 EUR, and the fixture corporations receive from several clients every day.
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
@@ -3781,7 +3926,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Produces in `simulation/results.py`:
   - `HELD_OUT_DATABASE = "aml_sim_heldout"`
   - `result_path(database: str, seed: int, system: str, cadence: int, limit: int) -> Path`
-  - `refuse_second_opening(database: str, seed: int, system: str, cadence: int, limit: int) -> None` raising `HeldOutAlreadyOpenedError`
+  - `refuse_second_opening(database: str, system: str) -> None` raising `HeldOutAlreadyOpenedError` when any result file of that agent system exists on the held-out database, whatever its seed, cadence or limit
   - `result_document(run: SimulationRun, git_state: GitState) -> dict[str, Any]` with keys `database, seed, system, cadence, limit, truncated, undecided_alerts, last_day, created_at, git_commit, git_dirty, thresholds_sha256, prompt_version, transaction_sha256, counts, groups, blocked, metrics, by_persona, workload, shadow, alerts`
   - `write_result(run: SimulationRun, git_state: GitState) -> Path`
   - `summary(document: Mapping[str, Any]) -> str`
@@ -3881,13 +4026,13 @@ CASES = (
 )
 
 
-def document(workspace: Path, cases: tuple[Case, ...] = CASES, **options: Any) -> dict[str, Any]:
-    assert workspace
+def document(cases: tuple[Case, ...] = CASES, **options: Any) -> dict[str, Any]:
     return result_document(make_run(cases, **options), GIT)
 
 
-def test_groups_found_days_and_money_include_zeros(workspace: Path) -> None:
-    result = document(workspace)
+@pytest.mark.usefixtures("workspace")
+def test_groups_found_days_and_money_include_zeros() -> None:
+    result = document()
 
     assert result["counts"]["groups"] == 2
     assert result["counts"]["groups_found"] == 1
@@ -3900,8 +4045,9 @@ def test_groups_found_days_and_money_include_zeros(workspace: Path) -> None:
     assert by_scenario["invoices"]["days_to_first_block"] is None
 
 
-def test_rates_are_reported_overall_and_per_persona(workspace: Path) -> None:
-    result = document(workspace)
+@pytest.mark.usefixtures("workspace")
+def test_rates_are_reported_overall_and_per_persona() -> None:
+    result = document()
 
     assert result["metrics"]["alerts"] == 5
     assert result["metrics"]["close_rate"] == pytest.approx(2 / 5)
@@ -3911,16 +4057,18 @@ def test_rates_are_reported_overall_and_per_persona(workspace: Path) -> None:
     assert result["by_persona"]["corporation"]["false_close_rate"] == pytest.approx(1.0)
 
 
-def test_cost_and_latency_per_alert(workspace: Path) -> None:
-    result = document(workspace)
+@pytest.mark.usefixtures("workspace")
+def test_cost_and_latency_per_alert() -> None:
+    result = document()
 
     assert result["metrics"]["mean_cost_usd"] == pytest.approx(0.1)
     assert result["metrics"]["total_cost_usd"] == pytest.approx(0.5)
     assert result["metrics"]["mean_latency_ms"] == pytest.approx(100.0)
 
 
-def test_workload_is_counted_per_weekly_round(workspace: Path) -> None:
-    result = document(workspace)
+@pytest.mark.usefixtures("workspace")
+def test_workload_is_counted_per_weekly_round() -> None:
+    result = document()
 
     assert result["workload"] == [
         {"round": 1, "alerts": 3, "escalations": 1},
@@ -3930,8 +4078,9 @@ def test_workload_is_counted_per_weekly_round(workspace: Path) -> None:
     ]
 
 
-def test_shadow_comparison_splits_all_differences(workspace: Path) -> None:
-    assert document(workspace)["shadow"] == {
+@pytest.mark.usefixtures("workspace")
+def test_shadow_comparison_splits_all_differences() -> None:
+    assert document()["shadow"] == {
         "alerts_compared": 5,
         "alerts_differing": 4,
         "laundering_caught_b4_closed": 1,
@@ -3941,22 +4090,25 @@ def test_shadow_comparison_splits_all_differences(workspace: Path) -> None:
     }
 
 
-def test_a_free_run_has_no_shadow(workspace: Path) -> None:
+@pytest.mark.usefixtures("workspace")
+def test_a_free_run_has_no_shadow() -> None:
     cases = (make_case(1, "escalate", truth=True, group_id=0),)
 
-    assert document(workspace, cases, system="b4")["shadow"] is None
+    assert document(cases, system="b4")["shadow"] is None
 
 
-def test_truncation_is_marked(workspace: Path) -> None:
-    result = document(workspace, truncated=True)
+@pytest.mark.usefixtures("workspace")
+def test_truncation_is_marked() -> None:
+    result = document(truncated=True)
 
     assert result["truncated"] is True
     assert result["undecided_alerts"] == 3
     assert "TRUNCATED" in summary(result)
 
 
-def test_summary_names_system_and_groups(workspace: Path) -> None:
-    text = summary(document(workspace))
+@pytest.mark.usefixtures("workspace")
+def test_summary_names_system_and_groups() -> None:
+    text = summary(document())
 
     assert "azure" in text
     assert "1 of 2 groups" in text
@@ -3977,18 +4129,19 @@ def test_write_result_creates_the_file() -> None:
     assert path.parent == Path("eval/results/aml_sim_dev/sim")
 
 
-def test_the_held_out_world_opens_once_for_an_agent(workspace: Path) -> None:
-    assert workspace
-    target = result_path("aml_sim_heldout", 2, "azure", 1, 60)
+@pytest.mark.usefixtures("workspace")
+def test_the_held_out_world_opens_once_for_an_agent() -> None:
+    target = result_path("aml_sim_heldout", 3, "azure", 7, 30)
 
-    refuse_second_opening("aml_sim_heldout", 2, "azure", 1, 60)
+    refuse_second_opening("aml_sim_heldout", "azure")
     target.parent.mkdir(parents=True)
     target.write_text("{}")
 
     with pytest.raises(HeldOutAlreadyOpenedError, match="azure"):
-        refuse_second_opening("aml_sim_heldout", 2, "azure", 1, 60)
-    refuse_second_opening("aml_sim_heldout", 2, "b4", 1, 60)
-    refuse_second_opening("aml_sim_dev", 2, "azure", 1, 60)
+        refuse_second_opening("aml_sim_heldout", "azure")
+    refuse_second_opening("aml_sim_heldout", "azure_profile")
+    refuse_second_opening("aml_sim_heldout", "b4")
+    refuse_second_opening("aml_sim_dev", "azure")
 ```
 
 `tests/test_cli_simulation.py` (new file):
@@ -4059,7 +4212,7 @@ RATE_NAMES = ("close_rate", "false_close_rate", "escalation_precision")
 
 class HeldOutAlreadyOpenedError(DomainError):
     def __init__(self, path: Path) -> None:
-        super().__init__(f"{path} exists; the held-out world is opened once per agent")
+        super().__init__(f"{path} exists; the held-out world is opened once per agent, delete the file by hand to rerun")
 
 
 def result_path(database: str, seed: int, system: str, cadence: int, limit: int) -> Path:
@@ -4067,10 +4220,12 @@ def result_path(database: str, seed: int, system: str, cadence: int, limit: int)
     return RESULTS_DIR / database / "sim" / f"seed{seed}-{system}-cadence{cadence}{partial}.json"
 
 
-def refuse_second_opening(database: str, seed: int, system: str, cadence: int, limit: int) -> None:
-    path = result_path(database, seed, system, cadence, limit)
-    if database == HELD_OUT_DATABASE and system in AGENT_SYSTEMS and path.exists():
-        raise HeldOutAlreadyOpenedError(path)
+def refuse_second_opening(database: str, system: str) -> None:
+    if database != HELD_OUT_DATABASE or system not in AGENT_SYSTEMS:
+        return
+    opened = sorted((RESULTS_DIR / database / "sim").glob(f"seed[0-9]*-{system}-cadence*.json"))
+    if opened:
+        raise HeldOutAlreadyOpenedError(opened[0])
 
 
 def outcome(case: Case) -> Outcome:
@@ -4084,16 +4239,18 @@ def outcome(case: Case) -> Outcome:
     )
 
 
-def rates(cases: Sequence[Case]) -> dict[str, Any]:
-    measured = measure([outcome(case) for case in cases], [1.0] * len(cases))
+def measure_cases(cases: Sequence[Case]) -> dict[str, Any]:
+    return measure([outcome(case) for case in cases], [1.0] * len(cases))
+
+
+def rates(cases: Sequence[Case], measured: Mapping[str, Any]) -> dict[str, Any]:
     return {"alerts": len(cases), **{name: measured[name] for name in RATE_NAMES}}
 
 
-def overall_metrics(cases: Sequence[Case]) -> dict[str, Any]:
-    measured = measure([outcome(case) for case in cases], [1.0] * len(cases))
+def overall_metrics(cases: Sequence[Case], measured: Mapping[str, Any]) -> dict[str, Any]:
     costs = [case.decision.cost_usd for case in cases if case.decision.cost_usd is not None]
     return {
-        **rates(cases),
+        **rates(cases, measured),
         "mean_cost_usd": measured["mean_cost_usd"],
         "mean_latency_ms": measured["mean_latency_ms"],
         "total_cost_usd": sum(costs) if costs else None,
@@ -4202,9 +4359,11 @@ def result_document(run: SimulationRun, git_state: GitState) -> dict[str, Any]:
         },
         "groups": [group_row(group) for group in run.groups],
         "blocked": {account: day.isoformat() for account, day in sorted(run.blocked.items())},
-        "metrics": overall_metrics(run.cases),
+        "metrics": overall_metrics(run.cases, measure_cases(run.cases)),
         "by_persona": {
-            persona: rates([case for case in run.cases if case.actor.persona == persona]) for persona in personas
+            persona: rates(subset, measure_cases(subset))
+            for persona in personas
+            if (subset := [case for case in run.cases if case.actor.persona == persona])
         },
         "workload": workload(run.cases),
         "shadow": shadow_comparison(run.cases),
@@ -4262,7 +4421,7 @@ def run_simulation(args: argparse.Namespace) -> None:
     from aml_investigator.simulation.results import refuse_second_opening, summary, write_result
 
     settings = settings_for(args)
-    refuse_second_opening(settings.database, args.seed, args.system, args.cadence, args.limit)
+    refuse_second_opening(settings.database, args.system)
     git_state = GitState.capture()
     run = asyncio.run(simulate(settings, seed=args.seed, system=args.system, cadence=args.cadence, limit=args.limit))
     path = write_result(run, git_state)
@@ -5226,7 +5385,7 @@ def test_the_report_shows_personas_workload_and_shadow(workspace: Path) -> None:
 def test_a_truncated_run_is_marked(workspace: Path) -> None:
     store(workspace, "seed1-azure-cadence1.json", "aml_sim_heldout", 1, "azure", 1, truncated=True)
 
-    assert "truncated" in render_simulation(workspace)
+    assert "truncated at " in render_simulation(workspace)
 
 
 def test_partial_tuning_runs_are_not_tabulated(workspace: Path) -> None:
@@ -5411,7 +5570,7 @@ def full_runs(workspace: Path, database: str) -> dict[Path, Document]:
 
 
 def label(document: Document) -> str:
-    truncated = ", truncated" if document["truncated"] else ""
+    truncated = f", truncated at {document['last_day']}" if document["truncated"] else ""
     return f"{document['system']}, seed {document['seed']}, cadence {document['cadence']}{truncated}"
 
 
@@ -5730,7 +5889,6 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ```python
 import json
-import warnings
 from pathlib import Path
 
 import pytest
@@ -5738,7 +5896,7 @@ import pytest
 from aml_investigator.simulation.loop import calibrate_world
 from aml_investigator.simulation.world import FIRST_DAY, NotASimulationDatabaseError
 from tests.conftest import Database
-from tests.simulation_fixtures import settings_for, write_config
+from tests.simulation_fixtures import THRESHOLDS, settings_for, write_config
 
 
 @pytest.fixture
@@ -5753,10 +5911,9 @@ async def test_calibration_writes_thresholds_and_the_b1_operating_point(
     settings = settings_for(world_db)
     write_config(tmp_path / "config" / "simulation")
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("aml_investigator.simulation.loop.choose_thresholds", lambda *_, **__: THRESHOLDS)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", UserWarning)
-        thresholds_path, point_path = await calibrate_world(settings, seed=61, budget_per_day=2.0)
+    thresholds_path, point_path = await calibrate_world(settings, seed=61, budget_per_day=2.0)
 
     calibrated = json.loads(thresholds_path.read_text())
     point = json.loads(point_path.read_text())["operating_point"]
@@ -5765,7 +5922,7 @@ async def test_calibration_writes_thresholds_and_the_b1_operating_point(
     assert calibrated["budget_per_day"] == 2.0
     assert calibrated["suppression_days"] == 3
     assert calibrated["calibrated_on"]["first"] == FIRST_DAY.isoformat()
-    assert calibrated["thresholds"]
+    assert calibrated["thresholds"] == THRESHOLDS
     assert set(point) == {"threshold", "close_rate", "false_close_rate"}
 
 
@@ -5774,6 +5931,8 @@ async def test_calibration_refuses_any_other_database(db: Database) -> None:
     with pytest.raises(NotASimulationDatabaseError):
         await calibrate_world(settings_for(db), seed=61, budget_per_day=2.0)
 ```
+
+The calibration test replaces `choose_thresholds` with the fixture thresholds, which the fixture world meets by construction (see Task 7), so that the B1 operating point has live alerts to be fitted on. The choice of thresholds itself is tested in `tests/test_calibrate.py`.
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
@@ -5916,9 +6075,11 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 These are not code tasks. They run after Task 11 is committed, in this order, by the controller or by Jan. **Stop at the first failed step**: do not continue, do not retry a paid step, report the failure exactly as it happened. Never print DSNs, passwords, keys or `.env` contents.
 
+**Jobs on one database run strictly one after another.** Every `sim run` resets the world's tables, so never start a second job on a database while a first one is still running; start the next only when the previous log ends with `DONE`.
+
 **Long runs are detached.** Background tasks die with the Claude session, so every run below uses `nohup caffeinate -is ... &` and logs to `$HOME/aml-m9-logs/`, outside the session scratchpad. A detached run is finished when its log ends with `DONE`; nothing watches it unless a real mechanism is armed, so check the log before each next step. Free runs prefix `AML_AZURE_OPENAI_ENDPOINT=` so that no run can reach Azure.
 
-**Spending stops at $15 in total.** Paid steps are 4 and 6 only. Before each paid step run the spend check and add the worst case for that step, $0.08 per investigation (30 investigations $2.40, 60 investigations $4.80). If the sum exceeds $15, stop.
+**Spending stops at $15 in total, as an operational check, not as code.** The program enforces only the cap of 60 investigations per agent run, so the stop is the sum of spend read from the result files before each paid step. Paid steps are 4 and 6 only. Before each paid step run the spend check and add the worst case for that step, $0.08 per investigation (30 investigations $2.40, 60 investigations $4.80). If the sum exceeds $15, stop. An overrun is bounded by one run, a few dollars at worst.
 
 ```bash
 uv run python -c "import glob, json; print(round(sum(json.load(open(p))['metrics']['total_cost_usd'] or 0 for p in glob.glob('eval/results/aml_sim_*/sim/*.json')), 2))"
@@ -5961,7 +6122,7 @@ AML_AZURE_OPENAI_ENDPOINT= nohup caffeinate -is zsh -c 'uv run aml --database am
 
 Expected in the log: `thresholds written to config/thresholds/aml_sim_dev.json`, `operating point written to eval/results/aml_sim_dev/val/b1.json`, `DONE`. A warning naming a rule means that rule has no train-window candidates or is too loud and is switched off; keep it and record it, because rules and scenarios are not changed to suit each other.
 
-Copy to the other worlds, so that the held-out world and the spread reuse the development world's thresholds and B1 operating point, and commit before any further run:
+When `calibrate.log` ends with `DONE`, copy to the other worlds, so that the held-out world and the spread reuse the development world's thresholds and B1 operating point, and commit before any further run:
 
 ```bash
 for world in aml_sim_heldout aml_sim_spread; do
@@ -5978,10 +6139,10 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### 3. Run the free systems on the development world
 
 ```bash
-AML_AZURE_OPENAI_ENDPOINT= nohup caffeinate -is zsh -c 'set -e; for system in b0 b1 b4 scripted; do uv run aml --database aml_sim_dev sim run --seed 1001 --system "$system" --cadence 1; done; echo DONE' > "$HOME/aml-m9-logs/dev-free.log" 2>&1 &
+AML_AZURE_OPENAI_ENDPOINT= nohup caffeinate -is zsh -c 'set -e; for system in b0 b1 b4 scripted; do time uv run aml --database aml_sim_dev sim run --seed 1001 --system "$system" --cadence 1; done; echo DONE' > "$HOME/aml-m9-logs/dev-free.log" 2>&1 &
 ```
 
-Expected in the log: one summary line per system, `DONE`. Use these runs to debug the world. Alerts per live day should be near 2. If they are not, or the loop misbehaves, fix the code; the blind YAML stays as committed.
+Expected in the log: one summary line per system, the wall-clock of each run from `time`, `DONE`. Record the wall-clock of the `b1` and `b4` runs: each cadence-1 run rescans all six rules over the whole tape on each of 28 monitoring days, and nothing has measured it. Step 7 has 120 such runs, so project its duration as 120 times the longer of the two (an upper bound, since cadences 3 and 7 rescan less). If the projection exceeds one night (10 hours), do not run step 7 as written: run it with fewer seeds (shorten `{3001..3020}`), and say in the report how many were run. Use these runs to debug the world. Alerts per live day should be near 2. If they are not, or the loop misbehaves, fix the code; the blind YAML stays as committed.
 
 ```bash
 git add eval/results/aml_sim_dev/sim
@@ -6028,17 +6189,13 @@ Expected: `azure 2f43327f402d azure_profile <12 hex>`; `git status --short` is e
 
 ### 6. Open the held-out world once for both agents
 
-Confirm `az account show` again. Run the spend check; the two runs need $9.60 of headroom. Each run stops at 60 investigations and marks the result as truncated. `aml sim run` refuses to open the same agent twice on `aml_sim_heldout`.
+Confirm `az account show` again. Run the spend check; the two runs need $9.60 of headroom. Each run stops at 60 investigations and marks the result as truncated. `aml sim run` refuses an agent on `aml_sim_heldout` if any result file of that agent exists there, whatever its seed, cadence or limit; a legitimate rerun needs that file deleted by hand. The two agent runs and the free runs share one database, so they run in one job, one after another.
 
 ```bash
-nohup caffeinate -is zsh -c 'set -e; for system in azure azure_profile; do uv run aml --database aml_sim_heldout sim run --seed 2001 --system "$system" --cadence 1; done; echo DONE' > "$HOME/aml-m9-logs/heldout-agents.log" 2>&1 &
+nohup caffeinate -is zsh -c 'set -e; for system in azure azure_profile; do uv run aml --database aml_sim_heldout sim run --seed 2001 --system "$system" --cadence 1; done; for system in b0 b1 b4; do AML_AZURE_OPENAI_ENDPOINT= uv run aml --database aml_sim_heldout sim run --seed 2001 --system "$system" --cadence 1; done; echo DONE' > "$HOME/aml-m9-logs/heldout.log" 2>&1 &
 ```
 
-Then, for free, the baselines on the same world:
-
-```bash
-AML_AZURE_OPENAI_ENDPOINT= nohup caffeinate -is zsh -c 'set -e; for system in b0 b1 b4; do uv run aml --database aml_sim_heldout sim run --seed 2001 --system "$system" --cadence 1; done; echo DONE' > "$HOME/aml-m9-logs/heldout-free.log" 2>&1 &
-```
+The baselines run for free after the two agents, in the same job, on the same world. Wait until `heldout.log` ends with `DONE`.
 
 ```bash
 git add eval/results/aml_sim_heldout/sim
@@ -6053,7 +6210,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 AML_AZURE_OPENAI_ENDPOINT= nohup caffeinate -is zsh -c 'set -e; for seed in {3001..3020}; do for cadence in 1 3 7; do for system in b4 b1; do uv run aml --database aml_sim_spread sim run --seed "$seed" --system "$system" --cadence "$cadence"; done; done; done; echo DONE' > "$HOME/aml-m9-logs/spread.log" 2>&1 &
 ```
 
-Expected when finished: the log ends with `DONE`, and `ls eval/results/aml_sim_spread/sim | wc -l` prints `120`.
+Expected when finished: the log ends with `DONE`, and `ls eval/results/aml_sim_spread/sim | wc -l` prints `120` (six files per seed, so fewer if step 3 led to fewer seeds).
 
 ```bash
 git add eval/results/aml_sim_spread/sim
@@ -6089,7 +6246,7 @@ Checked against `docs/m9-simulator-design.md` after writing; what it found was f
 | World: personas, externals, monthly events, Poisson spending, log-normal amounts, peers, spending stops at the balance | Tasks 2, 3 |
 | References and benign confounders, honest mismatches | Tasks 3, 4 (`honest_profile_mismatch_share`) |
 | Customer profile, display names, shared pools | Tasks 1, 2, 4, 9 |
-| Scenarios as steps, small interpreter, about 20 accounts, six to eight groups | Tasks 2 (schema), 4, 5 |
+| Scenarios as steps, small interpreter, about 20 accounts, seven or eight groups | Tasks 2 (schema), 4, 5 |
 | Against circularity | Task 4 |
 | No learning adversary; reserve after two days; group stops | Task 5 |
 | Daily loop steps 1–4, 21 + 28 days, only live days alert | Task 7 |
@@ -6107,8 +6264,8 @@ Checked against `docs/m9-simulator-design.md` after writing; what it found was f
 | Check: small world end to end in CI with B4 and scripted | Task 10 (runs under the existing `uv run pytest` in `.github/workflows/ci.yml`) |
 | Check: generated report, zero detection included | Task 10 |
 
-**Placeholder scan.** No TBD or TODO, no "similar to". The only substitution left to the executor is `OUTPUT_DIR` in Task 4, the path printed by `mktemp -d` in the step before it. The blind author's YAML is given as schema and worked example, as required.
+**Placeholder scan.** No TBD or TODO, no "similar to". The only substitutions left to the executor are `OUTPUT_DIR` in Task 4, the path printed by `mktemp -d` in the step before it, and `AGENT_ID`, the id the Agent tool reports for the blind author. The blind author's YAML is given as schema and worked example, as required.
 
 **Type consistency.** The code blocks were extracted and applied in task order to a scratch copy of the repository; `ruff check`, `ruff format --check` and `mypy` passed there apart from the missing PyYAML stubs that Task 2 installs. Names used across tasks (`Payment`, `Balances`, `Tape`, `GroupProgress`, `Case`, `SimulationRun`, `WorldDays`, `build_alerts_for_days`, `AgentPrompt`, `MAX_INVESTIGATIONS`) were checked that way. Fixed during this review: the shared cap constant moved to the package `__init__` so the CLI needs no heavy import; `test_baselines.py` had to exclude the new Azure-only system; `loop.py` must not import from `cli` because `cli/__init__.py` imports the simulation CLI.
 
-**Verified and not verified at planning time.** Tests that need no database were run on the scratch copy and passed, except `tests/test_simulation_config_files.py`, which needs the blind author's files. Tests that use the `db` or `world_db` fixtures were not run, because planning was barred from writing to any database, so their first real execution is during each task. The generator was run in memory on the real `personas.yaml` with stub text pools: 834 honest accounts and about 1,300 payments a day. Rule run time on that volume, alert volumes and agent cost are unmeasured.
+**Verified and not verified at planning time.** Tests that need no database were run on the scratch copy and passed, except `tests/test_simulation_config_files.py`, which needs the blind author's files. Tests that use the `db` or `world_db` fixtures were not run, because planning was barred from writing to any database, so their first real execution is during each task. The generator was run in memory on the real `personas.yaml` with stub text pools: 834 honest accounts and about 1,300 payments a day. Rule run time on that volume, alert volumes and agent cost are unmeasured. The edits that applied the pre-flight rulings (per-persona vocabulary, the committed-scenario interpreter test, `Fixed`-driven loop tests, `refuse_second_opening`, the metrics helpers) were not run through ruff, mypy or pytest.

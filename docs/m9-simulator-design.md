@@ -164,6 +164,8 @@ free systems get percentile ranges over the 20 seeds.
   the `azure` prompts stays the same.
 - `monitoring/alerts.py`: alert building for a day range on a non-empty table. `first_days_parameters` already takes
   a `DayRange`, and suppression already looks back before it.
+- `monitoring/calibration.py`: `choose_thresholds` warns and switches a rule off instead of raising when the rule has no
+  train-window candidates, so a small world can lack a rule.
 - `txn_id` follows `(ts, sha256(seed, row))` within a day, and account ids are pseudonymised, so identifiers do not
   reveal labels (ADR-0002, ADR-0015).
 - `docs/results.md`: a generated M9 section with its own markers. ADR-0025 records this design.
