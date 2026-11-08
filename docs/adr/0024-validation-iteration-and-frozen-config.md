@@ -29,7 +29,10 @@ M8 iterated on the 200 HI-Small validation alerts before opening test once. What
   customer holds at least three other accounts. Without it the comparison with B3 would credit the model
   with what the rule does.
 - **Test:** 200 alerts per dataset (HI-Small and LI-Small), C, A, B0–B4 and B2, injection pairs and the
-  clean-vs-clean control on C; spending stops at $95 for the test chain.
+  clean-vs-clean control on C; spending stops at $95 for the test chain (lowered to $85 after the first
+  attempt hung and was rerun; the completed chain spent $60.20, the hung attempt about $12 more).
+- **Request timeout.** The first test attempt hung for seven hours on two Azure requests; the Azure client
+  now times out after 600 seconds and retries (commit 225d4da). This changes no decision input.
 
 ## Consequences
 - On val, C and B4 take the same decision on all 200 alerts (close rate 0.258, false-close rate 0.060;

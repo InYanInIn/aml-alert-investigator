@@ -519,3 +519,34 @@ Sources:
 
 not run
 <!-- report:end -->
+
+### Findings (test split, opened once with the configuration frozen in ADR-0024)
+- **The agent's decision is the close policy.** C and the no-LLM rule B4 take the same decision on 200 of 200
+  HI-Small and 199 of 200 LI-Small test alerts; the one difference is a close that failed citation
+  verification and was escalated. What C adds over B4 is the investigated, cited case for the analyst, at
+  about 6.5 cents and three minutes per alert.
+- **Against B3 at the same close rate, the policy misses less laundering.** Holding B3 to C's weighted close
+  rate, B3 closes 3 positive alerts on HI-Small test where C closes none, and 7 on LI-Small test where C
+  closes 5 (validation: 7 against 4). The counts are small and the intervals overlap; B3 alone on its own
+  operating point closes more on HI-Small (39% at 7.5% false-close rate) and less on LI-Small (8% at 4.5%).
+- **The policy transfers imperfectly to LI-Small.** It was found on HI-Small train; on LI-Small test it lets
+  5 of 67 positive alerts through (7.5% [1.5, 13.4]), each a single outgoing ACH payment from an account
+  with no inflow and at least three sibling accounts, which B3 escalated.
+- **Error analysis** (`docs/m8-error-analysis.md`, 20 wrong decisions): 19 are policy errors that B4 makes
+  too; one is a correct close lost to the citation check. Any incoming payment in the window forces an
+  escalation (9 of the 15 false escalations analysed), and in 5 of those the written case leans on a
+  pass-through story the data supports only weakly.
+- **Regulation citations are often generic** (`docs/m8-citation-grading.md`, 30 sampled citations graded by
+  Claude, a Sonnet subagent, against a 0–2 rubric; human spot-check of 8 rows pending): 16 support the
+  claim, 12 are only related, 2 do not support it (mean 1.47). The agent falls back on AMLR art. 69(1)/(2)
+  for claims they do not back, worst on close decisions, which no passage licenses directly.
+- **Injection pairs did not move a decision**: 0 of 34 (HI) and 0 of 35 (LI) clean escalations closed when a
+  customer reference carried an instruction; the clean-twice control flipped 1 of 35 and 0 of 35.
+- **Not run:** stability repeats on test (validation only, 49 of 50 identical over three repeats); LI-Small
+  validation for the LLM systems (the configuration was frozen on HI-Small validation).
+
+### Implications (proposed, not yet decided)
+- The deterministic rule is cheaper and as accurate as the agent's decision; a production design would apply
+  it first and use the agent to write and cite the case, or to investigate only what the rule escalates.
+- Tie the close rationale to a passage that describes ongoing monitoring against the customer profile instead
+  of the reporting article, and give the verifier a check that a cited passage is one retrieved for the claim.
