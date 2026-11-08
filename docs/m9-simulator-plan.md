@@ -155,14 +155,15 @@ def db(database: Database) -> Database:
 In `tests/conftest.py`, replace:
 
 ```python
-            "core.alerts, core.rule_candidates, core.transactions, core.fx_rates, core.accounts "
+"core.alerts, core.rule_candidates, core.transactions, core.fx_rates, core.accounts"
 ```
 
 with:
 
 ```python
-            "core.alerts, core.rule_candidates, core.transactions, core.fx_rates, core.customer_profiles, "
-            "core.accounts "
+"core.alerts, core.rule_candidates, core.transactions, core.fx_rates, core.customer_profiles,"
+
+"core.accounts "
 ```
 
 In `tests/conftest.py`, replace:
@@ -3412,7 +3413,6 @@ def prepare_workspace(root: Path, database: str, *, scenarios: list[dict[str, An
     b1_result.parent.mkdir(parents=True, exist_ok=True)
     point = {"threshold": 1.5, "close_rate": 0.5, "false_close_rate": 0.0}
     b1_result.write_text(json.dumps({"operating_point": point}))
-
 ```
 
 `tests/test_simulation_loop.py` (new file):
@@ -4212,7 +4212,9 @@ RATE_NAMES = ("close_rate", "false_close_rate", "escalation_precision")
 
 class HeldOutAlreadyOpenedError(DomainError):
     def __init__(self, path: Path) -> None:
-        super().__init__(f"{path} exists; the held-out world is opened once per agent, delete the file by hand to rerun")
+        super().__init__(
+            f"{path} exists; the held-out world is opened once per agent, delete the file by hand to rerun"
+        )
 
 
 def result_path(database: str, seed: int, system: str, cadence: int, limit: int) -> Path:
@@ -4756,23 +4758,23 @@ class Counterparty(BaseModel):
 In `src/aml_investigator/mcp_server/store.py`, replace:
 
 ```python
-    AccountProfile,
-    Alert,
-    Counterparty,
-    CounterpartyPage,
-    FundPath,
+(AccountProfile,)
+(Alert,)
+(Counterparty,)
+(CounterpartyPage,)
+(FundPath,)
 ```
 
 with:
 
 ```python
-    AccountProfile,
-    AccountProfileWithCustomer,
-    Alert,
-    Counterparty,
-    CounterpartyPage,
-    CustomerProfile,
-    FundPath,
+(AccountProfile,)
+(AccountProfileWithCustomer,)
+(Alert,)
+(Counterparty,)
+(CounterpartyPage,)
+(CustomerProfile,)
+(FundPath,)
 ```
 
 In `src/aml_investigator/mcp_server/store.py`, replace:
@@ -4811,16 +4813,16 @@ with:
 In `src/aml_investigator/mcp_server/tools.py`, replace:
 
 ```python
-    AccountProfile,
-    Alert,
+(AccountProfile,)
+(Alert,)
 ```
 
 with:
 
 ```python
-    AccountProfile,
-    AccountProfileWithCustomer,
-    Alert,
+(AccountProfile,)
+(AccountProfileWithCustomer,)
+(Alert,)
 ```
 
 In `src/aml_investigator/mcp_server/tools.py`, replace:
@@ -5043,13 +5045,13 @@ with:
 In `src/aml_investigator/investigation/agent/nodes.py`, replace:
 
 ```python
-            prompt_version=PROMPT_VERSION,
+prompt_version = (PROMPT_VERSION,)
 ```
 
 with:
 
 ```python
-            prompt_version=self.prompt.version,
+prompt_version = (self.prompt.version,)
 ```
 
 In `src/aml_investigator/investigation/agent/graph.py`, replace:
@@ -5533,8 +5535,6 @@ Append to `src/aml_investigator/simulation/results.py`:
 `src/aml_investigator/simulation/results.py` (append):
 
 ```python
-
-
 type Document = dict[str, Any]
 
 
@@ -5987,8 +5987,6 @@ from datetime import date, timedelta
 `src/aml_investigator/simulation/loop.py` (append):
 
 ```python
-
-
 async def calibrate_world(settings: Settings, *, seed: int, budget_per_day: float) -> tuple[Path, Path]:
     require_simulation_database(settings.database)
     thresholds_path = THRESHOLDS_DIR / f"{settings.database}.json"
