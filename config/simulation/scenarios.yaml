@@ -1,0 +1,96 @@
+# Surveys of customer due diligence find stated purpose and real activity diverge for roughly one customer in seven; 0.15 keeps honest mismatch common enough that it cannot work as a label.
+honest_profile_mismatch_share: 0.15
+scenarios:
+  - id: student_carriers_family_support
+    typology: money_mule
+    start_day: 3
+    rounds: 3
+    round_gap: 4
+    roles:
+      - {name: payers, kind: source, entity_type: Individual, count: 3}
+      - {name: carrier, kind: member, persona: student, count: 1, reserves: 1}
+      - {name: collector, kind: sink, entity_type: Individual, count: 1}
+    steps:
+      - {from: payers, to: carrier, amount: {low: 400.0, high: 1500.0}, count: 4, format: ACH, reference: family_support}
+      - {from: carrier, to: collector, share: 0.9, count: 2, delay: 1, format: Wire, reference: peer_transfer}
+
+  - id: worker_cash_below_threshold
+    typology: structuring
+    start_day: 2
+    rounds: 2
+    round_gap: 5
+    roles:
+      - {name: depositors, kind: source, entity_type: Individual, count: 4}
+      - {name: saver, kind: member, persona: worker, count: 1, reserves: 1}
+      - {name: buyer, kind: sink, entity_type: Corporation, count: 1}
+    steps:
+      - {from: depositors, to: saver, amount: {low: 8200.0, high: 9700.0}, count: 3, format: Cash, reference: vehicle_sale}
+      - {from: saver, to: buyer, share: 0.9, count: 1, delay: 2, format: Wire, reference: large_purchase}
+
+  - id: consultant_pass_through
+    typology: shell_pass_through
+    start_day: 6
+    rounds: 2
+    round_gap: 7
+    roles:
+      - {name: clients, kind: source, entity_type: Corporation, count: 2}
+      - {name: consultant, kind: member, persona: office_employee, count: 1, reserves: 1}
+      - {name: recipient, kind: sink, entity_type: Corporation, count: 1}
+    steps:
+      - {from: clients, to: consultant, amount: {low: 15000.0, high: 40000.0}, count: 2, format: Wire, reference: consulting_invoice}
+      - {from: consultant, to: recipient, share: 0.97, count: 1, delay: 1, format: Wire, reference: supplier_invoice}
+
+  - id: many_small_cash_into_one_account
+    typology: funnel_account
+    start_day: 8
+    rounds: 2
+    round_gap: 3
+    roles:
+      - {name: depositors, kind: source, entity_type: Individual, count: 8}
+      - {name: collector_account, kind: member, persona: worker, count: 1, reserves: 1}
+      - {name: onward, kind: sink, entity_type: Individual, count: 1}
+    steps:
+      - {from: depositors, to: collector_account, amount: {low: 200.0, high: 900.0}, count: 12, format: Cash, reference: peer_transfer}
+      - {from: collector_account, to: onward, share: 0.95, count: 2, delay: 1, format: Wire, reference: family_support}
+
+  - id: workers_round_trip
+    typology: cycle
+    start_day: 5
+    rounds: 2
+    round_gap: 6
+    roles:
+      - {name: origin, kind: source, entity_type: Corporation, count: 1}
+      - {name: ring_a, kind: member, persona: worker, count: 1, reserves: 1}
+      - {name: ring_b, kind: member, persona: worker, count: 1}
+      - {name: exit, kind: sink, entity_type: Corporation, count: 1}
+    steps:
+      - {from: origin, to: ring_a, amount: {low: 3000.0, high: 6000.0}, count: 2, format: Wire, reference: consulting_invoice}
+      - {from: ring_a, to: ring_b, share: 0.95, count: 2, delay: 1, format: ACH, reference: supplier_invoice}
+      - {from: ring_b, to: ring_a, share: 0.95, count: 2, delay: 1, format: ACH, reference: consulting_invoice}
+      - {from: ring_a, to: exit, share: 0.95, count: 2, delay: 1, format: Wire, reference: supplier_invoice}
+
+  - id: office_supplier_invoices
+    typology: invoice_disguise
+    start_day: 10
+    rounds: 2
+    round_gap: 6
+    roles:
+      - {name: customers, kind: source, entity_type: Corporation, count: 2}
+      - {name: trader, kind: member, persona: office_employee, count: 1, reserves: 1}
+      - {name: suppliers, kind: sink, entity_type: Corporation, count: 3}
+    steps:
+      - {from: customers, to: trader, amount: {low: 4000.0, high: 9000.0}, count: 3, format: Wire, reference: supplier_invoice}
+      - {from: trader, to: suppliers, share: 0.85, count: 3, delay: 2, format: Wire, reference: supplier_invoice}
+
+  - id: student_slow_trickle
+    typology: slow_layering
+    start_day: 0
+    rounds: 4
+    round_gap: 4
+    roles:
+      - {name: senders, kind: source, entity_type: Individual, count: 2}
+      - {name: holder, kind: member, persona: student, count: 1, reserves: 1}
+      - {name: receivers, kind: sink, entity_type: Individual, count: 2}
+    steps:
+      - {from: senders, to: holder, amount: {low: 300.0, high: 700.0}, count: 2, format: ACH, reference: family_support}
+      - {from: holder, to: receivers, share: 0.8, count: 2, delay: 3, format: ACH, reference: peer_transfer}
