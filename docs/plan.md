@@ -126,7 +126,18 @@ traces visible; CI replay evaluation passes on the recorded responses.
 Check: `docs/results.md` is generated from committed JSON, lists every test-split opening, and reports every
 metric with intervals — including any metric where a baseline beats the agent.
 
-### M9 — AKS demo and teardown
+### M9 — Behaviour simulator
+Design: `docs/m9-simulator-design.md`.
+- A small simulated bank (about 850 accounts) with students, workers, office employees, business owners,
+  corporations and a few laundering groups; scenarios frozen before the first alert.
+- Daily loop: payments, monitoring, investigation, simulated analyst, blocks; 21 days of history and 28 live days.
+- Two agents on one held-out world, at most 60 investigations each: the frozen M8 system, and a variant that sees
+  the customer profile and decides by judgement. Free baselines over 20 more seeds and cadences of 1, 3 and 7 days.
+
+Check: identical tape for identical seed; no look-ahead in candidates; `truth.sim_actors` closed to runtime roles;
+`docs/results.md` reports groups found, days to detection, money that left and per-persona rates, zeros included.
+
+### M10 — AKS demo and teardown
 - Terraform (second part): AKS Free tier with one B2s node, ACR, PostgreSQL Flexible Server B1ms with
   `vector`, Key Vault, workload identity; GitHub OIDC deploy workflow.
 - Load HI-Small into Flexible Server; deploy; record the screencast via port-forward.

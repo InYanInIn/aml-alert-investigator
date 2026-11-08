@@ -9,8 +9,8 @@ Portfolio project on synthetic data (IBM AMLworld). Not a compliance product.
 
 **Status:** M8 — evaluated once on the test split (200 alerts per dataset). The agent closes 22% (HI-Small)
 and 25% (LI-Small) of alerts at false-close rates of 0% and 7.5%, deciding as a no-LLM rule does (399 of 400);
-it adds the cited investigation. Results in [docs/results.md](docs/results.md). Next: M9, AKS demo and
-teardown. See [docs/plan.md](docs/plan.md).
+it adds the cited investigation. Results in [docs/results.md](docs/results.md). Next: M9, behaviour
+simulator; M10, AKS demo and teardown. See [docs/plan.md](docs/plan.md).
 
 ## Run the agent on Azure OpenAI
 Needs the Azure resources from `infra/terraform` (`terraform apply` with `budget_email` in a git-ignored
