@@ -63,7 +63,7 @@ a mix of grades chosen by the grader, not a random sample; the other 22 citation
 | Row | Dataset, alert | Passage | Claude | Author |
 |---|---|---|---|---|
 | 1 | HI 5146 | AMLR art. 26(1) | 0 | 0 |
-| 2 | LI 7163 | AMLR art. 2(1)(20) | 1 | 2 |
+| 2 | LI 7163 | AMLR art. 2(1)(20) | 1 | 1 |
 | 3 | LI 7849 | AMLR art. 69(1) | 0 | 0 |
 | 4 | HI 2170 | AMLR art. 69(1) | 1 | 1 |
 | 5 | HI 3662 | AMLR art. 69(2) | 1 | 2 |
@@ -71,6 +71,6 @@ a mix of grades chosen by the grader, not a random sample; the other 22 citation
 | 7 | HI 862 | PL-AML art. 72 ust. 1 | 2 | 2 |
 | 8 | LI 1029 | AMLR art. 69(1) | 1 | 2 |
 
-Agreement on 5 of 8. All three differences raise a 1 to a 2, so Claude's grade 1 may be strict: the author
-raised 3 of the 5 rows it had graded 1. With the author's grades on these rows the distribution over all 30
-is 19 / 9 / 2 (grades 2 / 1 / 0), mean 1.57, against 16 / 12 / 2 and 1.47 for Claude alone.
+Agreement on 6 of 8. Both differences raise a 1 to a 2: the author raised 2 of the 5 rows Claude had graded 1.
+With the author's grades on these rows the distribution over all 30 is 18 / 10 / 2 (grades 2 / 1 / 0), mean
+1.53, against 16 / 12 / 2 and 1.47 for Claude alone.
