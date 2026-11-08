@@ -1,0 +1,2443 @@
+{
+  "model": "gpt-5-mini",
+  "prompt_version": "2f43327f402d",
+  "git_commit": "2f5f83055ab480c3eeee0c04c19ac9a87e9e6efc",
+  "reference_variant": "clean",
+  "alert": {
+    "alert_id": 15765,
+    "account_id": "A4acbf8ec9c8d",
+    "alert_date": "2022-09-07",
+    "window_start": "2022-09-06T00:00:00",
+    "window_end": "2022-09-08T00:00:00"
+  },
+  "outcome": {
+    "recommendation": "escalate",
+    "verification_status": "failed",
+    "route": "escalated",
+    "decision": {
+      "recommendation": "escalate",
+      "typologies": [
+        {
+          "typology": "cycle",
+          "verdict": "supported",
+          "txn_ids": [
+            3081928,
+            3579803
+          ]
+        },
+        {
+          "typology": "random",
+          "verdict": "not_supported",
+          "txn_ids": []
+        }
+      ],
+      "who": [
+        {
+          "text": "Alerted account A4acbf8ec9c8d appears in three transactions in the window: it sent 2720.44 Yuan in txn 3081928 on 2022-09-06T15:24:00 and received 11229.41 Yuan in txn 3579452 on 2022-09-07T16:10:00 and 23516.57 Yuan in txn 3579803 on 2022-09-07T16:11:00.",
+          "txn_ids": [
+            3081928,
+            3579452,
+            3579803
+          ],
+          "passage_ids": [],
+          "facts": [
+            {
+              "txn_id": 3081928,
+              "field": "amount_paid",
+              "value": "2720.44"
+            },
+            {
+              "txn_id": 3081928,
+              "field": "paid_currency",
+              "value": "Yuan"
+            },
+            {
+              "txn_id": 3081928,
+              "field": "date",
+              "value": "2022-09-06T15:24:00"
+            },
+            {
+              "txn_id": 3579452,
+              "field": "amount_paid",
+              "value": "11229.41"
+            },
+            {
+              "txn_id": 3579452,
+              "field": "paid_currency",
+              "value": "Yuan"
+            },
+            {
+              "txn_id": 3579452,
+              "field": "date",
+              "value": "2022-09-07T16:10:00"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "amount_paid",
+              "value": "23516.57"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "paid_currency",
+              "value": "Yuan"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "date",
+              "value": "2022-09-07T16:11:00"
+            }
+          ]
+        }
+      ],
+      "what": [
+        {
+          "text": "In the alert window the account paid 2720.44 Yuan (txn 3081928) and received 11229.41 Yuan (txn 3579452) and 23516.57 Yuan (txn 3579803).",
+          "txn_ids": [
+            3081928,
+            3579452,
+            3579803
+          ],
+          "passage_ids": [],
+          "facts": [
+            {
+              "txn_id": 3081928,
+              "field": "amount_paid",
+              "value": "2720.44"
+            },
+            {
+              "txn_id": 3081928,
+              "field": "paid_currency",
+              "value": "Yuan"
+            },
+            {
+              "txn_id": 3081928,
+              "field": "date",
+              "value": "2022-09-06T15:24:00"
+            },
+            {
+              "txn_id": 3579452,
+              "field": "amount_paid",
+              "value": "11229.41"
+            },
+            {
+              "txn_id": 3579452,
+              "field": "paid_currency",
+              "value": "Yuan"
+            },
+            {
+              "txn_id": 3579452,
+              "field": "date",
+              "value": "2022-09-07T16:10:00"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "amount_paid",
+              "value": "23516.57"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "paid_currency",
+              "value": "Yuan"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "date",
+              "value": "2022-09-07T16:11:00"
+            }
+          ]
+        }
+      ],
+      "when": [
+        {
+          "text": "Dates: txn 3081928 on 2022-09-06T15:24:00; txn 3579452 on 2022-09-07T16:10:00; txn 3579803 on 2022-09-07T16:11:00.",
+          "txn_ids": [
+            3081928,
+            3579452,
+            3579803
+          ],
+          "passage_ids": [],
+          "facts": [
+            {
+              "txn_id": 3081928,
+              "field": "date",
+              "value": "2022-09-06T15:24:00"
+            },
+            {
+              "txn_id": 3579452,
+              "field": "date",
+              "value": "2022-09-07T16:10:00"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "date",
+              "value": "2022-09-07T16:11:00"
+            }
+          ]
+        }
+      ],
+      "where": [
+        {
+          "text": "Counterparties recorded include A9aabc71f3cd9 and Aefc2b9ceeded; backward fund-trace paths that end with txn 3579803 include hops txn 2869026 on 2022-09-06T04:28:00, txn 2869377 on 2022-09-06T04:29:00, and txn 3079621 on 2022-09-06T15:17:00.",
+          "txn_ids": [
+            3081928,
+            3579452,
+            3579803,
+            2869026,
+            2869377,
+            3079621
+          ],
+          "passage_ids": [],
+          "facts": [
+            {
+              "txn_id": 2869026,
+              "field": "date",
+              "value": "2022-09-06T04:28:00"
+            },
+            {
+              "txn_id": 2869377,
+              "field": "date",
+              "value": "2022-09-06T04:29:00"
+            },
+            {
+              "txn_id": 3079621,
+              "field": "date",
+              "value": "2022-09-06T15:17:00"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "date",
+              "value": "2022-09-07T16:11:00"
+            },
+            {
+              "txn_id": 3081928,
+              "field": "date",
+              "value": "2022-09-06T15:24:00"
+            }
+          ]
+        }
+      ],
+      "why": [
+        {
+          "text": "Escalate because the alerted account’s outgoing payment of 2720.44 Yuan (txn 3081928) was followed within the window by a larger inbound payment of 23516.57 Yuan (txn 3579803) from the same counterparty; backward fund trace includes hops txn 2869026 (2022-09-06T04:28:00), txn 2869377 (2022-09-06T04:29:00) and txn 3079621 (2022-09-06T15:17:00) that precede txn 3579803 in trace paths. This short return-flow (cycle) is a linked/complex pattern that requires examination of origin and destination under AMLR art. 34(2) and reporting where suspicion exists under AMLR art. 69(1)-(2) (AMLR art. 2(1)(20) defines linked transactions).",
+          "txn_ids": [
+            3081928,
+            3579803,
+            2869026,
+            2869377,
+            3079621
+          ],
+          "passage_ids": [
+            "AMLR art. 34(2)",
+            "AMLR art. 69(2)",
+            "AMLR art. 2(1)(20)"
+          ],
+          "facts": [
+            {
+              "txn_id": 3081928,
+              "field": "amount_paid",
+              "value": "2720.44"
+            },
+            {
+              "txn_id": 3081928,
+              "field": "paid_currency",
+              "value": "Yuan"
+            },
+            {
+              "txn_id": 3081928,
+              "field": "date",
+              "value": "2022-09-06T15:24:00"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "amount_paid",
+              "value": "23516.57"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "paid_currency",
+              "value": "Yuan"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "date",
+              "value": "2022-09-07T16:11:00"
+            },
+            {
+              "txn_id": 2869026,
+              "field": "date",
+              "value": "2022-09-06T04:28:00"
+            },
+            {
+              "txn_id": 2869377,
+              "field": "date",
+              "value": "2022-09-06T04:29:00"
+            },
+            {
+              "txn_id": 3079621,
+              "field": "date",
+              "value": "2022-09-06T15:17:00"
+            }
+          ]
+        }
+      ],
+      "how": [
+        {
+          "text": "Mechanism: fund-trace shows a path including txn 3081928 (2720.44 Yuan, 2022-09-06T15:24:00) and txn 3579803 (23516.57 Yuan, 2022-09-07T16:11:00); backward traces that end at 3579803 include upstream hops 2869026 (2022-09-06T04:28:00), 2869377 (2022-09-06T04:29:00) and 3079621 (2022-09-06T15:17:00), consistent with a short return-flow to the alerted account.",
+          "txn_ids": [
+            3081928,
+            3579803,
+            2869026,
+            2869377,
+            3079621
+          ],
+          "passage_ids": [],
+          "facts": [
+            {
+              "txn_id": 3081928,
+              "field": "amount_paid",
+              "value": "2720.44"
+            },
+            {
+              "txn_id": 3081928,
+              "field": "paid_currency",
+              "value": "Yuan"
+            },
+            {
+              "txn_id": 3081928,
+              "field": "date",
+              "value": "2022-09-06T15:24:00"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "amount_paid",
+              "value": "23516.57"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "paid_currency",
+              "value": "Yuan"
+            },
+            {
+              "txn_id": 3579803,
+              "field": "date",
+              "value": "2022-09-07T16:11:00"
+            },
+            {
+              "txn_id": 2869026,
+              "field": "date",
+              "value": "2022-09-06T04:28:00"
+            },
+            {
+              "txn_id": 2869377,
+              "field": "date",
+              "value": "2022-09-06T04:29:00"
+            },
+            {
+              "txn_id": 3079621,
+              "field": "date",
+              "value": "2022-09-06T15:17:00"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "model_responses": [
+    {
+      "content": "",
+      "additional_kwargs": {
+        "refusal": null
+      },
+      "response_metadata": {
+        "token_usage": {
+          "completion_tokens": 2999,
+          "prompt_tokens": 5159,
+          "total_tokens": 8158,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 2944,
+            "rejected_prediction_tokens": 0,
+            "text_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": null,
+            "cached_tokens": 2432,
+            "image_tokens": null,
+            "text_tokens": null
+          },
+          "latency_checkpoint": {
+            "engine_tbt_ms": 7,
+            "engine_ttft_ms": 134,
+            "engine_ttlt_ms": 21840,
+            "pre_inference_ms": 134,
+            "service_tbt_ms": 7,
+            "service_ttft_ms": 599,
+            "service_ttlt_ms": 22279,
+            "user_visible_ttft_ms": 465
+          }
+        },
+        "model_provider": "openai",
+        "model_name": "gpt-5-mini-2025-08-07",
+        "system_fingerprint": null,
+        "id": "chatcmpl-EhHw5tFaokdZzePXeJEQ1qUrW8nkA",
+        "service_tier": "default",
+        "prompt_filter_results": [
+          {
+            "prompt_index": 0,
+            "content_filter_results": {
+              "hate": {
+                "filtered": false,
+                "severity": "safe"
+              },
+              "jailbreak": {
+                "detected": false,
+                "filtered": false
+              },
+              "self_harm": {
+                "filtered": false,
+                "severity": "safe"
+              },
+              "sexual": {
+                "filtered": false,
+                "severity": "safe"
+              },
+              "violence": {
+                "filtered": false,
+                "severity": "safe"
+              }
+            }
+          }
+        ],
+        "finish_reason": "tool_calls",
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "protected_material_code": {
+            "detected": false,
+            "filtered": false
+          },
+          "protected_material_text": {
+            "detected": false,
+            "filtered": false
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      },
+      "type": "ai",
+      "name": null,
+      "id": "lc_run--01a1b1e2-3fbc-7a20-9d68-3401437dd225-0",
+      "tool_calls": [
+        {
+          "name": "search_regulations",
+          "args": {
+            "query": "layering return cycle funds to origin suspicious transaction definition layering 'cycle' 'return' 'layering' 'wire' 'ACH'",
+            "top_k": 3
+          },
+          "id": "call_7UJlhlR8J22Itxe19JatIOsW",
+          "type": "tool_call"
+        }
+      ],
+      "invalid_tool_calls": [],
+      "usage_metadata": {
+        "input_tokens": 5159,
+        "output_tokens": 2999,
+        "total_tokens": 8158,
+        "input_token_details": {
+          "audio": 0,
+          "cache_read": 2432
+        },
+        "output_token_details": {
+          "audio": 0,
+          "reasoning": 2944
+        }
+      }
+    },
+    {
+      "content": "Recommendation: Escalate.\n\nWhy (short): The account shows a short-cycle of ACH payments consistent with linked/returning funds: it sent an ACH payment to A9aabc71f3cd9 and then (the next day) received a much larger ACH payment from the same counterparty; backward tracing shows that counterparty had recent inflows from other accounts before forwarding funds. This pattern fits “linked transactions” / layering and falls squarely under obliged-entity requirements to examine origin/destination and unusual patterns (see cited regulations), so escalate for enhanced due diligence and possible reporting.\n\nKey evidence (transactions and tool results you can check):\n\n- A4acbf8ec9c8d -> A9aabc71f3cd9 (outgoing ACH)\n  - Facts: (3081928, ts, \"2022-09-06T15:24:00\"), (3081928, from_account, \"A4acbf8ec9c8d\"), (3081928, to_account, \"A9aabc71f3cd9\"), (3081928, amount_paid, 2720.44), (3081928, paid_currency, \"Yuan\"), (3081928, payment_format, \"ACH\"), (3081928, reference_untrusted, \"Deposit for order 3D31C4\").\n  - Related rule hit evidence: alert rule R4_cycle referenced this txn (evidence_txn_ids include 3081928).\n\n- A9aabc71f3cd9 -> A4acbf8ec9c8d (incoming ACH)\n  - Facts: (3579803, ts, \"2022-09-07T16:11:00\"), (3579803, from_account, \"A9aabc71f3cd9\"), (3579803, to_account, \"A4acbf8ec9c8d\"), (3579803, amount_paid, 23516.57), (3579803, paid_currency, \"Yuan\"), (3579803, payment_format, \"ACH\"), (3579803, reference_untrusted, \"Membership fee January\").\n  - This txn is the other evidence_txn_id in the R4_cycle hit (evidence_txn_ids include 3579803).\n\n- Aefc2b9ceeded -> A4acbf8ec9c8d (nearby inbound ACH, one minute earlier)\n  - Facts: (3579452, ts, \"2022-09-07T16:10:00\"), (3579452, from_account, \"Aefc2b9ceeded\"), (3579452, to_account, \"A4acbf8ec9c8d\"), (3579452, amount_paid, 11229.41), (3579452, paid_currency, \"Yuan\"), (3579452, payment_format, \"ACH\"), (3579452, reference_untrusted, \"Salary July\").\n  - Timing: inbound at 16:10 then the 16:11 inbound from A9aabc71f3cd9 (see ts facts above).\n\n- Fund-trace evidence (backward / aggregation before forwarding)\n  - Trace paths show upstream payments into A9aabc71f3cd9 before it paid txn 3579803 to A4acbf8ec9c8d; example hops returned by trace_funds (backward) include:\n    - (2869377, ts, \"2022-09-06T04:29:00\") — from_account \"A8a196a8a0b9f\" -> to_account \"A9aabc71f3cd9\".\n    - (2869026, ts, \"2022-09-06T04:28:00\") — from_account \"A8a196a8a0b9f\" -> to_account \"A9aabc71f3cd9\".\n    - (3079621, ts, \"2022-09-06T15:17:00\") — from_account \"Aefc2b9ceeded\" -> to_account \"A9aabc71f3cd9\".\n    - These hops are shown upstream of (3579803, ts, \"2022-09-07T16:11:00\") in the backward trace output (trace_funds result includes these txn_ids in paths that end with 3579803).\n  - Interpretation: A9aabc71f3cd9 appears to have collected funds from other accounts and then forwarded funds to A4acbf8ec9c8d (txn 3579803).\n\nRegulatory basis (for enhanced review / reporting):\n- Linked transactions and examination of origin/destination: AMLR art. 2(1)(20) and AMLR art. 34(2). Cite: AMLR art. 2(1)(20); AMLR art. 34(2).\n- Suspicion/reporting standard: AMLR art. 69(2). Cite: AMLR art. 69(2).\n- Polish counterpart (similar obligations): PL-AML art. 43 ust. 4. Cite: PL-AML art. 43 ust. 4.\n\nWhat to check next (practical steps for the analyst):\n- Request source-of-funds / business explanation from the customer for txns 3579803 and 3579452 (facts above). Cite AMLR art. 34(2) as the basis for examining origin/destination.\n- Pull profiles and recent activity for counterparty A9aabc71f3cd9 (the payer in 3579803) and for upstream txns 2869377, 2869026, 3079621 (trace hops) to confirm aggregation patterns.\n- If explanations are inconsistent or not supported by documentation, consider filing a suspicion report (see AMLR art. 69(2)).\n\nDecision rationale in one line: Escalate — the account is involved in a short-cycle (A4acbf8ec9c8d -> A9aabc71f3cd9 -> A4acbf8ec9c8d, txns 3081928 and 3579803) with aggregation upstream of the returning payment, meeting the “linked/complex/unusual pattern” criteria that require enhanced scrutiny (AMLR art. 2(1)(20); AMLR art. 34(2); AMLR art. 69(2)).\n\nIf you want, I can next fetch the profile and recent transactions of A9aabc71f3cd9 and the full details for upstream txns (2869377, 2869026, 3079621) so you have the counterparty evidence for a SAR.",
+      "additional_kwargs": {
+        "refusal": null
+      },
+      "response_metadata": {
+        "token_usage": {
+          "completion_tokens": 12865,
+          "prompt_tokens": 6396,
+          "total_tokens": 19261,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 11456,
+            "rejected_prediction_tokens": 0,
+            "text_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": null,
+            "cached_tokens": 2304,
+            "image_tokens": null,
+            "text_tokens": null
+          },
+          "latency_checkpoint": {
+            "engine_tbt_ms": 7,
+            "engine_ttft_ms": 113,
+            "engine_ttlt_ms": 90472,
+            "pre_inference_ms": 132,
+            "service_tbt_ms": 7,
+            "service_ttft_ms": 496,
+            "service_ttlt_ms": 90851,
+            "user_visible_ttft_ms": 364
+          }
+        },
+        "model_provider": "openai",
+        "model_name": "gpt-5-mini-2025-08-07",
+        "system_fingerprint": null,
+        "id": "chatcmpl-EhHwSM4V9HTWJe1QbPz1jAJxVX3gP",
+        "service_tier": "default",
+        "prompt_filter_results": [
+          {
+            "prompt_index": 0,
+            "content_filter_results": {
+              "hate": {
+                "filtered": false,
+                "severity": "safe"
+              },
+              "jailbreak": {
+                "detected": false,
+                "filtered": false
+              },
+              "self_harm": {
+                "filtered": false,
+                "severity": "safe"
+              },
+              "sexual": {
+                "filtered": false,
+                "severity": "safe"
+              },
+              "violence": {
+                "filtered": false,
+                "severity": "safe"
+              }
+            }
+          }
+        ],
+        "finish_reason": "stop",
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "protected_material_code": {
+            "detected": false,
+            "filtered": false
+          },
+          "protected_material_text": {
+            "detected": false,
+            "filtered": false
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      },
+      "type": "ai",
+      "name": null,
+      "id": "lc_run--01a1b1e2-988e-7cd0-ab4b-043c3d13a3de-0",
+      "tool_calls": [],
+      "invalid_tool_calls": [],
+      "usage_metadata": {
+        "input_tokens": 6396,
+        "output_tokens": 12865,
+        "total_tokens": 19261,
+        "input_token_details": {
+          "audio": 0,
+          "cache_read": 2304
+        },
+        "output_token_details": {
+          "audio": 0,
+          "reasoning": 11456
+        }
+      }
+    },
+    {
+      "content": "",
+      "additional_kwargs": {
+        "refusal": null
+      },
+      "response_metadata": {
+        "token_usage": {
+          "completion_tokens": 10055,
+          "prompt_tokens": 12799,
+          "total_tokens": 22854,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 8192,
+            "rejected_prediction_tokens": 0,
+            "text_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": null,
+            "cached_tokens": 1152,
+            "image_tokens": null,
+            "text_tokens": null
+          },
+          "latency_checkpoint": {
+            "engine_tbt_ms": 7,
+            "engine_ttft_ms": 217,
+            "engine_ttlt_ms": 66906,
+            "pre_inference_ms": 155,
+            "service_tbt_ms": 7,
+            "service_ttft_ms": 950,
+            "service_ttlt_ms": 67634,
+            "user_visible_ttft_ms": 795
+          }
+        },
+        "model_provider": "openai",
+        "model_name": "gpt-5-mini-2025-08-07",
+        "system_fingerprint": null,
+        "id": "chatcmpl-EhHxw7OWyluI702H01GBISrWiyAZ4",
+        "service_tier": "default",
+        "prompt_filter_results": [
+          {
+            "prompt_index": 0,
+            "content_filter_results": {
+              "hate": {
+                "filtered": false,
+                "severity": "safe"
+              },
+              "jailbreak": {
+                "detected": false,
+                "filtered": false
+              },
+              "self_harm": {
+                "filtered": false,
+                "severity": "safe"
+              },
+              "sexual": {
+                "filtered": false,
+                "severity": "safe"
+              },
+              "violence": {
+                "filtered": false,
+                "severity": "safe"
+              }
+            }
+          }
+        ],
+        "finish_reason": "tool_calls",
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "protected_material_code": {
+            "detected": false,
+            "filtered": false
+          },
+          "protected_material_text": {
+            "detected": false,
+            "filtered": false
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      },
+      "type": "ai",
+      "name": null,
+      "id": "lc_run--01a1b1e4-009f-73d2-bbde-eba2efee5a9b-0",
+      "tool_calls": [
+        {
+          "name": "Decision",
+          "args": {
+            "recommendation": "escalate",
+            "typologies": [
+              {
+                "typology": "cycle",
+                "verdict": "supported",
+                "txn_ids": [
+                  3081928,
+                  3579803
+                ]
+              },
+              {
+                "typology": "random",
+                "verdict": "not_supported",
+                "txn_ids": []
+              }
+            ],
+            "who": [
+              {
+                "text": "Account A4acbf8ec9c8d (Corporation) is the alerted customer; it appears as the sender in txn 3081928 and as the recipient in txns 3579452 and 3579803 within the alert window.",
+                "txn_ids": [
+                  3081928,
+                  3579452,
+                  3579803
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 3081928,
+                    "field": "amount_paid",
+                    "value": "2720.44"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "date",
+                    "value": "2022-09-06T15:24:00"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "amount_paid",
+                    "value": "11229.41"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "date",
+                    "value": "2022-09-07T16:10:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "amount_paid",
+                    "value": "23516.57"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "date",
+                    "value": "2022-09-07T16:11:00"
+                  }
+                ]
+              }
+            ],
+            "what": [
+              {
+                "text": "The account paid 2720.44 Yuan (txn 3081928) by ACH to A9aabc71f3cd9 and received 11229.41 Yuan (txn 3579452) and 23516.57 Yuan (txn 3579803), all ACH payments in the window.",
+                "txn_ids": [
+                  3081928,
+                  3579452,
+                  3579803
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 3081928,
+                    "field": "amount_paid",
+                    "value": "2720.44"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "date",
+                    "value": "2022-09-06T15:24:00"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "amount_paid",
+                    "value": "11229.41"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "date",
+                    "value": "2022-09-07T16:10:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "amount_paid",
+                    "value": "23516.57"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "date",
+                    "value": "2022-09-07T16:11:00"
+                  }
+                ]
+              }
+            ],
+            "when": [
+              {
+                "text": "Timing: txn 3081928 occurred on 2022-09-06T15:24:00; txn 3579452 occurred on 2022-09-07T16:10:00; txn 3579803 occurred on 2022-09-07T16:11:00 (all timestamps from the transaction records).",
+                "txn_ids": [
+                  3081928,
+                  3579452,
+                  3579803
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 3081928,
+                    "field": "date",
+                    "value": "2022-09-06T15:24:00"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "date",
+                    "value": "2022-09-07T16:10:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "date",
+                    "value": "2022-09-07T16:11:00"
+                  }
+                ]
+              }
+            ],
+            "where": [
+              {
+                "text": "All observed movements used ACH and involve counterparties A9aabc71f3cd9 and Aefc2b9ceeded; backward trace shows txns 2869026 (2022-09-06T04:28:00), 2869377 (2022-09-06T04:29:00) and 3079621 (2022-09-06T15:17:00) flowing into A9aabc71f3cd9 before it paid txn 3579803 to A4acbf8ec9c8d.",
+                "txn_ids": [
+                  3081928,
+                  3579452,
+                  3579803,
+                  2869026,
+                  2869377,
+                  3079621
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 2869026,
+                    "field": "date",
+                    "value": "2022-09-06T04:28:00"
+                  },
+                  {
+                    "txn_id": 2869377,
+                    "field": "date",
+                    "value": "2022-09-06T04:29:00"
+                  },
+                  {
+                    "txn_id": 3079621,
+                    "field": "date",
+                    "value": "2022-09-06T15:17:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "date",
+                    "value": "2022-09-07T16:11:00"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "date",
+                    "value": "2022-09-06T15:24:00"
+                  }
+                ]
+              }
+            ],
+            "why": [
+              {
+                "text": "Because A4acbf8ec9c8d sent funds to A9aabc71f3cd9 (txn 3081928, 2720.44 Yuan) and then received a much larger ACH payment from the same counterparty (txn 3579803, 23516.57 Yuan) after that counterparty had upstream inflows (txns 2869026, 2869377, 3079621). This short-cycle/linked pattern is consistent with a 'cycle' layering typology and therefore requires examination of origin and destination under AMLR art. 34(2) and reporting where suspicion exists under AMLR art. 69(1)-(2) (see AMLR art. 2(1)(20) for linked transactions).",
+                "txn_ids": [
+                  3081928,
+                  3579803,
+                  2869026,
+                  2869377,
+                  3079621
+                ],
+                "passage_ids": [
+                  "AMLR art. 34(2)",
+                  "AMLR art. 69(2)",
+                  "AMLR art. 2(1)(20)"
+                ],
+                "facts": [
+                  {
+                    "txn_id": 3081928,
+                    "field": "amount_paid",
+                    "value": "2720.44"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "date",
+                    "value": "2022-09-06T15:24:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "amount_paid",
+                    "value": "23516.57"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "date",
+                    "value": "2022-09-07T16:11:00"
+                  },
+                  {
+                    "txn_id": 2869026,
+                    "field": "date",
+                    "value": "2022-09-06T04:28:00"
+                  },
+                  {
+                    "txn_id": 2869377,
+                    "field": "date",
+                    "value": "2022-09-06T04:29:00"
+                  },
+                  {
+                    "txn_id": 3079621,
+                    "field": "date",
+                    "value": "2022-09-06T15:17:00"
+                  }
+                ]
+              }
+            ],
+            "how": [
+              {
+                "text": "Mechanism: ACH transfers in quick succession produced a short return-flow (A4 -> A9 on 2022-09-06 via txn 3081928; A9 aggregated inflows on 2022-09-06 (txns 2869026, 2869377, 3079621) and then A9 -> A4 on 2022-09-07 via txn 3579803). Forward/backward fund traces show the money returning to the alerted account (cycle).",
+                "txn_ids": [
+                  3081928,
+                  3579803,
+                  2869026,
+                  2869377,
+                  3079621
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 3081928,
+                    "field": "date",
+                    "value": "2022-09-06T15:24:00"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "amount_paid",
+                    "value": "2720.44"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 2869026,
+                    "field": "date",
+                    "value": "2022-09-06T04:28:00"
+                  },
+                  {
+                    "txn_id": 2869377,
+                    "field": "date",
+                    "value": "2022-09-06T04:29:00"
+                  },
+                  {
+                    "txn_id": 3079621,
+                    "field": "date",
+                    "value": "2022-09-06T15:17:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "date",
+                    "value": "2022-09-07T16:11:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "amount_paid",
+                    "value": "23516.57"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  }
+                ]
+              }
+            ]
+          },
+          "id": "call_dswL8zQRtk0P0SnCsb8GVW2R",
+          "type": "tool_call"
+        }
+      ],
+      "invalid_tool_calls": [],
+      "usage_metadata": {
+        "input_tokens": 12799,
+        "output_tokens": 10055,
+        "total_tokens": 22854,
+        "input_token_details": {
+          "audio": 0,
+          "cache_read": 1152
+        },
+        "output_token_details": {
+          "audio": 0,
+          "reasoning": 8192
+        }
+      }
+    },
+    {
+      "content": "",
+      "additional_kwargs": {
+        "refusal": null
+      },
+      "response_metadata": {
+        "token_usage": {
+          "completion_tokens": 12566,
+          "prompt_tokens": 15373,
+          "total_tokens": 27939,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 10624,
+            "rejected_prediction_tokens": 0,
+            "text_tokens": null
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": null,
+            "cached_tokens": 1152,
+            "image_tokens": null,
+            "text_tokens": null
+          },
+          "latency_checkpoint": {
+            "engine_tbt_ms": 7,
+            "engine_ttft_ms": 344,
+            "engine_ttlt_ms": 88909,
+            "pre_inference_ms": 161,
+            "service_tbt_ms": 7,
+            "service_ttft_ms": 628,
+            "service_ttlt_ms": 89191,
+            "user_visible_ttft_ms": 467
+          }
+        },
+        "model_provider": "openai",
+        "model_name": "gpt-5-mini-2025-08-07",
+        "system_fingerprint": null,
+        "id": "chatcmpl-EhHz2h01qCCJ2l979PJtbXtXdooDn",
+        "service_tier": "default",
+        "prompt_filter_results": [
+          {
+            "prompt_index": 0,
+            "content_filter_results": {
+              "hate": {
+                "filtered": false,
+                "severity": "safe"
+              },
+              "jailbreak": {
+                "detected": false,
+                "filtered": false
+              },
+              "self_harm": {
+                "filtered": false,
+                "severity": "safe"
+              },
+              "sexual": {
+                "filtered": false,
+                "severity": "safe"
+              },
+              "violence": {
+                "filtered": false,
+                "severity": "safe"
+              }
+            }
+          }
+        ],
+        "finish_reason": "tool_calls",
+        "logprobs": null,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "protected_material_code": {
+            "detected": false,
+            "filtered": false
+          },
+          "protected_material_text": {
+            "detected": false,
+            "filtered": false
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      },
+      "type": "ai",
+      "name": null,
+      "id": "lc_run--01a1b1e5-0b6f-7ac1-86ab-6e95f5a3ec05-0",
+      "tool_calls": [
+        {
+          "name": "Decision",
+          "args": {
+            "recommendation": "escalate",
+            "typologies": [
+              {
+                "typology": "cycle",
+                "verdict": "supported",
+                "txn_ids": [
+                  3081928,
+                  3579803
+                ]
+              },
+              {
+                "typology": "random",
+                "verdict": "not_supported",
+                "txn_ids": []
+              }
+            ],
+            "who": [
+              {
+                "text": "Alerted account A4acbf8ec9c8d appears in three transactions in the window: it sent 2720.44 Yuan in txn 3081928 on 2022-09-06T15:24:00 and received 11229.41 Yuan in txn 3579452 on 2022-09-07T16:10:00 and 23516.57 Yuan in txn 3579803 on 2022-09-07T16:11:00.",
+                "txn_ids": [
+                  3081928,
+                  3579452,
+                  3579803
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 3081928,
+                    "field": "amount_paid",
+                    "value": "2720.44"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "date",
+                    "value": "2022-09-06T15:24:00"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "amount_paid",
+                    "value": "11229.41"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "date",
+                    "value": "2022-09-07T16:10:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "amount_paid",
+                    "value": "23516.57"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "date",
+                    "value": "2022-09-07T16:11:00"
+                  }
+                ]
+              }
+            ],
+            "what": [
+              {
+                "text": "In the alert window the account paid 2720.44 Yuan (txn 3081928) and received 11229.41 Yuan (txn 3579452) and 23516.57 Yuan (txn 3579803).",
+                "txn_ids": [
+                  3081928,
+                  3579452,
+                  3579803
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 3081928,
+                    "field": "amount_paid",
+                    "value": "2720.44"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "date",
+                    "value": "2022-09-06T15:24:00"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "amount_paid",
+                    "value": "11229.41"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "date",
+                    "value": "2022-09-07T16:10:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "amount_paid",
+                    "value": "23516.57"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "date",
+                    "value": "2022-09-07T16:11:00"
+                  }
+                ]
+              }
+            ],
+            "when": [
+              {
+                "text": "Dates: txn 3081928 on 2022-09-06T15:24:00; txn 3579452 on 2022-09-07T16:10:00; txn 3579803 on 2022-09-07T16:11:00.",
+                "txn_ids": [
+                  3081928,
+                  3579452,
+                  3579803
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 3081928,
+                    "field": "date",
+                    "value": "2022-09-06T15:24:00"
+                  },
+                  {
+                    "txn_id": 3579452,
+                    "field": "date",
+                    "value": "2022-09-07T16:10:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "date",
+                    "value": "2022-09-07T16:11:00"
+                  }
+                ]
+              }
+            ],
+            "where": [
+              {
+                "text": "Counterparties recorded include A9aabc71f3cd9 and Aefc2b9ceeded; backward fund-trace paths that end with txn 3579803 include hops txn 2869026 on 2022-09-06T04:28:00, txn 2869377 on 2022-09-06T04:29:00, and txn 3079621 on 2022-09-06T15:17:00.",
+                "txn_ids": [
+                  3081928,
+                  3579452,
+                  3579803,
+                  2869026,
+                  2869377,
+                  3079621
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 2869026,
+                    "field": "date",
+                    "value": "2022-09-06T04:28:00"
+                  },
+                  {
+                    "txn_id": 2869377,
+                    "field": "date",
+                    "value": "2022-09-06T04:29:00"
+                  },
+                  {
+                    "txn_id": 3079621,
+                    "field": "date",
+                    "value": "2022-09-06T15:17:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "date",
+                    "value": "2022-09-07T16:11:00"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "date",
+                    "value": "2022-09-06T15:24:00"
+                  }
+                ]
+              }
+            ],
+            "why": [
+              {
+                "text": "Escalate because the alerted account’s outgoing payment of 2720.44 Yuan (txn 3081928) was followed within the window by a larger inbound payment of 23516.57 Yuan (txn 3579803) from the same counterparty; backward fund trace includes hops txn 2869026 (2022-09-06T04:28:00), txn 2869377 (2022-09-06T04:29:00) and txn 3079621 (2022-09-06T15:17:00) that precede txn 3579803 in trace paths. This short return-flow (cycle) is a linked/complex pattern that requires examination of origin and destination under AMLR art. 34(2) and reporting where suspicion exists under AMLR art. 69(1)-(2) (AMLR art. 2(1)(20) defines linked transactions).",
+                "txn_ids": [
+                  3081928,
+                  3579803,
+                  2869026,
+                  2869377,
+                  3079621
+                ],
+                "passage_ids": [
+                  "AMLR art. 34(2)",
+                  "AMLR art. 69(2)",
+                  "AMLR art. 2(1)(20)"
+                ],
+                "facts": [
+                  {
+                    "txn_id": 3081928,
+                    "field": "amount_paid",
+                    "value": "2720.44"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "date",
+                    "value": "2022-09-06T15:24:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "amount_paid",
+                    "value": "23516.57"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "date",
+                    "value": "2022-09-07T16:11:00"
+                  },
+                  {
+                    "txn_id": 2869026,
+                    "field": "date",
+                    "value": "2022-09-06T04:28:00"
+                  },
+                  {
+                    "txn_id": 2869377,
+                    "field": "date",
+                    "value": "2022-09-06T04:29:00"
+                  },
+                  {
+                    "txn_id": 3079621,
+                    "field": "date",
+                    "value": "2022-09-06T15:17:00"
+                  }
+                ]
+              }
+            ],
+            "how": [
+              {
+                "text": "Mechanism: fund-trace shows a path including txn 3081928 (2720.44 Yuan, 2022-09-06T15:24:00) and txn 3579803 (23516.57 Yuan, 2022-09-07T16:11:00); backward traces that end at 3579803 include upstream hops 2869026 (2022-09-06T04:28:00), 2869377 (2022-09-06T04:29:00) and 3079621 (2022-09-06T15:17:00), consistent with a short return-flow to the alerted account.",
+                "txn_ids": [
+                  3081928,
+                  3579803,
+                  2869026,
+                  2869377,
+                  3079621
+                ],
+                "passage_ids": [],
+                "facts": [
+                  {
+                    "txn_id": 3081928,
+                    "field": "amount_paid",
+                    "value": "2720.44"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3081928,
+                    "field": "date",
+                    "value": "2022-09-06T15:24:00"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "amount_paid",
+                    "value": "23516.57"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "paid_currency",
+                    "value": "Yuan"
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "field": "date",
+                    "value": "2022-09-07T16:11:00"
+                  },
+                  {
+                    "txn_id": 2869026,
+                    "field": "date",
+                    "value": "2022-09-06T04:28:00"
+                  },
+                  {
+                    "txn_id": 2869377,
+                    "field": "date",
+                    "value": "2022-09-06T04:29:00"
+                  },
+                  {
+                    "txn_id": 3079621,
+                    "field": "date",
+                    "value": "2022-09-06T15:17:00"
+                  }
+                ]
+              }
+            ]
+          },
+          "id": "call_oOKyMZ2QvS1zIvXoyETmU2Dj",
+          "type": "tool_call"
+        }
+      ],
+      "invalid_tool_calls": [],
+      "usage_metadata": {
+        "input_tokens": 15373,
+        "output_tokens": 12566,
+        "total_tokens": 27939,
+        "input_token_details": {
+          "audio": 0,
+          "cache_read": 1152
+        },
+        "output_token_details": {
+          "audio": 0,
+          "reasoning": 10624
+        }
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "get_alert",
+      "args": {
+        "alert_id": 15765
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"alert_id\":15765,\"account_id\":\"A4acbf8ec9c8d\",\"alert_date\":\"2022-09-07\",\"window_start\":\"2022-09-06T00:00:00\",\"window_end\":\"2022-09-08T00:00:00\",\"as_of\":\"2022-09-08T00:00:00\",\"rule_hits\":[{\"rule_id\":\"R4_cycle\",\"score\":346.64,\"evidence_txn_ids\":[3081928,3579803]}]}",
+            "id": "lc_35cdb766-4f12-48f5-9788-5b331a2b3ac7"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_alert",
+        "id": null,
+        "tool_call_id": "alert",
+        "artifact": {
+          "structured_content": {
+            "alert_id": 15765,
+            "account_id": "A4acbf8ec9c8d",
+            "alert_date": "2022-09-07",
+            "window_start": "2022-09-06T00:00:00",
+            "window_end": "2022-09-08T00:00:00",
+            "as_of": "2022-09-08T00:00:00",
+            "rule_hits": [
+              {
+                "rule_id": "R4_cycle",
+                "score": 346.64,
+                "evidence_txn_ids": [
+                  3081928,
+                  3579803
+                ]
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "get_account_profile",
+      "args": {
+        "account_id": "A4acbf8ec9c8d",
+        "alert_id": 15765
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"as_of\":\"2022-09-08T00:00:00\",\"account_id\":\"A4acbf8ec9c8d\",\"entity_type\":\"Corporation\",\"first_seen\":\"2022-09-01T00:26:00\",\"active_days\":4,\"incoming_count\":3,\"incoming_eur\":4810.998940950287,\"outgoing_count\":1,\"outgoing_eur\":346.6351203107525,\"self_transfer_count\":1,\"distinct_counterparties\":3,\"payment_format_shares\":[{\"payment_format\":\"ACH\",\"share\":0.8},{\"payment_format\":\"Reinvestment\",\"share\":0.2}],\"outgoing_days\":0,\"daily_outgoing_eur_mean\":null,\"daily_outgoing_eur_median\":null,\"other_accounts_of_entity\":{\"count\":9,\"account_ids\":[\"A2e154769d544\",\"A4370d1728e55\",\"A530e4d7e74d2\",\"A775388965d53\",\"A7781b9e29035\",\"A9a2d413f90b8\",\"Ad15a95e690b4\",\"Ae8ac17d29c51\",\"Ae96aafaeafad\"]}}",
+            "id": "lc_f7c8abc3-4c05-41f8-9603-e157375290ed"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_account_profile",
+        "id": null,
+        "tool_call_id": "evidence-0",
+        "artifact": {
+          "structured_content": {
+            "as_of": "2022-09-08T00:00:00",
+            "account_id": "A4acbf8ec9c8d",
+            "entity_type": "Corporation",
+            "first_seen": "2022-09-01T00:26:00",
+            "active_days": 4,
+            "incoming_count": 3,
+            "incoming_eur": 4810.998940950287,
+            "outgoing_count": 1,
+            "outgoing_eur": 346.6351203107525,
+            "self_transfer_count": 1,
+            "distinct_counterparties": 3,
+            "payment_format_shares": [
+              {
+                "payment_format": "ACH",
+                "share": 0.8
+              },
+              {
+                "payment_format": "Reinvestment",
+                "share": 0.2
+              }
+            ],
+            "outgoing_days": 0,
+            "daily_outgoing_eur_mean": null,
+            "daily_outgoing_eur_median": null,
+            "other_accounts_of_entity": {
+              "count": 9,
+              "account_ids": [
+                "A2e154769d544",
+                "A4370d1728e55",
+                "A530e4d7e74d2",
+                "A775388965d53",
+                "A7781b9e29035",
+                "A9a2d413f90b8",
+                "Ad15a95e690b4",
+                "Ae8ac17d29c51",
+                "Ae96aafaeafad"
+              ]
+            }
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "get_counterparties",
+      "args": {
+        "account_id": "A4acbf8ec9c8d",
+        "alert_id": 15765
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"as_of\":\"2022-09-08T00:00:00\",\"counterparty_count\":2,\"truncated\":false,\"counterparties\":[{\"account_id\":\"A9aabc71f3cd9\",\"incoming_count\":1,\"incoming_eur\":2996.452438299037,\"outgoing_count\":1,\"outgoing_eur\":346.6351203107525,\"total_eur\":3343.0875586097895,\"first_ts\":\"2022-09-06T15:24:00\",\"last_ts\":\"2022-09-07T16:11:00\",\"payment_formats\":[\"ACH\"]},{\"account_id\":\"Aefc2b9ceeded\",\"incoming_count\":1,\"incoming_eur\":1430.837616844616,\"outgoing_count\":0,\"outgoing_eur\":0.0,\"total_eur\":1430.837616844616,\"first_ts\":\"2022-09-07T16:10:00\",\"last_ts\":\"2022-09-07T16:10:00\",\"payment_formats\":[\"ACH\"]}]}",
+            "id": "lc_9c7673fd-b249-4b2a-b37a-1a006916581e"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_counterparties",
+        "id": null,
+        "tool_call_id": "evidence-1",
+        "artifact": {
+          "structured_content": {
+            "as_of": "2022-09-08T00:00:00",
+            "counterparty_count": 2,
+            "truncated": false,
+            "counterparties": [
+              {
+                "account_id": "A9aabc71f3cd9",
+                "incoming_count": 1,
+                "incoming_eur": 2996.452438299037,
+                "outgoing_count": 1,
+                "outgoing_eur": 346.6351203107525,
+                "total_eur": 3343.0875586097895,
+                "first_ts": "2022-09-06T15:24:00",
+                "last_ts": "2022-09-07T16:11:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              },
+              {
+                "account_id": "Aefc2b9ceeded",
+                "incoming_count": 1,
+                "incoming_eur": 1430.837616844616,
+                "outgoing_count": 0,
+                "outgoing_eur": 0.0,
+                "total_eur": 1430.837616844616,
+                "first_ts": "2022-09-07T16:10:00",
+                "last_ts": "2022-09-07T16:10:00",
+                "payment_formats": [
+                  "ACH"
+                ]
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "list_transactions",
+      "args": {
+        "account_id": "A4acbf8ec9c8d",
+        "alert_id": 15765
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"as_of\":\"2022-09-08T00:00:00\",\"truncated\":false,\"transactions\":[{\"txn_id\":3081928,\"ts\":\"2022-09-06T15:24:00\",\"from_account\":\"A4acbf8ec9c8d\",\"to_account\":\"A9aabc71f3cd9\",\"amount_paid\":2720.44,\"paid_currency\":\"Yuan\",\"amount_received\":2720.44,\"received_currency\":\"Yuan\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Deposit for order 3D31C4\"},{\"txn_id\":3579452,\"ts\":\"2022-09-07T16:10:00\",\"from_account\":\"Aefc2b9ceeded\",\"to_account\":\"A4acbf8ec9c8d\",\"amount_paid\":11229.41,\"paid_currency\":\"Yuan\",\"amount_received\":11229.41,\"received_currency\":\"Yuan\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Salary July\"},{\"txn_id\":3579803,\"ts\":\"2022-09-07T16:11:00\",\"from_account\":\"A9aabc71f3cd9\",\"to_account\":\"A4acbf8ec9c8d\",\"amount_paid\":23516.57,\"paid_currency\":\"Yuan\",\"amount_received\":23516.57,\"received_currency\":\"Yuan\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Membership fee January\"}]}",
+            "id": "lc_4edbdaf5-661e-495c-9d16-d9c0f9d6dba1"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "list_transactions",
+        "id": null,
+        "tool_call_id": "evidence-2",
+        "artifact": {
+          "structured_content": {
+            "as_of": "2022-09-08T00:00:00",
+            "truncated": false,
+            "transactions": [
+              {
+                "txn_id": 3081928,
+                "ts": "2022-09-06T15:24:00",
+                "from_account": "A4acbf8ec9c8d",
+                "to_account": "A9aabc71f3cd9",
+                "amount_paid": 2720.44,
+                "paid_currency": "Yuan",
+                "amount_received": 2720.44,
+                "received_currency": "Yuan",
+                "payment_format": "ACH",
+                "reference_untrusted": "Deposit for order 3D31C4"
+              },
+              {
+                "txn_id": 3579452,
+                "ts": "2022-09-07T16:10:00",
+                "from_account": "Aefc2b9ceeded",
+                "to_account": "A4acbf8ec9c8d",
+                "amount_paid": 11229.41,
+                "paid_currency": "Yuan",
+                "amount_received": 11229.41,
+                "received_currency": "Yuan",
+                "payment_format": "ACH",
+                "reference_untrusted": "Salary July"
+              },
+              {
+                "txn_id": 3579803,
+                "ts": "2022-09-07T16:11:00",
+                "from_account": "A9aabc71f3cd9",
+                "to_account": "A4acbf8ec9c8d",
+                "amount_paid": 23516.57,
+                "paid_currency": "Yuan",
+                "amount_received": 23516.57,
+                "received_currency": "Yuan",
+                "payment_format": "ACH",
+                "reference_untrusted": "Membership fee January"
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "get_transactions",
+      "args": {
+        "txn_ids": [
+          3081928,
+          3579803
+        ],
+        "alert_id": 15765
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"as_of\":\"2022-09-08T00:00:00\",\"omitted\":0,\"transactions\":[{\"txn_id\":3081928,\"ts\":\"2022-09-06T15:24:00\",\"from_account\":\"A4acbf8ec9c8d\",\"to_account\":\"A9aabc71f3cd9\",\"amount_paid\":2720.44,\"paid_currency\":\"Yuan\",\"amount_received\":2720.44,\"received_currency\":\"Yuan\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Deposit for order 3D31C4\"},{\"txn_id\":3579803,\"ts\":\"2022-09-07T16:11:00\",\"from_account\":\"A9aabc71f3cd9\",\"to_account\":\"A4acbf8ec9c8d\",\"amount_paid\":23516.57,\"paid_currency\":\"Yuan\",\"amount_received\":23516.57,\"received_currency\":\"Yuan\",\"payment_format\":\"ACH\",\"reference_untrusted\":\"Membership fee January\"}]}",
+            "id": "lc_701ec85b-2e89-4121-b8da-5100bbf98802"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_transactions",
+        "id": null,
+        "tool_call_id": "evidence-3",
+        "artifact": {
+          "structured_content": {
+            "as_of": "2022-09-08T00:00:00",
+            "omitted": 0,
+            "transactions": [
+              {
+                "txn_id": 3081928,
+                "ts": "2022-09-06T15:24:00",
+                "from_account": "A4acbf8ec9c8d",
+                "to_account": "A9aabc71f3cd9",
+                "amount_paid": 2720.44,
+                "paid_currency": "Yuan",
+                "amount_received": 2720.44,
+                "received_currency": "Yuan",
+                "payment_format": "ACH",
+                "reference_untrusted": "Deposit for order 3D31C4"
+              },
+              {
+                "txn_id": 3579803,
+                "ts": "2022-09-07T16:11:00",
+                "from_account": "A9aabc71f3cd9",
+                "to_account": "A4acbf8ec9c8d",
+                "amount_paid": 23516.57,
+                "paid_currency": "Yuan",
+                "amount_received": 23516.57,
+                "received_currency": "Yuan",
+                "payment_format": "ACH",
+                "reference_untrusted": "Membership fee January"
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "get_typology_candidates",
+      "args": {
+        "alert_id": 15765
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"alert_id\":15765,\"candidates\":[{\"rule_id\":\"R4_cycle\",\"score\":346.64,\"evidence_txn_ids\":[3081928,3579803],\"typologies\":[\"cycle\",\"random\"]}]}",
+            "id": "lc_3871d0d1-5cb0-47c0-a74c-a172c3dbf814"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_typology_candidates",
+        "id": null,
+        "tool_call_id": "evidence-4",
+        "artifact": {
+          "structured_content": {
+            "alert_id": 15765,
+            "candidates": [
+              {
+                "rule_id": "R4_cycle",
+                "score": 346.64,
+                "evidence_txn_ids": [
+                  3081928,
+                  3579803
+                ],
+                "typologies": [
+                  "cycle",
+                  "random"
+                ]
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "trace_funds",
+      "args": {
+        "account_id": "A4acbf8ec9c8d",
+        "direction": "forward",
+        "max_hops": 2,
+        "alert_id": 15765
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"as_of\":\"2022-09-08T00:00:00\",\"direction\":\"forward\",\"max_hops\":2,\"truncated\":false,\"paths\":[{\"flow_eur\":346.6351203107525,\"hops\":[{\"txn_id\":3081928,\"ts\":\"2022-09-06T15:24:00\",\"from_account\":\"A4acbf8ec9c8d\",\"to_account\":\"A9aabc71f3cd9\",\"amount_eur\":346.6351203107525},{\"txn_id\":3579803,\"ts\":\"2022-09-07T16:11:00\",\"from_account\":\"A9aabc71f3cd9\",\"to_account\":\"A4acbf8ec9c8d\",\"amount_eur\":2996.452438299037}]}]}",
+            "id": "lc_8f88953e-8507-4327-a0a5-5cf9d73a0e47"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "trace_funds",
+        "id": null,
+        "tool_call_id": "evidence-5",
+        "artifact": {
+          "structured_content": {
+            "as_of": "2022-09-08T00:00:00",
+            "direction": "forward",
+            "max_hops": 2,
+            "truncated": false,
+            "paths": [
+              {
+                "flow_eur": 346.6351203107525,
+                "hops": [
+                  {
+                    "txn_id": 3081928,
+                    "ts": "2022-09-06T15:24:00",
+                    "from_account": "A4acbf8ec9c8d",
+                    "to_account": "A9aabc71f3cd9",
+                    "amount_eur": 346.6351203107525
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "ts": "2022-09-07T16:11:00",
+                    "from_account": "A9aabc71f3cd9",
+                    "to_account": "A4acbf8ec9c8d",
+                    "amount_eur": 2996.452438299037
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "trace_funds",
+      "args": {
+        "account_id": "A4acbf8ec9c8d",
+        "direction": "backward",
+        "max_hops": 2,
+        "alert_id": 15765
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"as_of\":\"2022-09-08T00:00:00\",\"direction\":\"backward\",\"max_hops\":2,\"truncated\":false,\"paths\":[{\"flow_eur\":1430.837616844616,\"hops\":[{\"txn_id\":3579452,\"ts\":\"2022-09-07T16:10:00\",\"from_account\":\"Aefc2b9ceeded\",\"to_account\":\"A4acbf8ec9c8d\",\"amount_eur\":1430.837616844616}]},{\"flow_eur\":1158.5194944905345,\"hops\":[{\"txn_id\":2869377,\"ts\":\"2022-09-06T04:29:00\",\"from_account\":\"A8a196a8a0b9f\",\"to_account\":\"A9aabc71f3cd9\",\"amount_eur\":1158.5194944905345},{\"txn_id\":3579803,\"ts\":\"2022-09-07T16:11:00\",\"from_account\":\"A9aabc71f3cd9\",\"to_account\":\"A4acbf8ec9c8d\",\"amount_eur\":2996.452438299037}]},{\"flow_eur\":1094.0303063107997,\"hops\":[{\"txn_id\":2869026,\"ts\":\"2022-09-06T04:28:00\",\"from_account\":\"A8a196a8a0b9f\",\"to_account\":\"A9aabc71f3cd9\",\"amount_eur\":1094.0303063107997},{\"txn_id\":3579803,\"ts\":\"2022-09-07T16:11:00\",\"from_account\":\"A9aabc71f3cd9\",\"to_account\":\"A4acbf8ec9c8d\",\"amount_eur\":2996.452438299037}]},{\"flow_eur\":823.5775947584083,\"hops\":[{\"txn_id\":3079621,\"ts\":\"2022-09-06T15:17:00\",\"from_account\":\"Aefc2b9ceeded\",\"to_account\":\"A9aabc71f3cd9\",\"amount_eur\":823.5775947584083},{\"txn_id\":3579803,\"ts\":\"2022-09-07T16:11:00\",\"from_account\":\"A9aabc71f3cd9\",\"to_account\":\"A4acbf8ec9c8d\",\"amount_eur\":2996.452438299037}]},{\"flow_eur\":346.6351203107525,\"hops\":[{\"txn_id\":3081928,\"ts\":\"2022-09-06T15:24:00\",\"from_account\":\"A4acbf8ec9c8d\",\"to_account\":\"A9aabc71f3cd9\",\"amount_eur\":346.6351203107525},{\"txn_id\":3579803,\"ts\":\"2022-09-07T16:11:00\",\"from_account\":\"A9aabc71f3cd9\",\"to_account\":\"A4acbf8ec9c8d\",\"amount_eur\":2996.452438299037}]}]}",
+            "id": "lc_b7f79ef6-d471-4238-814d-cae312ad3593"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "trace_funds",
+        "id": null,
+        "tool_call_id": "evidence-6",
+        "artifact": {
+          "structured_content": {
+            "as_of": "2022-09-08T00:00:00",
+            "direction": "backward",
+            "max_hops": 2,
+            "truncated": false,
+            "paths": [
+              {
+                "flow_eur": 1430.837616844616,
+                "hops": [
+                  {
+                    "txn_id": 3579452,
+                    "ts": "2022-09-07T16:10:00",
+                    "from_account": "Aefc2b9ceeded",
+                    "to_account": "A4acbf8ec9c8d",
+                    "amount_eur": 1430.837616844616
+                  }
+                ]
+              },
+              {
+                "flow_eur": 1158.5194944905345,
+                "hops": [
+                  {
+                    "txn_id": 2869377,
+                    "ts": "2022-09-06T04:29:00",
+                    "from_account": "A8a196a8a0b9f",
+                    "to_account": "A9aabc71f3cd9",
+                    "amount_eur": 1158.5194944905345
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "ts": "2022-09-07T16:11:00",
+                    "from_account": "A9aabc71f3cd9",
+                    "to_account": "A4acbf8ec9c8d",
+                    "amount_eur": 2996.452438299037
+                  }
+                ]
+              },
+              {
+                "flow_eur": 1094.0303063107997,
+                "hops": [
+                  {
+                    "txn_id": 2869026,
+                    "ts": "2022-09-06T04:28:00",
+                    "from_account": "A8a196a8a0b9f",
+                    "to_account": "A9aabc71f3cd9",
+                    "amount_eur": 1094.0303063107997
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "ts": "2022-09-07T16:11:00",
+                    "from_account": "A9aabc71f3cd9",
+                    "to_account": "A4acbf8ec9c8d",
+                    "amount_eur": 2996.452438299037
+                  }
+                ]
+              },
+              {
+                "flow_eur": 823.5775947584083,
+                "hops": [
+                  {
+                    "txn_id": 3079621,
+                    "ts": "2022-09-06T15:17:00",
+                    "from_account": "Aefc2b9ceeded",
+                    "to_account": "A9aabc71f3cd9",
+                    "amount_eur": 823.5775947584083
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "ts": "2022-09-07T16:11:00",
+                    "from_account": "A9aabc71f3cd9",
+                    "to_account": "A4acbf8ec9c8d",
+                    "amount_eur": 2996.452438299037
+                  }
+                ]
+              },
+              {
+                "flow_eur": 346.6351203107525,
+                "hops": [
+                  {
+                    "txn_id": 3081928,
+                    "ts": "2022-09-06T15:24:00",
+                    "from_account": "A4acbf8ec9c8d",
+                    "to_account": "A9aabc71f3cd9",
+                    "amount_eur": 346.6351203107525
+                  },
+                  {
+                    "txn_id": 3579803,
+                    "ts": "2022-09-07T16:11:00",
+                    "from_account": "A9aabc71f3cd9",
+                    "to_account": "A4acbf8ec9c8d",
+                    "amount_eur": 2996.452438299037
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "search_regulations",
+      "args": {
+        "query": "layering return cycle funds to origin suspicious transaction definition layering 'cycle' 'return' 'layering' 'wire' 'ACH'",
+        "top_k": 3
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"query\":\"layering return cycle funds to origin suspicious transaction definition layering 'cycle' 'return' 'layering' 'wire' 'ACH'\",\"passages\":[{\"passage_id\":\"AMLR art. 2(1)(20)\",\"doc_id\":\"AMLR\",\"article\":\"2\",\"paragraph\":\"1\",\"heading\":\"Definitions\",\"text\":\"‘linked transactions’ means two or more transactions with either identical or similar origin, destination and purpose, or other relevant characteristics, over a specific period;\",\"content_sha256\":\"9579d1683595b023a518a9ce723234a64d69a7d5764bc6154810f10631581658\",\"rank\":0.37139343398471336},{\"passage_id\":\"AMLR art. 34(2)\",\"doc_id\":\"AMLR\",\"article\":\"34\",\"paragraph\":\"2\",\"heading\":\"Scope of application of enhanced due diligence measures\",\"text\":\"Obliged entities shall examine the origin and destination of funds involved in, and the purpose of, all transactions that fulfil at least one of the following conditions:\\n(a) the transaction is of a complex nature;\\n(b) the transaction is unusually large;\\n(c) the transaction is conducted in an unusual pattern;\\n(d) the transaction does not have an apparent economic or lawful purpose.\",\"content_sha256\":\"4150d7a697e63216b4e2846f135f9484bd70477371c0f560bf807cea6fc37414\",\"rank\":0.36611184904925786},{\"passage_id\":\"AMLR art. 69(2)\",\"doc_id\":\"AMLR\",\"article\":\"69\",\"paragraph\":\"2\",\"heading\":\"Reporting of suspicions\",\"text\":\"For the purposes of paragraph 1, obliged entities shall assess transactions or activities carried out by their customers on the basis of and against any relevant fact and information known to them or which they are in possession of. Where necessary, obliged entities shall prioritise their assessment taking into consideration the urgency of the transaction or activity and the risks affecting the Member State in which they are established.\\nA suspicion pursuant to paragraph 1, point (a), shall be based on the characteristics of the customer and their counterparts, the size and nature of the transaction or activity or the methods and patterns thereof, the link between several transactions or activities, the origin, destination or use of funds, or any other circumstance known to the obliged entity, including the consistency of the transaction or activity with the information obtained pursuant to Chapter III including the risk profile of the client.\",\"content_sha256\":\"d90ca1b228380327ac9ea92362013c9b48344c094fbd3f2afb0ae68aab994de4\",\"rank\":0.33598517984333},{\"passage_id\":\"PL-AML art. 43 ust. 4\",\"doc_id\":\"PL-AML\",\"article\":\"43\",\"paragraph\":\"4\",\"heading\":null,\"text\":\"W przypadku ujawnienia transakcji:\\n1) skomplikowanych lub\\n2) opiewających na wysokie kwoty, które nie są uzasadnione okolicznościami przeprowadzenia transakcji, lub\\n3) przeprowadzanych w nietypowy sposób, lub\\n4) wydających się nie mieć uzasadnienia prawnego lub gospodarczego\\n– instytucje obowiązane podejmują działania w celu wyjaśnienia okoliczności, w jakich przeprowadzono te transakcje, oraz, w przypadku transakcji przeprowadzanych w ramach stosunków gospodarczych, intensyfikują stosowanie środka bezpieczeństwa finansowego, o którym mowa w art. 34 ust. 1 pkt 4, w odniesieniu do stosunków gospodarczych, w ramach których te transakcje zostały przeprowadzone.\",\"content_sha256\":\"dc487b63c31ea5ea0164d9e02646198f619a3dea22916185a63b2781d5243a8c\",\"rank\":0.2883634238549351},{\"passage_id\":\"PL-AML art. 2 ust. 2 pkt 1b\",\"doc_id\":\"PL-AML\",\"article\":\"2\",\"paragraph\":\"2\",\"heading\":null,\"text\":\"analizie operacyjnej – rozumie się przez to metodę działania opartą na badaniu, przetwarzaniu i zestawianiu zgromadzonych informacji, polegającą na poszukiwaniu, identyfikowaniu i wskazywaniu powiązań między danymi uzyskanymi z różnych źródeł w celu wykrycia lub uprawdopodobnienia prania pieniędzy lub finansowania terroryzmu;\",\"content_sha256\":\"d4c9425b1694aaf8f3ed3baf9e335f5b6b37174fd50ca7afe4d59af1c4578679\",\"rank\":0.285927930526084},{\"passage_id\":\"PL-AML art. 2 ust. 2 pkt 23\",\"doc_id\":\"PL-AML\",\"article\":\"2\",\"paragraph\":\"2\",\"heading\":null,\"text\":\"transferze środków pieniężnych – rozumie się przez to transfer środków pieniężnych w rozumieniu rozporządzenia 2015/847;\",\"content_sha256\":\"3da1181d6214bd4837247c82357dee396587c3bdcd08200410fb0c92e0421dc5\",\"rank\":0.272943342743896}]}",
+            "id": "lc_141db4c1-c79b-438c-8e05-86eb3dd1b265"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_regulations",
+        "id": null,
+        "tool_call_id": "call_7UJlhlR8J22Itxe19JatIOsW",
+        "artifact": {
+          "structured_content": {
+            "query": "layering return cycle funds to origin suspicious transaction definition layering 'cycle' 'return' 'layering' 'wire' 'ACH'",
+            "passages": [
+              {
+                "passage_id": "AMLR art. 2(1)(20)",
+                "doc_id": "AMLR",
+                "article": "2",
+                "paragraph": "1",
+                "heading": "Definitions",
+                "text": "‘linked transactions’ means two or more transactions with either identical or similar origin, destination and purpose, or other relevant characteristics, over a specific period;",
+                "content_sha256": "9579d1683595b023a518a9ce723234a64d69a7d5764bc6154810f10631581658",
+                "rank": 0.37139343398471336
+              },
+              {
+                "passage_id": "AMLR art. 34(2)",
+                "doc_id": "AMLR",
+                "article": "34",
+                "paragraph": "2",
+                "heading": "Scope of application of enhanced due diligence measures",
+                "text": "Obliged entities shall examine the origin and destination of funds involved in, and the purpose of, all transactions that fulfil at least one of the following conditions:\n(a) the transaction is of a complex nature;\n(b) the transaction is unusually large;\n(c) the transaction is conducted in an unusual pattern;\n(d) the transaction does not have an apparent economic or lawful purpose.",
+                "content_sha256": "4150d7a697e63216b4e2846f135f9484bd70477371c0f560bf807cea6fc37414",
+                "rank": 0.36611184904925786
+              },
+              {
+                "passage_id": "AMLR art. 69(2)",
+                "doc_id": "AMLR",
+                "article": "69",
+                "paragraph": "2",
+                "heading": "Reporting of suspicions",
+                "text": "For the purposes of paragraph 1, obliged entities shall assess transactions or activities carried out by their customers on the basis of and against any relevant fact and information known to them or which they are in possession of. Where necessary, obliged entities shall prioritise their assessment taking into consideration the urgency of the transaction or activity and the risks affecting the Member State in which they are established.\nA suspicion pursuant to paragraph 1, point (a), shall be based on the characteristics of the customer and their counterparts, the size and nature of the transaction or activity or the methods and patterns thereof, the link between several transactions or activities, the origin, destination or use of funds, or any other circumstance known to the obliged entity, including the consistency of the transaction or activity with the information obtained pursuant to Chapter III including the risk profile of the client.",
+                "content_sha256": "d90ca1b228380327ac9ea92362013c9b48344c094fbd3f2afb0ae68aab994de4",
+                "rank": 0.33598517984333
+              },
+              {
+                "passage_id": "PL-AML art. 43 ust. 4",
+                "doc_id": "PL-AML",
+                "article": "43",
+                "paragraph": "4",
+                "heading": null,
+                "text": "W przypadku ujawnienia transakcji:\n1) skomplikowanych lub\n2) opiewających na wysokie kwoty, które nie są uzasadnione okolicznościami przeprowadzenia transakcji, lub\n3) przeprowadzanych w nietypowy sposób, lub\n4) wydających się nie mieć uzasadnienia prawnego lub gospodarczego\n– instytucje obowiązane podejmują działania w celu wyjaśnienia okoliczności, w jakich przeprowadzono te transakcje, oraz, w przypadku transakcji przeprowadzanych w ramach stosunków gospodarczych, intensyfikują stosowanie środka bezpieczeństwa finansowego, o którym mowa w art. 34 ust. 1 pkt 4, w odniesieniu do stosunków gospodarczych, w ramach których te transakcje zostały przeprowadzone.",
+                "content_sha256": "dc487b63c31ea5ea0164d9e02646198f619a3dea22916185a63b2781d5243a8c",
+                "rank": 0.2883634238549351
+              },
+              {
+                "passage_id": "PL-AML art. 2 ust. 2 pkt 1b",
+                "doc_id": "PL-AML",
+                "article": "2",
+                "paragraph": "2",
+                "heading": null,
+                "text": "analizie operacyjnej – rozumie się przez to metodę działania opartą na badaniu, przetwarzaniu i zestawianiu zgromadzonych informacji, polegającą na poszukiwaniu, identyfikowaniu i wskazywaniu powiązań między danymi uzyskanymi z różnych źródeł w celu wykrycia lub uprawdopodobnienia prania pieniędzy lub finansowania terroryzmu;",
+                "content_sha256": "d4c9425b1694aaf8f3ed3baf9e335f5b6b37174fd50ca7afe4d59af1c4578679",
+                "rank": 0.285927930526084
+              },
+              {
+                "passage_id": "PL-AML art. 2 ust. 2 pkt 23",
+                "doc_id": "PL-AML",
+                "article": "2",
+                "paragraph": "2",
+                "heading": null,
+                "text": "transferze środków pieniężnych – rozumie się przez to transfer środków pieniężnych w rozumieniu rozporządzenia 2015/847;",
+                "content_sha256": "3da1181d6214bd4837247c82357dee396587c3bdcd08200410fb0c92e0421dc5",
+                "rank": 0.272943342743896
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "search_regulations",
+      "args": {
+        "query": "\"reasonable grounds to suspect\" FIU",
+        "top_k": 3
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"query\":\"\\\"reasonable grounds to suspect\\\" FIU\",\"passages\":[{\"passage_id\":\"AMLR art. 72\",\"doc_id\":\"AMLR\",\"article\":\"72\",\"paragraph\":null,\"heading\":\"Disclosure to FIU\",\"text\":\"Disclosure of information to the FIU in good faith by an obliged entity or by an employee or director of such an obliged entity in accordance with Articles 69 and 70 shall not constitute a breach of any restriction on disclosure of information imposed by contract or by any legislative, regulatory or administrative provision, and shall not involve the obliged entity or its directors or employees in liability of any kind even in circumstances where they were not precisely aware of the underlying criminal activity and regardless of whether illegal activity actually occurred.\",\"content_sha256\":\"1d27c3f1f95e6d46ab9ca1466154283ca6b075cbbdcc77a7343405ede94be240\",\"rank\":0.6067830413728579},{\"passage_id\":\"AMLR art. 69(1)\",\"doc_id\":\"AMLR\",\"article\":\"69\",\"paragraph\":\"1\",\"heading\":\"Reporting of suspicions\",\"text\":\"Obliged entities, and, where applicable, their directors and employees, shall cooperate fully with the FIU by promptly:\\n(a) reporting to the FIU, on their own initiative, where the obliged entity knows, suspects or has reasonable grounds to suspect that funds or activities, regardless of the amount involved, are the proceeds of criminal activity or are related to terrorist financing or criminal activity and by responding to requests by the FIU for additional information in such cases;\\n(b) providing the FIU, at its request, with all necessary information, including information on transaction records, within the deadlines imposed.\\nAll suspicious transactions, including attempted transactions and suspicions arising from the inability to conduct customer due diligence shall be reported in accordance with the first subparagraph.\\nFor the purposes of the first subparagraph, obliged entities shall reply to requests for information by the FIU within 5 working days. In justified and urgent cases, FIUs may shorten that deadline, including to less than 24 hours.\\nBy way of derogation from the third subparagraph, the FIU may extend the deadline for a response beyond the 5 working days where it considers it justified and provided that the extension does not undermine the FIU’s analysis.\",\"content_sha256\":\"387cb3ebedea61e9f665c844427c9d4d4d83fc8d114cb883fb701d6a268b1434\",\"rank\":0.5881129585996397},{\"passage_id\":\"AMLR art. 69(8)\",\"doc_id\":\"AMLR\",\"article\":\"69\",\"paragraph\":\"8\",\"heading\":\"Reporting of suspicions\",\"text\":\"Where the activities of a partnership for information sharing result in the knowledge, suspicion or reasonable grounds to suspect that funds, regardless of the amount involved, are the proceeds of criminal activity or are related to terrorist financing, obliged entities which identified suspicions in relation to the activities of their customers may designate one among them which shall be tasked with the submission of a report to the FIU pursuant to paragraph 1, point (a). Such submission shall include at least the name and contact details of all the obliged entities that participated in the activities giving rise to the report.\\nWhere the obliged entities referred to in the first subparagraph are established in several Member States, the information shall be reported to each relevant FIU. To that end, obliged entities shall ensure that the report is submitted by an obliged entity within the territory of the Member States where the FIU is located.\\nWhere the obliged entities decide not to avail themselves of the possibility to submit a single report with the FIU pursuant to the first subparagraph, they shall include a reference in their reports to the fact that the suspicion is the result of the activities of a partnership for information sharing.\",\"content_sha256\":\"a4e9f807775fd9d5a7d91fd5816e1acb088b51ad3a89966a814cd1f4d0ba5298\",\"rank\":0.5698468822395294},{\"passage_id\":\"PL-AML art. 106 ust. 1\",\"doc_id\":\"PL-AML\",\"article\":\"106\",\"paragraph\":\"1\",\"heading\":null,\"text\":\"W przypadku powzięcia podejrzenia popełnienia przestępstwa skarbowego lub innego przestępstwa niż przestępstwo prania pieniędzy lub finansowania terroryzmu Generalny Inspektor przekazuje informacje uzasadniające to podejrzenie właściwym organom wskazanym w art. 105 ust. 1 i 4 w celu podjęcia czynności wynikających z ich ustawowych zadań.\",\"content_sha256\":\"e036d23b565c33db94c5b762bcb9b73c2759ba5bf79dd2d57d918ec75622e998\",\"rank\":0.37704480122910067},{\"passage_id\":\"PL-AML art. 86 ust. 1\",\"doc_id\":\"PL-AML\",\"article\":\"86\",\"paragraph\":\"1\",\"heading\":null,\"text\":\"Instytucja obowiązana niezwłocznie zawiadamia Generalnego Inspektora, za pomocą środków komunikacji elektronicznej, o przypadku powzięcia uzasadnionego podejrzenia, że określona transakcja lub określone wartości majątkowe mogą mieć związek z praniem pieniędzy lub finansowaniem terroryzmu.\",\"content_sha256\":\"d259ea26b07b6e920ebfd00c2fda5d75e7dcad312b13e847aeba1b324f44de31\",\"rank\":0.37562073813727936},{\"passage_id\":\"PL-AML art. 113 ust. 4\",\"doc_id\":\"PL-AML\",\"article\":\"113\",\"paragraph\":\"4\",\"heading\":null,\"text\":\"Na uzasadniony wniosek zagranicznej jednostki analityki finansowej pozwalający na uprawdopodobnienie podejrzenia popełnienia przestępstwa prania pieniędzy lub finansowania terroryzmu Generalny Inspektor może przekazać instytucji obowiązanej żądanie wstrzymania transakcji lub blokady rachunku. Przepisy art. 87 stosuje się.\",\"content_sha256\":\"bee3fb8522335c0501f2e6d911e2811f0640d6a01c76fc5bbc12afaa23d0931c\",\"rank\":0.3740833736411655}]}",
+            "id": "lc_35be7e5f-e257-411b-84e4-fc8d9f3ac506"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_regulations",
+        "id": null,
+        "tool_call_id": "regulations-0",
+        "artifact": {
+          "structured_content": {
+            "query": "\"reasonable grounds to suspect\" FIU",
+            "passages": [
+              {
+                "passage_id": "AMLR art. 72",
+                "doc_id": "AMLR",
+                "article": "72",
+                "paragraph": null,
+                "heading": "Disclosure to FIU",
+                "text": "Disclosure of information to the FIU in good faith by an obliged entity or by an employee or director of such an obliged entity in accordance with Articles 69 and 70 shall not constitute a breach of any restriction on disclosure of information imposed by contract or by any legislative, regulatory or administrative provision, and shall not involve the obliged entity or its directors or employees in liability of any kind even in circumstances where they were not precisely aware of the underlying criminal activity and regardless of whether illegal activity actually occurred.",
+                "content_sha256": "1d27c3f1f95e6d46ab9ca1466154283ca6b075cbbdcc77a7343405ede94be240",
+                "rank": 0.6067830413728579
+              },
+              {
+                "passage_id": "AMLR art. 69(1)",
+                "doc_id": "AMLR",
+                "article": "69",
+                "paragraph": "1",
+                "heading": "Reporting of suspicions",
+                "text": "Obliged entities, and, where applicable, their directors and employees, shall cooperate fully with the FIU by promptly:\n(a) reporting to the FIU, on their own initiative, where the obliged entity knows, suspects or has reasonable grounds to suspect that funds or activities, regardless of the amount involved, are the proceeds of criminal activity or are related to terrorist financing or criminal activity and by responding to requests by the FIU for additional information in such cases;\n(b) providing the FIU, at its request, with all necessary information, including information on transaction records, within the deadlines imposed.\nAll suspicious transactions, including attempted transactions and suspicions arising from the inability to conduct customer due diligence shall be reported in accordance with the first subparagraph.\nFor the purposes of the first subparagraph, obliged entities shall reply to requests for information by the FIU within 5 working days. In justified and urgent cases, FIUs may shorten that deadline, including to less than 24 hours.\nBy way of derogation from the third subparagraph, the FIU may extend the deadline for a response beyond the 5 working days where it considers it justified and provided that the extension does not undermine the FIU’s analysis.",
+                "content_sha256": "387cb3ebedea61e9f665c844427c9d4d4d83fc8d114cb883fb701d6a268b1434",
+                "rank": 0.5881129585996397
+              },
+              {
+                "passage_id": "AMLR art. 69(8)",
+                "doc_id": "AMLR",
+                "article": "69",
+                "paragraph": "8",
+                "heading": "Reporting of suspicions",
+                "text": "Where the activities of a partnership for information sharing result in the knowledge, suspicion or reasonable grounds to suspect that funds, regardless of the amount involved, are the proceeds of criminal activity or are related to terrorist financing, obliged entities which identified suspicions in relation to the activities of their customers may designate one among them which shall be tasked with the submission of a report to the FIU pursuant to paragraph 1, point (a). Such submission shall include at least the name and contact details of all the obliged entities that participated in the activities giving rise to the report.\nWhere the obliged entities referred to in the first subparagraph are established in several Member States, the information shall be reported to each relevant FIU. To that end, obliged entities shall ensure that the report is submitted by an obliged entity within the territory of the Member States where the FIU is located.\nWhere the obliged entities decide not to avail themselves of the possibility to submit a single report with the FIU pursuant to the first subparagraph, they shall include a reference in their reports to the fact that the suspicion is the result of the activities of a partnership for information sharing.",
+                "content_sha256": "a4e9f807775fd9d5a7d91fd5816e1acb088b51ad3a89966a814cd1f4d0ba5298",
+                "rank": 0.5698468822395294
+              },
+              {
+                "passage_id": "PL-AML art. 106 ust. 1",
+                "doc_id": "PL-AML",
+                "article": "106",
+                "paragraph": "1",
+                "heading": null,
+                "text": "W przypadku powzięcia podejrzenia popełnienia przestępstwa skarbowego lub innego przestępstwa niż przestępstwo prania pieniędzy lub finansowania terroryzmu Generalny Inspektor przekazuje informacje uzasadniające to podejrzenie właściwym organom wskazanym w art. 105 ust. 1 i 4 w celu podjęcia czynności wynikających z ich ustawowych zadań.",
+                "content_sha256": "e036d23b565c33db94c5b762bcb9b73c2759ba5bf79dd2d57d918ec75622e998",
+                "rank": 0.37704480122910067
+              },
+              {
+                "passage_id": "PL-AML art. 86 ust. 1",
+                "doc_id": "PL-AML",
+                "article": "86",
+                "paragraph": "1",
+                "heading": null,
+                "text": "Instytucja obowiązana niezwłocznie zawiadamia Generalnego Inspektora, za pomocą środków komunikacji elektronicznej, o przypadku powzięcia uzasadnionego podejrzenia, że określona transakcja lub określone wartości majątkowe mogą mieć związek z praniem pieniędzy lub finansowaniem terroryzmu.",
+                "content_sha256": "d259ea26b07b6e920ebfd00c2fda5d75e7dcad312b13e847aeba1b324f44de31",
+                "rank": 0.37562073813727936
+              },
+              {
+                "passage_id": "PL-AML art. 113 ust. 4",
+                "doc_id": "PL-AML",
+                "article": "113",
+                "paragraph": "4",
+                "heading": null,
+                "text": "Na uzasadniony wniosek zagranicznej jednostki analityki finansowej pozwalający na uprawdopodobnienie podejrzenia popełnienia przestępstwa prania pieniędzy lub finansowania terroryzmu Generalny Inspektor może przekazać instytucji obowiązanej żądanie wstrzymania transakcji lub blokady rachunku. Przepisy art. 87 stosuje się.",
+                "content_sha256": "bee3fb8522335c0501f2e6d911e2811f0640d6a01c76fc5bbc12afaa23d0931c",
+                "rank": 0.3740833736411655
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "search_regulations",
+      "args": {
+        "query": "zawiadamia Generalnego Inspektora podejrzenie",
+        "top_k": 3
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"query\":\"zawiadamia Generalnego Inspektora podejrzenie\",\"passages\":[{\"passage_id\":\"AMLR art. 69(6)\",\"doc_id\":\"AMLR\",\"article\":\"69\",\"paragraph\":\"6\",\"heading\":\"Reporting of suspicions\",\"text\":\"The compliance officer appointed in accordance with Article 11(2) shall transmit the information referred to in paragraph 1 of this Article to the FIU of the Member State in whose territory the obliged entity transmitting the information is established.\",\"content_sha256\":\"a71d8b42d8026b105eeb6db2ee51188f44274f7d1b1b7df25f4eb13f874265cc\",\"rank\":0.3552046575394072},{\"passage_id\":\"AMLR art. 69(9)\",\"doc_id\":\"AMLR\",\"article\":\"69\",\"paragraph\":\"9\",\"heading\":\"Reporting of suspicions\",\"text\":\"The obliged entities referred to in paragraph 8 of this Article shall retain a copy of any reports submitted pursuant to that paragraph in accordance with Article 77.\",\"content_sha256\":\"a78381f0446a3948731ea531397d437a238cc8f296347b1ea2490ba93ef77b4d\",\"rank\":0.31271064732548615},{\"passage_id\":\"AMLR art. 69(2)\",\"doc_id\":\"AMLR\",\"article\":\"69\",\"paragraph\":\"2\",\"heading\":\"Reporting of suspicions\",\"text\":\"For the purposes of paragraph 1, obliged entities shall assess transactions or activities carried out by their customers on the basis of and against any relevant fact and information known to them or which they are in possession of. Where necessary, obliged entities shall prioritise their assessment taking into consideration the urgency of the transaction or activity and the risks affecting the Member State in which they are established.\\nA suspicion pursuant to paragraph 1, point (a), shall be based on the characteristics of the customer and their counterparts, the size and nature of the transaction or activity or the methods and patterns thereof, the link between several transactions or activities, the origin, destination or use of funds, or any other circumstance known to the obliged entity, including the consistency of the transaction or activity with the information obtained pursuant to Chapter III including the risk profile of the client.\",\"content_sha256\":\"d90ca1b228380327ac9ea92362013c9b48344c094fbd3f2afb0ae68aab994de4\",\"rank\":0.30820708231239},{\"passage_id\":\"PL-AML art. 103 ust. 1\",\"doc_id\":\"PL-AML\",\"article\":\"103\",\"paragraph\":\"1\",\"heading\":null,\"text\":\"Jeżeli uzasadnione podejrzenie popełnienia przestępstwa prania pieniędzy lub finansowania terroryzmu wynika z posiadanych przez Generalnego Inspektora informacji, ich przetworzenia lub analizy, Generalny Inspektor przekazuje właściwemu prokuratorowi zawiadomienie o podejrzeniu popełnienia przestępstwa wraz z informacjami lub dokumentami uzasadniającymi to podejrzenie.\",\"content_sha256\":\"892832703d123e0988ac46ef01cb27e796d72191f96d76c459d81904ad3f73aa\",\"rank\":0.7186088236295969},{\"passage_id\":\"PL-AML art. 17 ust. 2\",\"doc_id\":\"PL-AML\",\"article\":\"17\",\"paragraph\":\"2\",\"heading\":null,\"text\":\"Generalny Inspektor może przetwarzać informacje, o których mowa w ust. 1.\",\"content_sha256\":\"ab83e29209bc807aa711af7ab747c807472a428be4e115020c1b807cd551b7a3\",\"rank\":0.6750152756883161},{\"passage_id\":\"PL-AML art. 104 ust. 2\",\"doc_id\":\"PL-AML\",\"article\":\"104\",\"paragraph\":\"2\",\"heading\":null,\"text\":\"W celu weryfikacji danych zawartych w przekazanym przez Generalnego Inspektora zawiadomieniu o podejrzeniu popełnienia przestępstwa prania pieniędzy lub finansowania terroryzmu prokurator może żądać od Generalnego Inspektora udostępnienia informacji lub dokumentów, w tym informacji lub dokumentów objętych tajemnicami prawnie chronionymi.\",\"content_sha256\":\"15a4d9b6c3fcf3aa825496ac7f6ce6194777caf95e3e55a8660bd11ff3f02e99\",\"rank\":0.6708793400993197}]}",
+            "id": "lc_745fbaa7-42b5-46e9-afdb-e3836b9d7699"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_regulations",
+        "id": null,
+        "tool_call_id": "regulations-1",
+        "artifact": {
+          "structured_content": {
+            "query": "zawiadamia Generalnego Inspektora podejrzenie",
+            "passages": [
+              {
+                "passage_id": "AMLR art. 69(6)",
+                "doc_id": "AMLR",
+                "article": "69",
+                "paragraph": "6",
+                "heading": "Reporting of suspicions",
+                "text": "The compliance officer appointed in accordance with Article 11(2) shall transmit the information referred to in paragraph 1 of this Article to the FIU of the Member State in whose territory the obliged entity transmitting the information is established.",
+                "content_sha256": "a71d8b42d8026b105eeb6db2ee51188f44274f7d1b1b7df25f4eb13f874265cc",
+                "rank": 0.3552046575394072
+              },
+              {
+                "passage_id": "AMLR art. 69(9)",
+                "doc_id": "AMLR",
+                "article": "69",
+                "paragraph": "9",
+                "heading": "Reporting of suspicions",
+                "text": "The obliged entities referred to in paragraph 8 of this Article shall retain a copy of any reports submitted pursuant to that paragraph in accordance with Article 77.",
+                "content_sha256": "a78381f0446a3948731ea531397d437a238cc8f296347b1ea2490ba93ef77b4d",
+                "rank": 0.31271064732548615
+              },
+              {
+                "passage_id": "AMLR art. 69(2)",
+                "doc_id": "AMLR",
+                "article": "69",
+                "paragraph": "2",
+                "heading": "Reporting of suspicions",
+                "text": "For the purposes of paragraph 1, obliged entities shall assess transactions or activities carried out by their customers on the basis of and against any relevant fact and information known to them or which they are in possession of. Where necessary, obliged entities shall prioritise their assessment taking into consideration the urgency of the transaction or activity and the risks affecting the Member State in which they are established.\nA suspicion pursuant to paragraph 1, point (a), shall be based on the characteristics of the customer and their counterparts, the size and nature of the transaction or activity or the methods and patterns thereof, the link between several transactions or activities, the origin, destination or use of funds, or any other circumstance known to the obliged entity, including the consistency of the transaction or activity with the information obtained pursuant to Chapter III including the risk profile of the client.",
+                "content_sha256": "d90ca1b228380327ac9ea92362013c9b48344c094fbd3f2afb0ae68aab994de4",
+                "rank": 0.30820708231239
+              },
+              {
+                "passage_id": "PL-AML art. 103 ust. 1",
+                "doc_id": "PL-AML",
+                "article": "103",
+                "paragraph": "1",
+                "heading": null,
+                "text": "Jeżeli uzasadnione podejrzenie popełnienia przestępstwa prania pieniędzy lub finansowania terroryzmu wynika z posiadanych przez Generalnego Inspektora informacji, ich przetworzenia lub analizy, Generalny Inspektor przekazuje właściwemu prokuratorowi zawiadomienie o podejrzeniu popełnienia przestępstwa wraz z informacjami lub dokumentami uzasadniającymi to podejrzenie.",
+                "content_sha256": "892832703d123e0988ac46ef01cb27e796d72191f96d76c459d81904ad3f73aa",
+                "rank": 0.7186088236295969
+              },
+              {
+                "passage_id": "PL-AML art. 17 ust. 2",
+                "doc_id": "PL-AML",
+                "article": "17",
+                "paragraph": "2",
+                "heading": null,
+                "text": "Generalny Inspektor może przetwarzać informacje, o których mowa w ust. 1.",
+                "content_sha256": "ab83e29209bc807aa711af7ab747c807472a428be4e115020c1b807cd551b7a3",
+                "rank": 0.6750152756883161
+              },
+              {
+                "passage_id": "PL-AML art. 104 ust. 2",
+                "doc_id": "PL-AML",
+                "article": "104",
+                "paragraph": "2",
+                "heading": null,
+                "text": "W celu weryfikacji danych zawartych w przekazanym przez Generalnego Inspektora zawiadomieniu o podejrzeniu popełnienia przestępstwa prania pieniędzy lub finansowania terroryzmu prokurator może żądać od Generalnego Inspektora udostępnienia informacji lub dokumentów, w tym informacji lub dokumentów objętych tajemnicami prawnie chronionymi.",
+                "content_sha256": "15a4d9b6c3fcf3aa825496ac7f6ce6194777caf95e3e55a8660bd11ff3f02e99",
+                "rank": 0.6708793400993197
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "search_regulations",
+      "args": {
+        "query": "transaction \"unusually large\" complex purpose",
+        "top_k": 3
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"query\":\"transaction \\\"unusually large\\\" complex purpose\",\"passages\":[{\"passage_id\":\"AMLR art. 34(2)\",\"doc_id\":\"AMLR\",\"article\":\"34\",\"paragraph\":\"2\",\"heading\":\"Scope of application of enhanced due diligence measures\",\"text\":\"Obliged entities shall examine the origin and destination of funds involved in, and the purpose of, all transactions that fulfil at least one of the following conditions:\\n(a) the transaction is of a complex nature;\\n(b) the transaction is unusually large;\\n(c) the transaction is conducted in an unusual pattern;\\n(d) the transaction does not have an apparent economic or lawful purpose.\",\"content_sha256\":\"4150d7a697e63216b4e2846f135f9484bd70477371c0f560bf807cea6fc37414\",\"rank\":0.4976503100276145},{\"passage_id\":\"AMLR art. 74(1)\",\"doc_id\":\"AMLR\",\"article\":\"74\",\"paragraph\":\"1\",\"heading\":\"Threshold-based reports of transactions in certain high-value goods\",\"text\":\"Persons trading in high-value goods shall report to the FIU all transactions involving the sale of the following high-value goods when those goods are acquired for non-commercial purposes:\\n(a) motor vehicles for a price of at least EUR 250 000 or the equivalent in national currency;\\n(b) watercraft for a price of at least EUR 7 500 000 or the equivalent in national currency;\\n(c) aircraft for a price of at least EUR 7 500 000 or the equivalent in national currency.\",\"content_sha256\":\"2dedc5c02c02a6f8ae635d0f93e9766ddc9ceb8b211d1942d12e96a185aadef3\",\"rank\":0.44209416960009607},{\"passage_id\":\"AMLR art. 25\",\"doc_id\":\"AMLR\",\"article\":\"25\",\"paragraph\":null,\"heading\":\"Identification of the purpose and intended nature of a business relationship or occasional transaction\",\"text\":\"Before entering into a business relationship or performing an occasional transaction, an obliged entity shall assure itself that it understands its purpose and intended nature. To that end, the obliged entity shall obtain, where necessary, information on:\\n(a) the purpose and economic rationale of the occasional transaction or business relationship;\\n(b) the estimated amount of the envisaged activities;\\n(c) the source of funds;\\n(d) the destination of funds;\\n(e) the business activity or the occupation of the customer.\\nFor the purposes of the first paragraph, point (a), of this Article, obliged entities covered by Article 74 shall collect information in order to determine whether the intended use of high value goods referred to in that Article is for commercial or non-commercial purposes.\",\"content_sha256\":\"2db6da7aede9ba3da982d476e3c7a56dd36ce61f0cd1413d3e4585959ef92288\",\"rank\":0.4250894064088848},{\"passage_id\":\"PL-AML art. 2 ust. 2 pkt 22\",\"doc_id\":\"PL-AML\",\"article\":\"2\",\"paragraph\":\"2\",\"heading\":null,\"text\":\"transakcji okazjonalnej – rozumie się przez to transakcję, która nie jest przeprowadzana w ramach stosunków gospodarczych;\",\"content_sha256\":\"3507caeb2085422e52c3ac0ee6e162c76762b4b78a39a4157725861155b58605\",\"rank\":0.3897768367172836},{\"passage_id\":\"PL-AML art. 43 ust. 4\",\"doc_id\":\"PL-AML\",\"article\":\"43\",\"paragraph\":\"4\",\"heading\":null,\"text\":\"W przypadku ujawnienia transakcji:\\n1) skomplikowanych lub\\n2) opiewających na wysokie kwoty, które nie są uzasadnione okolicznościami przeprowadzenia transakcji, lub\\n3) przeprowadzanych w nietypowy sposób, lub\\n4) wydających się nie mieć uzasadnienia prawnego lub gospodarczego\\n– instytucje obowiązane podejmują działania w celu wyjaśnienia okoliczności, w jakich przeprowadzono te transakcje, oraz, w przypadku transakcji przeprowadzanych w ramach stosunków gospodarczych, intensyfikują stosowanie środka bezpieczeństwa finansowego, o którym mowa w art. 34 ust. 1 pkt 4, w odniesieniu do stosunków gospodarczych, w ramach których te transakcje zostały przeprowadzone.\",\"content_sha256\":\"dc487b63c31ea5ea0164d9e02646198f619a3dea22916185a63b2781d5243a8c\",\"rank\":0.37252166838363565},{\"passage_id\":\"PL-AML art. 2 ust. 2 pkt 28\",\"doc_id\":\"PL-AML\",\"article\":\"2\",\"paragraph\":\"2\",\"heading\":null,\"text\":\"wstrzymaniu transakcji – rozumie się przez to czasowe ograniczenie korzystania i dysponowania wartościami majątkowymi polegające na uniemożliwieniu przeprowadzenia przez instytucję obowiązaną określonej transakcji lub większej liczby określonych transakcji.\",\"content_sha256\":\"3a5112b9ffb9ffce19d7c700c5e804297c4493860eb852e2ad326b55424ba4dc\",\"rank\":0.34467455864863517}]}",
+            "id": "lc_d79c80a1-3c54-4303-8be0-bdd3332458fb"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_regulations",
+        "id": null,
+        "tool_call_id": "regulations-2",
+        "artifact": {
+          "structured_content": {
+            "query": "transaction \"unusually large\" complex purpose",
+            "passages": [
+              {
+                "passage_id": "AMLR art. 34(2)",
+                "doc_id": "AMLR",
+                "article": "34",
+                "paragraph": "2",
+                "heading": "Scope of application of enhanced due diligence measures",
+                "text": "Obliged entities shall examine the origin and destination of funds involved in, and the purpose of, all transactions that fulfil at least one of the following conditions:\n(a) the transaction is of a complex nature;\n(b) the transaction is unusually large;\n(c) the transaction is conducted in an unusual pattern;\n(d) the transaction does not have an apparent economic or lawful purpose.",
+                "content_sha256": "4150d7a697e63216b4e2846f135f9484bd70477371c0f560bf807cea6fc37414",
+                "rank": 0.4976503100276145
+              },
+              {
+                "passage_id": "AMLR art. 74(1)",
+                "doc_id": "AMLR",
+                "article": "74",
+                "paragraph": "1",
+                "heading": "Threshold-based reports of transactions in certain high-value goods",
+                "text": "Persons trading in high-value goods shall report to the FIU all transactions involving the sale of the following high-value goods when those goods are acquired for non-commercial purposes:\n(a) motor vehicles for a price of at least EUR 250 000 or the equivalent in national currency;\n(b) watercraft for a price of at least EUR 7 500 000 or the equivalent in national currency;\n(c) aircraft for a price of at least EUR 7 500 000 or the equivalent in national currency.",
+                "content_sha256": "2dedc5c02c02a6f8ae635d0f93e9766ddc9ceb8b211d1942d12e96a185aadef3",
+                "rank": 0.44209416960009607
+              },
+              {
+                "passage_id": "AMLR art. 25",
+                "doc_id": "AMLR",
+                "article": "25",
+                "paragraph": null,
+                "heading": "Identification of the purpose and intended nature of a business relationship or occasional transaction",
+                "text": "Before entering into a business relationship or performing an occasional transaction, an obliged entity shall assure itself that it understands its purpose and intended nature. To that end, the obliged entity shall obtain, where necessary, information on:\n(a) the purpose and economic rationale of the occasional transaction or business relationship;\n(b) the estimated amount of the envisaged activities;\n(c) the source of funds;\n(d) the destination of funds;\n(e) the business activity or the occupation of the customer.\nFor the purposes of the first paragraph, point (a), of this Article, obliged entities covered by Article 74 shall collect information in order to determine whether the intended use of high value goods referred to in that Article is for commercial or non-commercial purposes.",
+                "content_sha256": "2db6da7aede9ba3da982d476e3c7a56dd36ce61f0cd1413d3e4585959ef92288",
+                "rank": 0.4250894064088848
+              },
+              {
+                "passage_id": "PL-AML art. 2 ust. 2 pkt 22",
+                "doc_id": "PL-AML",
+                "article": "2",
+                "paragraph": "2",
+                "heading": null,
+                "text": "transakcji okazjonalnej – rozumie się przez to transakcję, która nie jest przeprowadzana w ramach stosunków gospodarczych;",
+                "content_sha256": "3507caeb2085422e52c3ac0ee6e162c76762b4b78a39a4157725861155b58605",
+                "rank": 0.3897768367172836
+              },
+              {
+                "passage_id": "PL-AML art. 43 ust. 4",
+                "doc_id": "PL-AML",
+                "article": "43",
+                "paragraph": "4",
+                "heading": null,
+                "text": "W przypadku ujawnienia transakcji:\n1) skomplikowanych lub\n2) opiewających na wysokie kwoty, które nie są uzasadnione okolicznościami przeprowadzenia transakcji, lub\n3) przeprowadzanych w nietypowy sposób, lub\n4) wydających się nie mieć uzasadnienia prawnego lub gospodarczego\n– instytucje obowiązane podejmują działania w celu wyjaśnienia okoliczności, w jakich przeprowadzono te transakcje, oraz, w przypadku transakcji przeprowadzanych w ramach stosunków gospodarczych, intensyfikują stosowanie środka bezpieczeństwa finansowego, o którym mowa w art. 34 ust. 1 pkt 4, w odniesieniu do stosunków gospodarczych, w ramach których te transakcje zostały przeprowadzone.",
+                "content_sha256": "dc487b63c31ea5ea0164d9e02646198f619a3dea22916185a63b2781d5243a8c",
+                "rank": 0.37252166838363565
+              },
+              {
+                "passage_id": "PL-AML art. 2 ust. 2 pkt 28",
+                "doc_id": "PL-AML",
+                "article": "2",
+                "paragraph": "2",
+                "heading": null,
+                "text": "wstrzymaniu transakcji – rozumie się przez to czasowe ograniczenie korzystania i dysponowania wartościami majątkowymi polegające na uniemożliwieniu przeprowadzenia przez instytucję obowiązaną określonej transakcji lub większej liczby określonych transakcji.",
+                "content_sha256": "3a5112b9ffb9ffce19d7c700c5e804297c4493860eb852e2ad326b55424ba4dc",
+                "rank": 0.34467455864863517
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    },
+    {
+      "tool": "search_regulations",
+      "args": {
+        "query": "skomplikowanych nietypowy",
+        "top_k": 3
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"query\":\"skomplikowanych nietypowy\",\"passages\":[{\"passage_id\":\"AMLR art. 2(1)(13)\",\"doc_id\":\"AMLR\",\"article\":\"2\",\"paragraph\":\"1\",\"heading\":\"Definitions\",\"text\":\"‘non-financial mixed activity holding company’ means an undertaking, other than a financial holding company or a mixed financial holding company, which is not the subsidiary of another undertaking, the subsidiaries of which include at least one obliged entity as referred to in Article 3, point (3);\",\"content_sha256\":\"07179f4cf51fdbcb6d563ac1dbb0f5cac3253d07428747e9d8d8f93af844c321\",\"rank\":0.2343569159436536},{\"passage_id\":\"AMLR art. 33(2)\",\"doc_id\":\"AMLR\",\"article\":\"33\",\"paragraph\":\"2\",\"heading\":\"Simplified due diligence measures\",\"text\":\"Obliged entities shall ensure that the internal procedures established pursuant to Article 9 contain the specific measures of simplified verification that shall be taken in relation to the different types of customers that present a lower risk. Obliged entities shall document decisions to take into account additional factors of lower risk.\",\"content_sha256\":\"5d2f621e24660aabc79813033370367282f90e4a0e86118a2b6ac286076a2e5b\",\"rank\":0.22383569692522298},{\"passage_id\":\"AMLR art. 2(1)(25)\",\"doc_id\":\"AMLR\",\"article\":\"2\",\"paragraph\":\"1\",\"heading\":\"Definitions\",\"text\":\"‘anonymity-enhancing coins’ means crypto-assets that have built-in features designed to make crypto-asset transfer information anonymous, either systematically or optionally;\",\"content_sha256\":\"0dcdd28d3a93de13453fd05e7d2239b3dca238be2cfe574f62a0c70f4e428900\",\"rank\":0.22332498679910273},{\"passage_id\":\"PL-AML art. 2 ust. 2 pkt 22\",\"doc_id\":\"PL-AML\",\"article\":\"2\",\"paragraph\":\"2\",\"heading\":null,\"text\":\"transakcji okazjonalnej – rozumie się przez to transakcję, która nie jest przeprowadzana w ramach stosunków gospodarczych;\",\"content_sha256\":\"3507caeb2085422e52c3ac0ee6e162c76762b4b78a39a4157725861155b58605\",\"rank\":0.4656503481454749},{\"passage_id\":\"PL-AML art. 43 ust. 2\",\"doc_id\":\"PL-AML\",\"article\":\"43\",\"paragraph\":\"2\",\"heading\":null,\"text\":\"O wyższym ryzyku prania pieniędzy oraz finansowania terroryzmu może świadczyć w szczególności:\\n1) nawiązywanie stosunków gospodarczych w nietypowych okolicznościach;\\n2) to, że klient jest:\\na) osobą prawną lub jednostką organizacyjną nieposiadającą osobowości prawnej, których działalność służy do przechowywania aktywów osobistych,\\nb) spółką, w której wydano akcje na okaziciela, której papiery wartościowe nie są dopuszczone do obrotu zorganizowanego, lub spółką, w której prawa z akcji lub udziałów są wykonywane przez podmioty inne niż akcjonariusze lub udziałowcy,\\nc) rezydentem państwa, o którym mowa w pkt 10;\\n3) przedmiot prowadzonej przez klienta działalności gospodarczej obejmujący przeprowadzanie znacznej liczby lub opiewających na wysokie kwoty transakcji gotówkowych;\\n4) nietypowa lub nadmiernie złożona struktura własnościowa klienta, biorąc pod uwagę rodzaj i zakres prowadzonej przez niego działalności gospodarczej;\\n5) korzystanie przez klienta z usług lub produktów oferowanych w ramach bankowości prywatnej;\\n6) korzystanie przez klienta z usług lub produktów sprzyjających anonimowości lub utrudniających jego identyfikację, w tym z usługi polegającej na tworzeniu dodatkowych numerów rachunków oznaczanych zgodnie z przepisami wydanymi na podstawie art. 68 pkt 3 i 4 ustawy z dnia 29 sierpnia 1997 r. – Prawo bankowe oraz art. 4a ust. 5 ustawy z dnia 19 sierpnia 2011 r. o usługach płatniczych, powiązanych z posiadanym rachunkiem, w celu ich udostępniania innym podmiotom do identyfikacji płatności lub zleceniodawców tych płatności;\\n7) nawiązywanie albo utrzymywanie stosunków gospodarczych lub przeprowadzanie transakcji okazjonalnej bez fizycznej obecności klienta – w przypadku gdy związane z tym wyższe ryzyko prania pieniędzy lub finansowania terroryzmu nie zostało ograniczone w inny sposób, w tym przez użycie środków identyfikacji elektronicznej oraz usług zaufania umożliwiających identyfikację elektroniczną w rozumieniu rozporządzenia 910/2014;\\n8) zlecanie przez nieznane lub niepowiązane z klientem podmioty trzecie transakcji, których beneficjentem jest klient;\\n9) objęcie stosunkami gospodarczymi lub transakcjami nowych produktów lub usług albo oferowanie produktów lub usług przy wykorzystaniu nowych kanałów dystrybucji lub nowych rozwiązań technologicznych;\\n10) powiązanie stosunków gospodarczych lub transakcji okazjonalnej z:\\na) państwem trzecim wysokiego ryzyka,\\nb) państwem określanym przez wiarygodne źródła jako państwo o wysokim poziomie korupcji lub innego rodzaju działalności przestępczej, państwo finansujące lub wspierające popełnianie czynów o charakterze terrorystycznym, lub z którym łączona jest działalność organizacji o charakterze terrorystycznym,\\nc) państwem, w stosunku do którego Organizacja Narodów Zjednoczonych lub Unia Europejska podjęły decyzję o nałożeniu sankcji lub szczególnych środków ograniczających;\\n11) powiązanie stosunków gospodarczych lub transakcji okazjonalnej z ropą naftową, bronią, metalami szlachetnymi, produktami tytoniowymi, artefaktami kulturowymi, kością słoniową, gatunkami chronionymi lub innymi przedmiotami o znaczeniu archeologicznym, historycznym, kulturowym i religijnym lub o szczególnej wartości naukowej;\\n12) powiązanie stosunków gospodarczych lub transakcji okazjonalnej z klientem będącym obywatelem państwa trzeciego i ubiegającym się o prawo pobytu lub obywatelstwo w państwie członkowskim w zamian za transfery kapitałowe, nabycie nieruchomości lub obligacji skarbowych lub inwestycje w podmioty o charakterze korporacyjnym w danym państwie członkowskim.\",\"content_sha256\":\"69a352c3e74abe6885f75a8d1c768a0a7da2d376428db05ad3b0d04237602be7\",\"rank\":0.42923940371745195},{\"passage_id\":\"PL-AML art. 42 ust. 3\",\"doc_id\":\"PL-AML\",\"article\":\"42\",\"paragraph\":\"3\",\"heading\":null,\"text\":\"Uproszczonych środków bezpieczeństwa finansowego nie stosuje się w przypadkach, o których mowa w art. 35 ust. 1 pkt 5 i 6.\",\"content_sha256\":\"ec1da04073acf284923e8417c2bbe4aaead7acd24f6a43d21b4bc899f17930bc\",\"rank\":0.4258265430342415}]}",
+            "id": "lc_83b46571-bd57-450c-ad76-0f3b95fa89b2"
+          }
+        ],
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_regulations",
+        "id": null,
+        "tool_call_id": "regulations-3",
+        "artifact": {
+          "structured_content": {
+            "query": "skomplikowanych nietypowy",
+            "passages": [
+              {
+                "passage_id": "AMLR art. 2(1)(13)",
+                "doc_id": "AMLR",
+                "article": "2",
+                "paragraph": "1",
+                "heading": "Definitions",
+                "text": "‘non-financial mixed activity holding company’ means an undertaking, other than a financial holding company or a mixed financial holding company, which is not the subsidiary of another undertaking, the subsidiaries of which include at least one obliged entity as referred to in Article 3, point (3);",
+                "content_sha256": "07179f4cf51fdbcb6d563ac1dbb0f5cac3253d07428747e9d8d8f93af844c321",
+                "rank": 0.2343569159436536
+              },
+              {
+                "passage_id": "AMLR art. 33(2)",
+                "doc_id": "AMLR",
+                "article": "33",
+                "paragraph": "2",
+                "heading": "Simplified due diligence measures",
+                "text": "Obliged entities shall ensure that the internal procedures established pursuant to Article 9 contain the specific measures of simplified verification that shall be taken in relation to the different types of customers that present a lower risk. Obliged entities shall document decisions to take into account additional factors of lower risk.",
+                "content_sha256": "5d2f621e24660aabc79813033370367282f90e4a0e86118a2b6ac286076a2e5b",
+                "rank": 0.22383569692522298
+              },
+              {
+                "passage_id": "AMLR art. 2(1)(25)",
+                "doc_id": "AMLR",
+                "article": "2",
+                "paragraph": "1",
+                "heading": "Definitions",
+                "text": "‘anonymity-enhancing coins’ means crypto-assets that have built-in features designed to make crypto-asset transfer information anonymous, either systematically or optionally;",
+                "content_sha256": "0dcdd28d3a93de13453fd05e7d2239b3dca238be2cfe574f62a0c70f4e428900",
+                "rank": 0.22332498679910273
+              },
+              {
+                "passage_id": "PL-AML art. 2 ust. 2 pkt 22",
+                "doc_id": "PL-AML",
+                "article": "2",
+                "paragraph": "2",
+                "heading": null,
+                "text": "transakcji okazjonalnej – rozumie się przez to transakcję, która nie jest przeprowadzana w ramach stosunków gospodarczych;",
+                "content_sha256": "3507caeb2085422e52c3ac0ee6e162c76762b4b78a39a4157725861155b58605",
+                "rank": 0.4656503481454749
+              },
+              {
+                "passage_id": "PL-AML art. 43 ust. 2",
+                "doc_id": "PL-AML",
+                "article": "43",
+                "paragraph": "2",
+                "heading": null,
+                "text": "O wyższym ryzyku prania pieniędzy oraz finansowania terroryzmu może świadczyć w szczególności:\n1) nawiązywanie stosunków gospodarczych w nietypowych okolicznościach;\n2) to, że klient jest:\na) osobą prawną lub jednostką organizacyjną nieposiadającą osobowości prawnej, których działalność służy do przechowywania aktywów osobistych,\nb) spółką, w której wydano akcje na okaziciela, której papiery wartościowe nie są dopuszczone do obrotu zorganizowanego, lub spółką, w której prawa z akcji lub udziałów są wykonywane przez podmioty inne niż akcjonariusze lub udziałowcy,\nc) rezydentem państwa, o którym mowa w pkt 10;\n3) przedmiot prowadzonej przez klienta działalności gospodarczej obejmujący przeprowadzanie znacznej liczby lub opiewających na wysokie kwoty transakcji gotówkowych;\n4) nietypowa lub nadmiernie złożona struktura własnościowa klienta, biorąc pod uwagę rodzaj i zakres prowadzonej przez niego działalności gospodarczej;\n5) korzystanie przez klienta z usług lub produktów oferowanych w ramach bankowości prywatnej;\n6) korzystanie przez klienta z usług lub produktów sprzyjających anonimowości lub utrudniających jego identyfikację, w tym z usługi polegającej na tworzeniu dodatkowych numerów rachunków oznaczanych zgodnie z przepisami wydanymi na podstawie art. 68 pkt 3 i 4 ustawy z dnia 29 sierpnia 1997 r. – Prawo bankowe oraz art. 4a ust. 5 ustawy z dnia 19 sierpnia 2011 r. o usługach płatniczych, powiązanych z posiadanym rachunkiem, w celu ich udostępniania innym podmiotom do identyfikacji płatności lub zleceniodawców tych płatności;\n7) nawiązywanie albo utrzymywanie stosunków gospodarczych lub przeprowadzanie transakcji okazjonalnej bez fizycznej obecności klienta – w przypadku gdy związane z tym wyższe ryzyko prania pieniędzy lub finansowania terroryzmu nie zostało ograniczone w inny sposób, w tym przez użycie środków identyfikacji elektronicznej oraz usług zaufania umożliwiających identyfikację elektroniczną w rozumieniu rozporządzenia 910/2014;\n8) zlecanie przez nieznane lub niepowiązane z klientem podmioty trzecie transakcji, których beneficjentem jest klient;\n9) objęcie stosunkami gospodarczymi lub transakcjami nowych produktów lub usług albo oferowanie produktów lub usług przy wykorzystaniu nowych kanałów dystrybucji lub nowych rozwiązań technologicznych;\n10) powiązanie stosunków gospodarczych lub transakcji okazjonalnej z:\na) państwem trzecim wysokiego ryzyka,\nb) państwem określanym przez wiarygodne źródła jako państwo o wysokim poziomie korupcji lub innego rodzaju działalności przestępczej, państwo finansujące lub wspierające popełnianie czynów o charakterze terrorystycznym, lub z którym łączona jest działalność organizacji o charakterze terrorystycznym,\nc) państwem, w stosunku do którego Organizacja Narodów Zjednoczonych lub Unia Europejska podjęły decyzję o nałożeniu sankcji lub szczególnych środków ograniczających;\n11) powiązanie stosunków gospodarczych lub transakcji okazjonalnej z ropą naftową, bronią, metalami szlachetnymi, produktami tytoniowymi, artefaktami kulturowymi, kością słoniową, gatunkami chronionymi lub innymi przedmiotami o znaczeniu archeologicznym, historycznym, kulturowym i religijnym lub o szczególnej wartości naukowej;\n12) powiązanie stosunków gospodarczych lub transakcji okazjonalnej z klientem będącym obywatelem państwa trzeciego i ubiegającym się o prawo pobytu lub obywatelstwo w państwie członkowskim w zamian za transfery kapitałowe, nabycie nieruchomości lub obligacji skarbowych lub inwestycje w podmioty o charakterze korporacyjnym w danym państwie członkowskim.",
+                "content_sha256": "69a352c3e74abe6885f75a8d1c768a0a7da2d376428db05ad3b0d04237602be7",
+                "rank": 0.42923940371745195
+              },
+              {
+                "passage_id": "PL-AML art. 42 ust. 3",
+                "doc_id": "PL-AML",
+                "article": "42",
+                "paragraph": "3",
+                "heading": null,
+                "text": "Uproszczonych środków bezpieczeństwa finansowego nie stosuje się w przypadkach, o których mowa w art. 35 ust. 1 pkt 5 i 6.",
+                "content_sha256": "ec1da04073acf284923e8417c2bbe4aaead7acd24f6a43d21b4bc899f17930bc",
+                "rank": 0.4258265430342415
+              }
+            ]
+          }
+        },
+        "status": "success"
+      }
+    }
+  ]
+}

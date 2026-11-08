@@ -22,7 +22,7 @@ from aml_investigator.investigation.agent.tools import AlertTools, Phase, ToolCa
 from aml_investigator.investigation.agent.usage import TokenUsage
 from aml_investigator.investigation.decision import AnalystReview, Decision
 from aml_investigator.investigation.routing import AUTO_CLOSE_ANALYST, route_for
-from aml_investigator.investigation.verify import Provenance, Verification, verify
+from aml_investigator.investigation.verify import Provenance, Verification, verify, with_canonical_passage_ids
 from aml_investigator.mcp_server.schemas import ReferenceVariant
 from aml_investigator.review.repository import ReviewRepository
 
@@ -99,13 +99,14 @@ class InvestigationNodes:
         return await self.drafted(state, [*state["messages"], draft_request()])
 
     async def verify_citations(self, state: InvestigationState) -> InvestigationState:
-        draft = state["draft"]
+        provenance = state["provenance"]
+        draft = None if state["draft"] is None else with_canonical_passage_ids(state["draft"], provenance)
         verification = (
             Verification(status="failed", errors=state["draft_errors"])
             if draft is None
-            else verify(draft, state["provenance"], state["alert"].as_of)
+            else verify(draft, provenance, state["alert"].as_of)
         )
-        return {"verification": verification, "verifications": [*state["verifications"], verification]}
+        return {"draft": draft, "verification": verification, "verifications": [*state["verifications"], verification]}
 
     async def repair(self, state: InvestigationState) -> InvestigationState:
         request = repair_request(state["draft_output"], state["verification"].errors)
