@@ -55,3 +55,22 @@ Also: on close decisions the passages do not support closing at all, because no 
 6. HI alert 11572, what, grade 1 (Descriptive what-claim; passage not needed and does not state the flows). Claim: what: inbound payments, larger payouts, recipients forwarded funds onward (txns listed). Passage AMLR art. 34(2): "Obliged entities shall examine the origin and destination of funds involved in, and the purpose of, all transactions that fulfil at least..."
 7. HI alert 862, why, grade 2 (Euro 15,000 threshold reporting of transfers; amounts not shown in claim). Claim: Escalate: inbound payments then concentrated large outflows to one counterparty; exceed national reporting thresholds (art. 72). Passage PL-AML art. 72 ust. 1: "Instytucje obowiązane, z wyjątkiem instytucji, o których mowa w art. 2 ust. 1 pkt 11, 13–15a i 18, przekazują Generalnemu Inspektorowi informacje..."
 8. LI alert 1029, why, grade 1 (Unqualified reporting duty asserted from a return pattern; PL art. 35 ust. 1 cited alongside is a CDD trigger). Claim: Recommend escalation: funds sent out and returned from same counterparty; reporting obligations apply (69(1), PL 35 ust. 1). Passage AMLR art. 69(1): "Obliged entities, and, where applicable, their directors and employees, shall cooperate fully with the FIU by promptly: (a) reporting to the FIU,..."
+
+## Human spot-check
+The author graded the 8 rows above after Claude had graded them, seeing Claude's grade and reason. The rows are
+a mix of grades chosen by the grader, not a random sample; the other 22 citations have Claude's grade only.
+
+| Row | Dataset, alert | Passage | Claude | Author |
+|---|---|---|---|---|
+| 1 | HI 5146 | AMLR art. 26(1) | 0 | 0 |
+| 2 | LI 7163 | AMLR art. 2(1)(20) | 1 | 2 |
+| 3 | LI 7849 | AMLR art. 69(1) | 0 | 0 |
+| 4 | HI 2170 | AMLR art. 69(1) | 1 | 1 |
+| 5 | HI 3662 | AMLR art. 69(2) | 1 | 2 |
+| 6 | HI 11572 | AMLR art. 34(2) | 1 | 1 |
+| 7 | HI 862 | PL-AML art. 72 ust. 1 | 2 | 2 |
+| 8 | LI 1029 | AMLR art. 69(1) | 1 | 2 |
+
+Agreement on 5 of 8. All three differences raise a 1 to a 2, so Claude's grade 1 may be strict: the author
+raised 3 of the 5 rows it had graded 1. With the author's grades on these rows the distribution over all 30
+is 19 / 9 / 2 (grades 2 / 1 / 0), mean 1.57, against 16 / 12 / 2 and 1.47 for Claude alone.

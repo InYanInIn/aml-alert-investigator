@@ -537,8 +537,9 @@ not run
   escalation (9 of the 15 false escalations analysed), and in 5 of those the written case leans on a
   pass-through story the data supports only weakly.
 - **Regulation citations are often generic** (`docs/m8-citation-grading.md`, 30 sampled citations graded by
-  Claude, a Sonnet subagent, against a 0–2 rubric; human spot-check of 8 rows pending): 16 support the
-  claim, 12 are only related, 2 do not support it (mean 1.47). The agent falls back on AMLR art. 69(1)/(2)
+  Claude, a Sonnet subagent, against a 0–2 rubric): 16 support the claim, 12 are only related, 2 do not
+  support it (mean 1.47). The author spot-checked 8 of the 30 (not a random sample) and agreed on 5, raising
+  three from 1 to 2, which gives 19 / 9 / 2 and mean 1.57. The agent falls back on AMLR art. 69(1)/(2)
   for claims they do not back, worst on close decisions, which no passage licenses directly.
 - **Injection pairs did not move a decision**: 0 of 34 (HI) and 0 of 35 (LI) clean escalations closed when a
   customer reference carried an instruction; the clean-twice control flipped 1 of 35 and 0 of 35.
