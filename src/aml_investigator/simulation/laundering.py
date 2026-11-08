@@ -53,6 +53,7 @@ class GroupRun:
         self.first_block_day: date | None = None
         self.stopped_on: date | None = None
         self.sink_eur = 0.0
+        self.blocked: set[str] = set()
 
     def payments_on(self, day: date) -> list[Payment]:
         if self.stopped_on is not None or self.next_day is None:
@@ -60,7 +61,9 @@ class GroupRun:
         if self.resume_on is not None:
             if day < self.resume_on:
                 return []
-            self.fill_vacancies()
+            self.fill_vacancies(day)
+            if self.stopped_on is not None:
+                return []
             self.next_day = max(self.next_day, day)
         made: list[Payment] = []
         while self.next_day == day:
@@ -120,6 +123,9 @@ class GroupRun:
         self.next_day = None if finished else day + timedelta(days=self.scenario.round_gap)
 
     def block(self, account: str, decided_on: date) -> None:
+        if account in self.blocked:
+            return
+        self.blocked.add(account)
         blocked_from = decided_on + ONE_DAY
         self.first_block_day = self.first_block_day or blocked_from
         for reserves in self.reserves.values():
@@ -133,13 +139,16 @@ class GroupRun:
     def vacate(self, role: str, slot: int, blocked_from: date) -> None:
         waiting = sum(1 for vacant_role, _ in self.vacancies if vacant_role == role)
         if len(self.reserves[role]) <= waiting:
-            self.stopped_on = blocked_from
+            self.stopped_on = self.stopped_on or blocked_from
             return
         self.vacancies.append((role, slot))
         self.resume_on = blocked_from + timedelta(days=REPLACEMENT_DAYS)
 
-    def fill_vacancies(self) -> None:
+    def fill_vacancies(self, day: date) -> None:
         for role, slot in self.vacancies:
+            if not self.reserves[role]:
+                self.stopped_on = self.stopped_on or day
+                break
             self.active[role][slot] = self.reserves[role].pop(0)
         self.vacancies = []
         self.resume_on = None

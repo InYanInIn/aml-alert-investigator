@@ -164,3 +164,31 @@ def test_block_day_is_the_day_after_the_decision(world: World) -> None:
 
     [progress] = laundering.progress()
     assert progress.first_block_day == LIVE[3] + timedelta(days=1)
+
+
+def test_blocking_the_reserve_while_a_vacancy_waits_stops_the_group_at_resume(world: World) -> None:
+    laundering = Laundering(world)
+    book = balances(world)
+    roster = world.rosters[0]
+    [reserve] = roster.reserves["mule"]
+    laundering.payments_on(LIVE[1], book)
+    laundering.block(0, roster.active["mule"][0], LIVE[4])
+    laundering.block(0, reserve, LIVE[4])
+
+    assert [laundering.payments_on(day, book) for day in LIVE[5:9]] == [[] for _ in LIVE[5:9]]
+    [progress] = laundering.progress()
+    assert progress.stopped_on == LIVE[7]
+
+
+def test_blocking_the_same_account_twice_uses_one_reserve(world: World) -> None:
+    laundering = Laundering(world)
+    book = balances(world)
+    roster = world.rosters[0]
+    laundering.payments_on(LIVE[1], book)
+    blocked = roster.active["mule"][0]
+    laundering.block(0, blocked, LIVE[4])
+    laundering.block(0, blocked, LIVE[4])
+
+    [progress] = laundering.progress()
+    assert progress.stopped_on is None
+    assert laundering.payments_on(LIVE[7], book)
