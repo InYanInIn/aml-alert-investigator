@@ -1,9 +1,38 @@
+import json
 from pathlib import Path
 from typing import Any
 
 import yaml
+from pydantic import SecretStr
 
+from aml_investigator.core.settings import Settings
 from aml_investigator.simulation.world import SimulationConfig, load_config
+from tests.conftest import Database
+
+THRESHOLDS = {"R1_fan_in": 2.0, "R3_pass_through": 1500.0}
+
+
+def settings_for(db: Database) -> Settings:
+    return Settings(
+        _env_file=None,
+        owner_dsn=SecretStr(db.owner_dsn),
+        mcp_dsn=SecretStr(db.mcp_dsn),
+        app_dsn=SecretStr(db.app_dsn),
+        evaluator_dsn=SecretStr(db.evaluator_dsn),
+        azure_openai_endpoint=None,
+    )
+
+
+def prepare_workspace(root: Path, database: str, *, scenarios: list[dict[str, Any]] | None = None) -> None:
+    write_config(root / "config" / "simulation", scenarios=scenarios)
+    thresholds = root / "config" / "thresholds" / f"{database}.json"
+    thresholds.parent.mkdir(parents=True, exist_ok=True)
+    thresholds.write_text(json.dumps({"budget_per_day": 2.0, "suppression_days": 3, "thresholds": THRESHOLDS}))
+    b1_result = root / "eval" / "results" / database / "val" / "b1.json"
+    b1_result.parent.mkdir(parents=True, exist_ok=True)
+    point = {"threshold": 1.5, "close_rate": 0.5, "false_close_rate": 0.0}
+    b1_result.write_text(json.dumps({"operating_point": point}))
+
 
 PARENT_TUITION: dict[str, Any] = {
     "name": "parent_tuition",

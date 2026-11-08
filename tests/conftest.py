@@ -95,6 +95,10 @@ REGULATION_PASSAGES = (
 
 @pytest.fixture
 def regulations(db: Database) -> list[str]:
+    return load_regulations(db)
+
+
+def load_regulations(db: Database) -> list[str]:
     with db.owner() as conn:
         conn.execute("DELETE FROM corpus.passages")
         conn.execute("DELETE FROM corpus.documents")
