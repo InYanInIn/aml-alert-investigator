@@ -80,6 +80,20 @@ class AccountProfile(BaseModel):
     other_accounts_of_entity: OtherAccounts
 
 
+class CustomerProfile(BaseModel):
+    display_name: str | None
+    occupation: str | None
+    business_description: str | None
+    account_purpose: str | None
+    expected_activity: str | None
+    declared_monthly_eur: float | None
+    customer_since: date | None
+
+
+class AccountProfileWithCustomer(AccountProfile):
+    customer_profile_untrusted: CustomerProfile | None
+
+
 class Counterparty(BaseModel):
     account_id: str
     incoming_count: int

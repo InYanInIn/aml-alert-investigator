@@ -9,6 +9,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
 from aml_investigator.core.db import Pool
+from aml_investigator.investigation.agent.conversation import STANDARD_PROMPT, AgentPrompt
 from aml_investigator.investigation.agent.loop import MAX_TOOL_CALLS, TOKEN_BUDGET, LoopBudget
 from aml_investigator.investigation.agent.nodes import InvestigationNodes
 from aml_investigator.investigation.agent.state import CHECKPOINTED_TYPES, InvestigationState
@@ -27,6 +28,7 @@ def build_graph(
     max_tool_calls: int = MAX_TOOL_CALLS,
     token_budget: int = TOKEN_BUDGET,
     reference_variant: ReferenceVariant = "clean",
+    prompt: AgentPrompt = STANDARD_PROMPT,
 ) -> InvestigationGraph:
     nodes = InvestigationNodes(
         mcp=mcp,
@@ -34,6 +36,7 @@ def build_graph(
         repository=repository,
         budget=LoopBudget(tool_calls=max_tool_calls, tokens=token_budget),
         reference_variant=reference_variant,
+        prompt=prompt,
     )
     builder = StateGraph(InvestigationState)
     for node in (

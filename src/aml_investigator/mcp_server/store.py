@@ -9,9 +9,11 @@ from aml_investigator.core.sql import load
 from aml_investigator.corpus.embeddings import QueryEmbedder, vector_literal
 from aml_investigator.mcp_server.schemas import (
     AccountProfile,
+    AccountProfileWithCustomer,
     Alert,
     Counterparty,
     CounterpartyPage,
+    CustomerProfile,
     FundPath,
     FundTrace,
     OtherAccounts,
@@ -43,6 +45,7 @@ REGULATION_DOCUMENTS = ("AMLR", "PL-AML")
 ALERT_SQL = load(__package__, "alert")
 RULE_HITS_SQL = load(__package__, "alert_rule_hits")
 ACCOUNT_PROFILE_SQL = load(__package__, "account_profile")
+CUSTOMER_PROFILE_SQL = load(__package__, "customer_profile")
 COUNTERPARTIES_SQL = load(__package__, "counterparties")
 TRACE_SQL = {"forward": load(__package__, "trace_forward"), "backward": load(__package__, "trace_backward")}
 SEARCH_REGULATIONS_SQL = load(__package__, "search_regulations")
@@ -128,6 +131,14 @@ class CaseStore:
             raise RecordNotFoundError("Account", account_id)
         others = OtherAccounts(count=row.pop("other_account_count"), account_ids=row.pop("other_account_ids"))
         return AccountProfile(**row, as_of=alert.as_of, other_accounts_of_entity=others)
+
+    async def account_profile_with_customer(self, alert_id: int, account_id: str) -> AccountProfileWithCustomer:
+        profile = await self.account_profile(alert_id, account_id)
+        async with self.pool.connection() as conn:
+            cursor = await conn.execute(CUSTOMER_PROFILE_SQL, {"account": account_id})
+            row = await cursor.fetchone()
+        customer = None if row is None else CustomerProfile(**row)
+        return AccountProfileWithCustomer(**profile.model_dump(), customer_profile_untrusted=customer)
 
     async def counterparty_page(
         self, alert_id: int, account_id: str, *, direction: PaymentDirection, start: str | None, end: str | None

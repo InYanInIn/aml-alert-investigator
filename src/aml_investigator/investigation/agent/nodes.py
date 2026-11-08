@@ -9,7 +9,7 @@ from langchain_core.runnables import Runnable, RunnableConfig
 from langgraph.types import interrupt
 
 from aml_investigator.investigation.agent.conversation import (
-    PROMPT_VERSION,
+    AgentPrompt,
     draft_request,
     investigate_request,
     repair_request,
@@ -38,7 +38,9 @@ class InvestigationNodes:
         repository: ReviewRepository,
         budget: LoopBudget,
         reference_variant: ReferenceVariant,
+        prompt: AgentPrompt,
     ) -> None:
+        self.prompt = prompt
         self.mcp = mcp
         self.model = model
         self.drafter = cast(
@@ -55,7 +57,7 @@ class InvestigationNodes:
         if result.structured is None:
             raise ToolCallError(f"MCP tool get_alert failed: {result.message.text}")
         started: InvestigationState = {
-            "messages": [system_message()],
+            "messages": [system_message(self.prompt)],
             "provenance": Provenance(),
             "tool_calls": [],
             "tokens": 0,
@@ -124,7 +126,7 @@ class InvestigationNodes:
             alert_id=state["alert_id"],
             thread_id=config["configurable"]["thread_id"],
             model=self.model.get_name(),
-            prompt_version=PROMPT_VERSION,
+            prompt_version=self.prompt.version,
             recommendation=recommendation,
             decision=decision,
             verification=verification,

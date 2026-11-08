@@ -8,7 +8,7 @@ from typing import Any
 from aml_investigator.core.errors import DomainError
 from aml_investigator.evaluation.metrics import Outcome, measure
 from aml_investigator.evaluation.results import RESULTS_DIR, THRESHOLDS_DIR, GitState, sha256
-from aml_investigator.investigation.agent.conversation import PROMPT_VERSION
+from aml_investigator.investigation.agent.conversation import PROFILE_PROMPT, PROMPT_VERSION
 from aml_investigator.simulation import MAX_INVESTIGATIONS
 from aml_investigator.simulation.laundering import GroupProgress
 from aml_investigator.simulation.loop import AGENT_SYSTEMS, Case, SimulationRun
@@ -144,6 +144,8 @@ def alert_row(case: Case) -> dict[str, Any]:
 
 
 def prompt_version(system: str) -> str | None:
+    if system == "azure_profile":
+        return PROFILE_PROMPT.version
     return PROMPT_VERSION if system in AGENT_SYSTEMS else None
 
 

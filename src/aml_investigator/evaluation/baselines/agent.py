@@ -9,6 +9,7 @@ from aml_investigator.corpus.embeddings import query_embedder
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.recordings import CassetteRecorder
 from aml_investigator.evaluation.systems import EvalAlert, SystemDecision
+from aml_investigator.investigation.agent.conversation import PROFILE_PROMPT, STANDARD_PROMPT
 from aml_investigator.investigation.agent.loop import MAX_TOOL_CALLS
 from aml_investigator.investigation.service import InvestigationService, open_investigation_service
 from aml_investigator.mcp_server.server import build_server
@@ -57,6 +58,7 @@ async def open_agent(
                 settings.mcp_conninfo,
                 reference_variant=settings.reference_variant,
                 embed_query=query_embedder(settings.azure_endpoint),
+                customer_profile=settings.customer_profile,
             )
         ) as mcp,
         open_investigation_service(
@@ -66,6 +68,7 @@ async def open_agent(
             callbacks=[] if recorder is None else [recorder],
             reference_variant=settings.reference_variant,
             max_tool_calls=max_tool_calls,
+            prompt=PROFILE_PROMPT if settings.customer_profile else STANDARD_PROMPT,
         ) as service,
     ):
         yield AgentInvestigation(service, name, recorder)
