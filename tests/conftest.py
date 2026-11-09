@@ -8,6 +8,7 @@ from psycopg import sql
 
 from aml_investigator.core.migrate import migrate
 from aml_investigator.core.settings import Settings, load_settings
+from aml_investigator.simulation.world import reset_world
 
 
 @dataclass(frozen=True)
@@ -26,10 +27,9 @@ def retarget(settings: Settings, dbname: str) -> Database:
     return Database(test.owner_conninfo, test.mcp_conninfo, test.app_conninfo, test.evaluator_conninfo)
 
 
-@pytest.fixture(scope="session")
-def database() -> Iterator[Database]:
+def created_database(prefix: str) -> Iterator[Database]:
     settings = load_settings()
-    dbname = f"aml_test_{uuid.uuid4().hex[:8]}"
+    dbname = f"{prefix}_{uuid.uuid4().hex[:8]}"
     with psycopg.connect(settings.owner_conninfo, autocommit=True) as admin:
         admin.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(dbname)))
     test_db = retarget(settings, dbname)
@@ -41,13 +41,31 @@ def database() -> Iterator[Database]:
             admin.execute(sql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(sql.Identifier(dbname)))
 
 
+@pytest.fixture(scope="session")
+def database() -> Iterator[Database]:
+    yield from created_database("aml_test")
+
+
+@pytest.fixture(scope="session")
+def simulation_database() -> Iterator[Database]:
+    yield from created_database("aml_sim_test")
+
+
+@pytest.fixture
+def world_db(simulation_database: Database) -> Database:
+    with simulation_database.owner() as conn:
+        reset_world(conn)
+    return simulation_database
+
+
 @pytest.fixture
 def db(database: Database) -> Database:
     with database.owner() as conn:
         conn.execute(
             "TRUNCATE review.qa_reviews, review.decisions, review.investigations, truth.alert_truth, "
             "truth.candidate_truth, truth.pattern_attempts, truth.transaction_labels, core.alert_rule_hits, "
-            "core.alerts, core.rule_candidates, core.transactions, core.fx_rates, core.accounts "
+            "core.alerts, core.rule_candidates, core.transactions, core.fx_rates, core.customer_profiles, "
+            "core.accounts "
             "RESTART IDENTITY CASCADE"
         )
     return database
@@ -77,6 +95,10 @@ REGULATION_PASSAGES = (
 
 @pytest.fixture
 def regulations(db: Database) -> list[str]:
+    return load_regulations(db)
+
+
+def load_regulations(db: Database) -> list[str]:
     with db.owner() as conn:
         conn.execute("DELETE FROM corpus.passages")
         conn.execute("DELETE FROM corpus.documents")

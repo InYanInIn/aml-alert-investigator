@@ -11,11 +11,15 @@ from aml_investigator.core.health import liveness, readiness
 from aml_investigator.corpus.embeddings import QueryEmbedder
 from aml_investigator.mcp_server.schemas import ReferenceVariant
 from aml_investigator.mcp_server.store import CaseStore
-from aml_investigator.mcp_server.tools import TOOLS
+from aml_investigator.mcp_server.tools import TOOLS, get_account_profile, get_account_profile_with_customer
 
 
 def build_server(
-    dsn: str, *, reference_variant: ReferenceVariant = "clean", embed_query: QueryEmbedder | None = None
+    dsn: str,
+    *,
+    reference_variant: ReferenceVariant = "clean",
+    embed_query: QueryEmbedder | None = None,
+    customer_profile: bool = False,
 ) -> FastMCP[Any]:
     resources: dict[str, CaseStore] = {}
 
@@ -34,5 +38,8 @@ def build_server(
         return await readiness(store.pool if store is not None else None)
 
     for tool in TOOLS:
-        server.tool(tool)
+        if customer_profile and tool is get_account_profile:
+            server.tool(get_account_profile_with_customer, name=get_account_profile.__name__)
+        else:
+            server.tool(tool)
     return server

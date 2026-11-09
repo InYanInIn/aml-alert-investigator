@@ -1,0 +1,32 @@
+{
+  "budget_per_day": 2.0,
+  "suppression_days": 3,
+  "calibrated_on": {
+    "first": "2025-03-03",
+    "last": "2025-03-31"
+  },
+  "segments": {
+    "individual": {
+      "R1_fan_in": 4.0,
+      "R2_fan_out": 10.0,
+      "R3_pass_through": 2850.37,
+      "R4_cycle": 729.8199999999999,
+      "R6_profile_deviation": 7.405825319442524
+    },
+    "small_business": {
+      "R1_fan_in": 10.000000000000002,
+      "R2_fan_out": 9.0,
+      "R3_pass_through": 20701.78,
+      "R4_cycle": 6427.639999999999,
+      "R6_profile_deviation": 6.185239343732837
+    },
+    "corporation": {
+      "R1_fan_in": 13.000000000000002,
+      "R2_fan_out": 13.000000000000002,
+      "R3_pass_through": 175634.32,
+      "R4_cycle": 66715.88,
+      "R5_structuring": 3.0000000000000004,
+      "R6_profile_deviation": 8.616478112015036
+    }
+  }
+}

@@ -4,7 +4,7 @@ import pytest
 from aml_investigator.core.migrate import migrate
 from tests.conftest import Database
 
-TRUTH_TABLES = ("truth.transaction_labels", "truth.pattern_attempts")
+TRUTH_TABLES = ("truth.transaction_labels", "truth.pattern_attempts", "truth.sim_actors")
 
 
 @pytest.mark.parametrize("table", TRUTH_TABLES)
