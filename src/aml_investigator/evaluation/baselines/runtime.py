@@ -13,6 +13,7 @@ class RuntimeSettings:
     reference_variant: ReferenceVariant = "clean"
     azure_endpoint: str | None = None
     recordings: Path | None = None
+    customer_profile: bool = False
 
     @classmethod
     def of(

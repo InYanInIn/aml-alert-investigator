@@ -5,7 +5,8 @@ from typing import Any
 import psycopg
 import pytest
 
-from aml_investigator.monitoring.alerts import build_alerts
+from aml_investigator.data.splits import DayRange
+from aml_investigator.monitoring.alerts import build_alerts, build_alerts_for_days
 from tests.conftest import Database
 
 BASE = date(2022, 9, 5)
@@ -155,6 +156,61 @@ def test_unknown_rule_key_raises_and_creates_nothing(db: Database) -> None:
         build(db, {"R2_fan_out": 1, "R9_imaginary": 1})
 
     assert rows(db, "SELECT count(*) FROM core.alerts") == [(0,)]
+
+
+def build_days(
+    db: Database, thresholds: Mapping[str, float], first_offset: int, last_offset: int, suppression_days: int = 0
+) -> list[int]:
+    days = DayRange(BASE + timedelta(days=first_offset), BASE + timedelta(days=last_offset))
+    with psycopg.connect(db.owner_dsn) as conn:
+        return build_alerts_for_days(conn, thresholds, days, suppression_days=suppression_days)
+
+
+def test_a_day_range_builds_on_a_table_that_already_has_alerts(db: Database) -> None:
+    add_accounts(db, "A", "B")
+    add_candidate(db, "R2_fan_out", "A", 0, 5)
+    add_candidate(db, "R2_fan_out", "B", 1, 5)
+
+    first = build_days(db, {"R2_fan_out": 3}, 0, 0)
+    second = build_days(db, {"R2_fan_out": 3}, 1, 1)
+
+    assert len(first) == 1
+    assert len(second) == 1
+    assert first != second
+    assert rows(db, "SELECT account_id FROM core.alerts ORDER BY alert_id") == [("A",), ("B",)]
+
+
+def test_a_day_range_ignores_candidates_outside_it(db: Database) -> None:
+    add_accounts(db, "A")
+    add_candidate(db, "R2_fan_out", "A", 0, 5)
+    add_candidate(db, "R2_fan_out", "A", 5, 5)
+
+    assert len(build_days(db, {"R2_fan_out": 3}, 5, 5)) == 1
+    assert alert_days(db) == [BASE + timedelta(days=5)]
+
+
+def test_suppression_looks_back_before_the_day_range(db: Database) -> None:
+    add_accounts(db, "A")
+    add_candidate(db, "R2_fan_out", "A", 0, 5)
+    add_candidate(db, "R2_fan_out", "A", 1, 5)
+
+    assert len(build_days(db, {"R2_fan_out": 3}, 0, 0, suppression_days=1)) == 1
+    assert build_days(db, {"R2_fan_out": 3}, 1, 1, suppression_days=1) == []
+    assert alert_days(db) == [BASE]
+
+
+def test_alert_ids_follow_account_order_whatever_the_insertion_order(db: Database) -> None:
+    add_accounts(db, "A", "B", "C")
+    for account in ("C", "A", "B"):
+        add_candidate(db, "R2_fan_out", account, 0, 5)
+
+    ids = build_days(db, {"R2_fan_out": 3}, 0, 0)
+
+    assert rows(db, "SELECT account_id FROM core.alerts WHERE alert_id = ANY(%s) ORDER BY alert_id", ids) == [
+        ("A",),
+        ("B",),
+        ("C",),
+    ]
 
 
 def test_refuses_when_alerts_already_exist(db: Database) -> None:

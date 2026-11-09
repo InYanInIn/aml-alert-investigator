@@ -33,8 +33,15 @@ def first_days_parameters(
 
 
 def build_alerts(conn: psycopg.Connection[Any], thresholds: Mapping[str, float], *, suppression_days: int) -> int:
-    parameters = first_days_parameters(thresholds, ALL_DAYS, suppression_days=suppression_days)
     with conn.transaction():
         if conn.execute(ALERTS_EXIST_SQL).fetchone() == (True,):
             raise RuntimeError("core.alerts is not empty; refusing to build alerts on top of existing ones")
-        return conn.execute(BUILD_SQL, parameters).rowcount
+        return len(build_alerts_for_days(conn, thresholds, ALL_DAYS, suppression_days=suppression_days))
+
+
+def build_alerts_for_days(
+    conn: psycopg.Connection[Any], thresholds: Mapping[str, float], days: DayRange, *, suppression_days: int
+) -> list[int]:
+    parameters = first_days_parameters(thresholds, days, suppression_days=suppression_days)
+    with conn.transaction():
+        return [int(row[0]) for row in conn.execute(BUILD_SQL, parameters)]

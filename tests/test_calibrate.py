@@ -141,11 +141,13 @@ def test_chosen_volume_matches_build_alerts_when_lowering_the_threshold_suppress
     assert hits == (1,)
 
 
-def test_rule_without_train_candidates_is_an_error(db: Database) -> None:
+def test_rule_without_train_candidates_is_switched_off(db: Database) -> None:
     add_filler_candidates(db, except_rule="R1_fan_in")
 
-    with pytest.raises(ValueError, match="R1_fan_in"):
-        choose(db, share_per_day=1, suppression_days=0)
+    with pytest.warns(UserWarning, match="R1_fan_in"):
+        thresholds = choose(db, share_per_day=1, suppression_days=0)
+
+    assert "R1_fan_in" not in thresholds
 
 
 def test_threshold_choice_runs_as_the_app_role_that_cannot_read_labels(db: Database) -> None:

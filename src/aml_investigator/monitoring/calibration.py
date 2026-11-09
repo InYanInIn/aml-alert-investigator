@@ -92,11 +92,11 @@ def choose_thresholds(
         "max_alerts": share_per_day * day_count(train),
     }
     lowest = {rule_id: (top, threshold) for rule_id, top, threshold in conn.execute(LOWEST_THRESHOLDS_SQL, parameters)}
-    missing = [rule_id for rule_id in rule_ids if rule_id not in lowest]
-    if missing:
-        raise ValueError(f"no train-window candidates for rules: {', '.join(missing)}")
     chosen = {}
     for rule_id in rule_ids:
+        if rule_id not in lowest:
+            warnings.warn(f"{rule_id}: no train-window candidates; switched off", stacklevel=2)
+            continue
         top, threshold = lowest[rule_id]
         if threshold is None:
             warnings.warn(

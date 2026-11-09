@@ -7,10 +7,10 @@ to confirm or override. The agent is evaluated against labels it never sees and 
 
 Portfolio project on synthetic data (IBM AMLworld). Not a compliance product.
 
-**Status:** M8 — evaluated once on the test split (200 alerts per dataset). The agent closes 22% (HI-Small)
-and 25% (LI-Small) of alerts at false-close rates of 0% and 7.5%, deciding as a no-LLM rule does (399 of 400);
-it adds the cited investigation. Results in [docs/results.md](docs/results.md). Next: M9, AKS demo and
-teardown. See [docs/plan.md](docs/plan.md).
+**Status:** M9 — a simulated bank tested two agents on a held-out world of 31 alerts. Given customer profiles and payment
+purposes, the agent closed 11 of 22 honest alerts and no laundering alert, where a no-LLM rule and the M8 agent closed
+none. On AMLworld (M8) the agent decided as a no-LLM rule does. Results in [docs/results.md](docs/results.md). Next: M10,
+AKS demo and teardown. See [docs/plan.md](docs/plan.md).
 
 ## Run the agent on Azure OpenAI
 Needs the Azure resources from `infra/terraform` (`terraform apply` with `budget_email` in a git-ignored
