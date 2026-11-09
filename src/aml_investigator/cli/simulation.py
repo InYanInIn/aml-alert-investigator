@@ -14,6 +14,13 @@ SIM_SYSTEMS = ("b0", "b1", "b4", "scripted", "azure", "azure_profile")
 CADENCES = (1, 3, 7)
 
 
+def non_negative_int(text: str) -> int:
+    value = int(text)
+    if value < 0:
+        raise argparse.ArgumentTypeError(f"must be zero or more, got {value}")
+    return value
+
+
 def run_corpus_copy(args: argparse.Namespace) -> None:
     from aml_investigator.simulation.world import copy_corpus
 
@@ -26,10 +33,11 @@ def run_corpus_copy(args: argparse.Namespace) -> None:
 def run_simulation(args: argparse.Namespace) -> None:
     from aml_investigator.evaluation.results import GitState
     from aml_investigator.simulation.loop import simulate
-    from aml_investigator.simulation.results import refuse_second_opening, summary, write_result
+    from aml_investigator.simulation.results import refuse_second_opening, summary, thresholds_digest, write_result
 
     settings = settings_for(args)
     refuse_second_opening(settings.database, args.system)
+    thresholds_digest(settings.database)
     git_state = GitState.capture()
     run = asyncio.run(simulate(settings, seed=args.seed, system=args.system, cadence=args.cadence, limit=args.limit))
     path = write_result(run, git_state)
@@ -58,7 +66,7 @@ def register(commands: Commands) -> None:
     corpus.set_defaults(handler=run_corpus_copy)
 
     run = simulation.add_parser("run", help="run one seed of a world with one system; resets the world tables")
-    run.add_argument("--seed", type=int, required=True)
+    run.add_argument("--seed", type=non_negative_int, required=True)
     run.add_argument("--system", choices=SIM_SYSTEMS, required=True)
     run.add_argument("--cadence", type=int, choices=CADENCES, required=True)
     run.add_argument(
