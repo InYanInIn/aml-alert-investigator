@@ -1,7 +1,7 @@
 import json
 import logging
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
@@ -14,11 +14,12 @@ from aml_investigator.core.sql import load
 from aml_investigator.data.splits import DayRange
 from aml_investigator.evaluation.baselines import open_system
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
-from aml_investigator.evaluation.metrics import OperatingPoint
-from aml_investigator.evaluation.results import THRESHOLDS_DIR, AlertTruth, validation_operating_point
-from aml_investigator.evaluation.runner import decide_all, final_recommendation, read_truth
+from aml_investigator.evaluation.metrics import OperatingPoint, choose_operating_point
+from aml_investigator.evaluation.results import RESULTS_DIR, THRESHOLDS_DIR, AlertTruth, validation_operating_point
+from aml_investigator.evaluation.runner import decide_all, final_recommendation, read_truth, scored_alerts
 from aml_investigator.evaluation.systems import EvalAlert, Recommendation, System, SystemDecision
 from aml_investigator.monitoring.alerts import build_alerts_for_days
+from aml_investigator.monitoring.calibration import choose_thresholds, train_split, write_thresholds
 from aml_investigator.monitoring.rules import generate_candidates
 from aml_investigator.simulation import MAX_INVESTIGATIONS
 from aml_investigator.simulation.behaviour import normal_day
@@ -259,3 +260,30 @@ async def simulate(
         days.laundering.progress(),
         days.blocked,
     )
+
+
+async def calibrate_world(settings: Settings, *, seed: int, budget_per_day: float) -> tuple[Path, Path]:
+    require_simulation_database(settings.database)
+    thresholds_path = THRESHOLDS_DIR / f"{settings.database}.json"
+    with psycopg.connect(settings.owner_conninfo, autocommit=True) as conn:
+        days = WorldDays(conn, build_world(seed, load_config()))
+        days.populate()
+        for day in (*history_days(), *live_days()):
+            days.generate(day)
+        regenerate_candidates(conn)
+        train = train_split(conn)["train"]
+        thresholds = choose_thresholds(conn, train, budget_per_day=budget_per_day, suppression_days=SUPPRESSION_DAYS)
+        write_thresholds(
+            thresholds_path, thresholds, budget_per_day=budget_per_day, suppression_days=SUPPRESSION_DAYS, train=train
+        )
+        live = DayRange(live_days()[0], live_days()[-1])
+        alerts = alerts_by_id(conn, build_alerts_for_days(conn, thresholds, live, suppression_days=SUPPRESSION_DAYS))
+        compute_alert_truth(conn)
+    async with open_system("b1", RuntimeSettings.of(settings)) as b1:
+        decisions = await decide_all(b1, alerts)
+    truths = await read_truth(settings.evaluator_conninfo, alerts)
+    point = choose_operating_point(scored_alerts(decisions, truths), {True: 1.0, False: 1.0})
+    point_path = RESULTS_DIR / settings.database / "val" / "b1.json"
+    point_path.parent.mkdir(parents=True, exist_ok=True)
+    point_path.write_text(json.dumps({"operating_point": asdict(point)}, indent=2) + "\n")
+    return thresholds_path, point_path

@@ -37,6 +37,13 @@ def run_simulation(args: argparse.Namespace) -> None:
     print(f"written to {path}")
 
 
+def run_calibration(args: argparse.Namespace) -> None:
+    from aml_investigator.simulation.loop import calibrate_world
+
+    thresholds, point = asyncio.run(calibrate_world(settings_for(args), seed=args.seed, budget_per_day=args.budget))
+    print(f"thresholds written to {thresholds}\noperating point written to {point}")
+
+
 def run_report(_: argparse.Namespace) -> None:
     from aml_investigator.simulation.results import update_simulation_report
 
@@ -58,6 +65,11 @@ def register(commands: Commands) -> None:
         "--limit", type=positive_int, default=MAX_INVESTIGATIONS, help="stop an agent after N investigations"
     )
     run.set_defaults(handler=run_simulation)
+
+    calibrate = simulation.add_parser("calibrate", help="thresholds and the B1 operating point from a world's tape")
+    calibrate.add_argument("--seed", type=int, required=True)
+    calibrate.add_argument("--budget", type=float, required=True)
+    calibrate.set_defaults(handler=run_calibration)
 
     report = simulation.add_parser("report", help="regenerate the M9 section of docs/results.md from result files")
     report.set_defaults(handler=run_report)
