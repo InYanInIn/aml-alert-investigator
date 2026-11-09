@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import json
+from pathlib import Path
 
 import psycopg
 
@@ -36,6 +37,12 @@ def run_simulation(args: argparse.Namespace) -> None:
     print(f"written to {path}")
 
 
+def run_report(_: argparse.Namespace) -> None:
+    from aml_investigator.simulation.results import update_simulation_report
+
+    print(f"report written to {update_simulation_report(Path())}")
+
+
 def register(commands: Commands) -> None:
     simulation = commands.add_parser("sim").add_subparsers(required=True)
 
@@ -51,3 +58,6 @@ def register(commands: Commands) -> None:
         "--limit", type=positive_int, default=MAX_INVESTIGATIONS, help="stop an agent after N investigations"
     )
     run.set_defaults(handler=run_simulation)
+
+    report = simulation.add_parser("report", help="regenerate the M9 section of docs/results.md from result files")
+    report.set_defaults(handler=run_report)
