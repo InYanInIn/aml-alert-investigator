@@ -1,3 +1,4 @@
+import hashlib
 import json
 import statistics
 from collections.abc import Iterable, Mapping, Sequence
@@ -14,6 +15,7 @@ from aml_investigator.investigation.agent.conversation import PROFILE_PROMPT, PR
 from aml_investigator.simulation import MAX_INVESTIGATIONS
 from aml_investigator.simulation.laundering import GroupProgress
 from aml_investigator.simulation.loop import AGENT_SYSTEMS, Case, SimulationRun
+from aml_investigator.simulation.segments import segments_path
 from aml_investigator.simulation.world import LIVE_DAYS, live_days
 
 HELD_OUT_DATABASE = "aml_sim_heldout"
@@ -157,6 +159,11 @@ def prompt_version(system: str) -> str | None:
     return PROMPT_VERSION if system in AGENT_SYSTEMS else None
 
 
+def thresholds_digest(database: str) -> str:
+    files = (THRESHOLDS_DIR / f"{database}.json", segments_path(database))
+    return hashlib.sha256("".join(sha256(path) for path in files).encode()).hexdigest()
+
+
 def result_document(run: SimulationRun, git_state: GitState) -> dict[str, Any]:
     personas = sorted({case.actor.persona for case in run.cases})
     return {
@@ -171,7 +178,7 @@ def result_document(run: SimulationRun, git_state: GitState) -> dict[str, Any]:
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "git_commit": git_state.commit,
         "git_dirty": git_state.dirty,
-        "thresholds_sha256": sha256(THRESHOLDS_DIR / f"{run.database}.json"),
+        "thresholds_sha256": thresholds_digest(run.database),
         "prompt_version": prompt_version(run.system),
         "transaction_sha256": run.tape_sha256,
         "counts": {

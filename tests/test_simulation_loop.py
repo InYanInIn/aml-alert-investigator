@@ -1,4 +1,3 @@
-import json
 from datetime import timedelta
 from pathlib import Path
 
@@ -6,7 +5,6 @@ import psycopg
 import pytest
 
 from aml_investigator.core.settings import Settings
-from aml_investigator.evaluation.results import THRESHOLDS_DIR
 from aml_investigator.evaluation.systems import EvalAlert, Recommendation, SystemDecision
 from aml_investigator.simulation import MAX_INVESTIGATIONS
 from aml_investigator.simulation.loop import (
@@ -17,6 +15,7 @@ from aml_investigator.simulation.loop import (
     read_actors,
     simulate,
 )
+from aml_investigator.simulation.segments import load_segments
 from aml_investigator.simulation.world import NotASimulationDatabaseError, build_world, live_days, load_config
 from tests.conftest import Database, load_regulations
 from tests.simulation_fixtures import prepare_workspace, settings_for
@@ -60,12 +59,11 @@ class Fixed:
 async def drive(
     settings: Settings, name: str, recommendation: Recommendation, limit: int = MAX_INVESTIGATIONS
 ) -> DailyLoop:
-    file = json.loads((THRESHOLDS_DIR / f"{settings.database}.json").read_text())
     with psycopg.connect(settings.owner_conninfo, autocommit=True) as conn:
         days = WorldDays(conn, build_world(31, load_config()))
         days.populate()
         actors = read_actors(settings.evaluator_conninfo)
-        loop = DailyLoop(days, actors, file["thresholds"], file["suppression_days"], 1, limit)
+        loop = DailyLoop(days, actors, load_segments(settings.database), 1, limit)
         await loop.run(Fixed(name, recommendation), Fixed("b4", "close"), None)
     return loop
 

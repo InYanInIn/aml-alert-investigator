@@ -24,6 +24,7 @@ def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         thresholds = tmp_path / f"config/thresholds/{database}.json"
         thresholds.parent.mkdir(parents=True, exist_ok=True)
         thresholds.write_text("{}")
+        thresholds.with_name(f"{database}.segments.json").write_text("{}")
     return tmp_path
 
 

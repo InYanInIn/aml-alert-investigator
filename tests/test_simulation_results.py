@@ -75,6 +75,7 @@ def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     path = tmp_path / "config/thresholds/aml_sim_dev.json"
     path.parent.mkdir(parents=True)
     path.write_text("{}")
+    path.with_name("aml_sim_dev.segments.json").write_text("{}")
     return tmp_path
 
 

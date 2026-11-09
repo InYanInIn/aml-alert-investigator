@@ -20,10 +20,17 @@ from aml_investigator.evaluation.runner import decide_all, final_recommendation,
 from aml_investigator.evaluation.systems import EvalAlert, Recommendation, System, SystemDecision
 from aml_investigator.monitoring.alerts import build_alerts_for_days
 from aml_investigator.monitoring.calibration import choose_thresholds, train_split, write_thresholds
-from aml_investigator.monitoring.rules import generate_candidates
+from aml_investigator.monitoring.rules import generate_candidates, rules
 from aml_investigator.simulation import MAX_INVESTIGATIONS
 from aml_investigator.simulation.behaviour import normal_day
 from aml_investigator.simulation.laundering import GroupProgress, Laundering
+from aml_investigator.simulation.segments import (
+    SegmentThresholds,
+    apply_segment_thresholds,
+    calibrate_segments,
+    load_segments,
+    write_segments,
+)
 from aml_investigator.simulation.world import (
     LIVE_DAYS,
     MONITORED_BANK_ID,
@@ -49,6 +56,7 @@ AGENT_SYSTEMS = frozenset({"scripted", "azure", "azure_profile"})
 DELETE_EXTERNAL_CANDIDATES_SQL = load(__package__, "delete_external_candidates")
 ACTORS_SQL = load(__package__, "actors")
 ALERTS_BY_ID_SQL = load(__package__, "alerts_by_id")
+ZERO_THRESHOLDS = {rule.RULE_ID: 0.0 for rule in rules()}
 
 
 @dataclass(frozen=True)
@@ -144,15 +152,13 @@ class DailyLoop:
         self,
         days: WorldDays,
         actors: Mapping[str, Actor],
-        thresholds: Mapping[str, float],
-        suppression_days: int,
+        segments: SegmentThresholds,
         cadence: int,
         limit: int,
     ) -> None:
         self.days = days
         self.actors = actors
-        self.thresholds = thresholds
-        self.suppression_days = suppression_days
+        self.segments = segments
         self.cadence = cadence
         self.limit = limit
         self.decided: list[Decided] = []
@@ -176,7 +182,8 @@ class DailyLoop:
     async def monitor(self, days: DayRange, system: System, shadow: System, point: OperatingPoint | None) -> None:
         conn = self.days.conn
         regenerate_candidates(conn)
-        ids = build_alerts_for_days(conn, self.thresholds, days, suppression_days=self.suppression_days)
+        apply_segment_thresholds(conn, self.segments.thresholds)
+        ids = build_alerts_for_days(conn, ZERO_THRESHOLDS, days, suppression_days=self.segments.suppression_days)
         alerts = alerts_by_id(conn, ids)
         is_agent = system.name in AGENT_SYSTEMS
         chosen = alerts[: self.limit - len(self.decided)] if is_agent else alerts
@@ -221,14 +228,14 @@ async def simulate(
     require_simulation_database(settings.database)
     if limit > MAX_INVESTIGATIONS:
         raise ValueError(f"an agent run stops at {MAX_INVESTIGATIONS} investigations; got {limit}")
-    file = json.loads((THRESHOLDS_DIR / f"{settings.database}.json").read_text())
+    segments = load_segments(settings.database)
     runtime = RuntimeSettings.of(settings)
     point = validation_operating_point(Path(), settings.database, system) if system == "b1" else None
     with psycopg.connect(settings.owner_conninfo, autocommit=True) as conn:
         days = WorldDays(conn, build_world(seed, load_config()))
         days.populate()
         actors = read_actors(settings.evaluator_conninfo)
-        loop = DailyLoop(days, actors, file["thresholds"], file["suppression_days"], cadence, limit)
+        loop = DailyLoop(days, actors, segments, cadence, limit)
         async with open_system(system, runtime) as under_test, open_system(SHADOW_SYSTEM, runtime) as shadow:
             await loop.run(under_test, shadow, point)
         compute_alert_truth(conn)
@@ -276,8 +283,21 @@ async def calibrate_world(settings: Settings, *, seed: int, budget_per_day: floa
         write_thresholds(
             thresholds_path, thresholds, budget_per_day=budget_per_day, suppression_days=SUPPRESSION_DAYS, train=train
         )
+        segment_thresholds = calibrate_segments(
+            conn, train, budget_per_day=budget_per_day, suppression_days=SUPPRESSION_DAYS
+        )
+        write_segments(
+            settings.database,
+            segment_thresholds,
+            budget_per_day=budget_per_day,
+            suppression_days=SUPPRESSION_DAYS,
+            train=train,
+        )
+        apply_segment_thresholds(conn, segment_thresholds)
         live = DayRange(live_days()[0], live_days()[-1])
-        alerts = alerts_by_id(conn, build_alerts_for_days(conn, thresholds, live, suppression_days=SUPPRESSION_DAYS))
+        alerts = alerts_by_id(
+            conn, build_alerts_for_days(conn, ZERO_THRESHOLDS, live, suppression_days=SUPPRESSION_DAYS)
+        )
         compute_alert_truth(conn)
     async with open_system("b1", RuntimeSettings.of(settings)) as b1:
         decisions = await decide_all(b1, alerts)

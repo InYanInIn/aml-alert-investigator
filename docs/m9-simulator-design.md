@@ -125,6 +125,8 @@ on identical alerts, B4 runs in the shadow of every agent run: it decides each a
 
 ## Worlds and runs
 Each world is a separate database named `aml_sim_*`; `aml sim run` refuses any other name and resets the world tables.
+Thresholds are calibrated per customer segment (individual, small business, corporation), with the budget split by
+monitored accounts: global thresholds gave 33 of 35 alerts on corporations and none on a laundering group.
 
 | Run | Seeds | System | Cost |
 |---|---|---|---|

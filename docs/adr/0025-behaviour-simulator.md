@@ -29,6 +29,9 @@ rule does not.
 - **Worlds.** Each world is a separate `aml_sim_*` database; `aml sim run` refuses any other name. Thresholds are
   calibrated on the development world with `budget_per_day = 2` and reused. The `azure_profile` prompt is tuned on the
   development world only, at most two iterations of 30 investigations, and frozen before the held-out world opens once.
+- **Thresholds per customer segment.** Alert thresholds are calibrated per segment (individual, small business,
+  corporation) with `budget_per_day` split by monitored accounts, because one global threshold per rule gave 33 of 35
+  alerts on corporations and none on a laundering group.
 - **Limits.** At most 60 investigations per agent run; agent spending in M9 stops at $15. No learning adversary.
   B3 is left out.
 

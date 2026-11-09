@@ -9,6 +9,7 @@ from aml_investigator.core.settings import Settings
 from aml_investigator.simulation.world import SimulationConfig, load_config
 from tests.conftest import Database
 
+SEGMENT_NAMES = ("individual", "small_business", "corporation")
 THRESHOLDS = {"R1_fan_in": 2.0, "R3_pass_through": 1500.0}
 
 
@@ -28,6 +29,10 @@ def prepare_workspace(root: Path, database: str, *, scenarios: list[dict[str, An
     thresholds = root / "config" / "thresholds" / f"{database}.json"
     thresholds.parent.mkdir(parents=True, exist_ok=True)
     thresholds.write_text(json.dumps({"budget_per_day": 2.0, "suppression_days": 3, "thresholds": THRESHOLDS}))
+    segments = root / "config" / "thresholds" / f"{database}.segments.json"
+    segments.write_text(
+        json.dumps({"budget_per_day": 2.0, "suppression_days": 3, "segments": dict.fromkeys(SEGMENT_NAMES, THRESHOLDS)})
+    )
     b1_result = root / "eval" / "results" / database / "val" / "b1.json"
     b1_result.parent.mkdir(parents=True, exist_ok=True)
     point = {"threshold": 1.5, "close_rate": 0.5, "false_close_rate": 0.0}

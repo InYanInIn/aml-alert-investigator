@@ -22,6 +22,7 @@ async def test_calibration_writes_thresholds_and_the_b1_operating_point(
     write_config(tmp_path / "config" / "simulation")
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr("aml_investigator.simulation.loop.choose_thresholds", lambda *_, **__: THRESHOLDS)
+    monkeypatch.setattr("aml_investigator.simulation.segments.choose_thresholds", lambda *_, **__: THRESHOLDS)
 
     thresholds_path, point_path = await calibrate_world(settings, seed=61, budget_per_day=2.0)
 
@@ -33,6 +34,12 @@ async def test_calibration_writes_thresholds_and_the_b1_operating_point(
     assert calibrated["suppression_days"] == 3
     assert calibrated["calibrated_on"]["first"] == FIRST_DAY.isoformat()
     assert calibrated["thresholds"] == THRESHOLDS
+    segments = json.loads(Path(f"config/thresholds/{settings.database}.segments.json").read_text())
+    assert segments["segments"] == {
+        "individual": THRESHOLDS,
+        "small_business": {},
+        "corporation": THRESHOLDS,
+    }
     assert set(point) == {"threshold", "close_rate", "false_close_rate"}
 
 
