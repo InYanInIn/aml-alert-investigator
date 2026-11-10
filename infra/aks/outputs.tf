@@ -16,7 +16,3 @@ output "github_variables" {
 output "key_vault_name" {
   value = azurerm_key_vault.demo.name
 }
-
-output "postgres_host" {
-  value = azurerm_postgresql_flexible_server.demo.fqdn
-}

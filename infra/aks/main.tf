@@ -26,14 +26,6 @@ resource "azurerm_container_registry" "demo" {
   admin_enabled       = false
 }
 
-resource "azurerm_public_ip" "outbound" {
-  name                = "pip-aml-demo-outbound"
-  resource_group_name = azurerm_resource_group.demo.name
-  location            = azurerm_resource_group.demo.location
-  allocation_method   = "Static"
-  sku                 = "Standard"
-}
-
 resource "azurerm_kubernetes_cluster" "demo" {
   name                      = "aks-aml-demo"
   resource_group_name       = azurerm_resource_group.demo.name
@@ -60,9 +52,6 @@ resource "azurerm_kubernetes_cluster" "demo" {
 
   network_profile {
     network_plugin = "azure"
-    load_balancer_profile {
-      outbound_ip_address_ids = [azurerm_public_ip.outbound.id]
-    }
   }
 }
 
@@ -82,44 +71,6 @@ resource "random_password" "role" {
   for_each = toset(["aml_mcp_reader", "aml_app", "aml_evaluator"])
   length   = 32
   special  = false
-}
-
-resource "azurerm_postgresql_flexible_server" "demo" {
-  name                          = "psql-aml-${random_string.suffix.result}"
-  resource_group_name           = azurerm_resource_group.demo.name
-  location                      = azurerm_resource_group.demo.location
-  version                       = "16"
-  sku_name                      = "B_Standard_B1ms"
-  storage_mb                    = 32768
-  backup_retention_days         = 7
-  geo_redundant_backup_enabled  = false
-  administrator_login           = "amladmin"
-  administrator_password        = random_password.admin.result
-  public_network_access_enabled = true
-
-  lifecycle {
-    ignore_changes = [zone]
-  }
-}
-
-resource "azurerm_postgresql_flexible_server_configuration" "extensions" {
-  name      = "azure.extensions"
-  server_id = azurerm_postgresql_flexible_server.demo.id
-  value     = "VECTOR"
-}
-
-resource "azurerm_postgresql_flexible_server_firewall_rule" "cluster_outbound" {
-  name             = "cluster-outbound"
-  server_id        = azurerm_postgresql_flexible_server.demo.id
-  start_ip_address = azurerm_public_ip.outbound.ip_address
-  end_ip_address   = azurerm_public_ip.outbound.ip_address
-}
-
-resource "azurerm_postgresql_flexible_server_firewall_rule" "owner" {
-  name             = "owner"
-  server_id        = azurerm_postgresql_flexible_server.demo.id
-  start_ip_address = var.owner_ip
-  end_ip_address   = var.owner_ip
 }
 
 resource "azurerm_key_vault" "demo" {
@@ -145,17 +96,18 @@ resource "time_sleep" "role_propagation" {
 }
 
 locals {
-  server = azurerm_postgresql_flexible_server.demo.fqdn
+  server = "postgres.${var.namespace}.svc.cluster.local"
   dsns = merge(
     {
-      aml-owner-dsn = "postgresql://amladmin:${random_password.admin.result}@${local.server}:5432/postgres?sslmode=require"
+      aml-owner-dsn         = "postgresql://amladmin:${random_password.admin.result}@${local.server}:5432/postgres?sslmode=disable"
+      aml-postgres-password = random_password.admin.result
     },
     {
       for secret, role in {
         aml-mcp-dsn       = "aml_mcp_reader"
         aml-app-dsn       = "aml_app"
         aml-evaluator-dsn = "aml_evaluator"
-      } : secret => "postgresql://${role}:${random_password.role[role].result}@${local.server}:5432/aml_sim_ui?sslmode=require"
+      } : secret => "postgresql://${role}:${random_password.role[role].result}@${local.server}:5432/aml_sim_ui?sslmode=disable"
     }
   )
 }

@@ -142,7 +142,7 @@ Design: `docs/m10-ui-design.md`. A local UI with a simulated world (World tab) a
 
 ### M11 — AKS demo and teardown
 Design: `docs/m11-deploy-design.md`.
-- Terraform root `infra/aks/`: AKS Free with one B2s node, ACR, PostgreSQL Flexible Server B1ms with `vector`, Key Vault,
+- Terraform root `infra/aks/`: AKS Free with one B2s node, ACR, in-cluster PostgreSQL (`pgvector/pgvector:pg16` StatefulSet), Key Vault,
   workload identity, GitHub OIDC; the existing Azure OpenAI account is a data source only.
 - Deploy the UI world (not HI-Small) with a `workflow_dispatch` workflow; paid investigations run in the pod; screencast
   through `kubectl port-forward`.

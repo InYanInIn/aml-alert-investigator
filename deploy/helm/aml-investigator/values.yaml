@@ -29,6 +29,14 @@ ui:
     requests: {cpu: 250m, memory: 512Mi}
     limits: {memory: 1536Mi}
 
+postgres:
+  image: pgvector/pgvector:pg16
+  secretName: aml-postgres
+  storage: 8Gi
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {memory: 768Mi}
+
 azure:
   openaiEndpoint: ""
   subscriptionId: ""

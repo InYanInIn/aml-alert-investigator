@@ -4,6 +4,7 @@ from graphlib import TopologicalSorter
 from pathlib import Path
 
 import psycopg
+from psycopg.conninfo import make_conninfo
 
 from aml_investigator.core.migrate import ensure_database, migrate
 from aml_investigator.core.settings import Settings
@@ -16,13 +17,17 @@ FOREIGN_KEYS = (SQL_DIR / "world_foreign_keys.sql").read_text()
 SEQUENCES = (SQL_DIR / "world_sequences_sync.sql").read_text()
 
 
+def forwarded(dsn: str) -> str:
+    return make_conninfo(dsn, host="127.0.0.1", port=os.environ["AKS_FORWARD_PORT"])
+
+
 def target_settings(database: str) -> Settings:
     return Settings(
         _env_file=None,
-        owner_dsn=os.environ["AKS_OWNER_DSN"],
-        mcp_dsn=os.environ["AKS_MCP_DSN"],
-        app_dsn=os.environ["AKS_APP_DSN"],
-        evaluator_dsn=os.environ["AKS_EVALUATOR_DSN"],
+        owner_dsn=forwarded(os.environ["AKS_OWNER_DSN"]),
+        mcp_dsn=forwarded(os.environ["AKS_MCP_DSN"]),
+        app_dsn=forwarded(os.environ["AKS_APP_DSN"]),
+        evaluator_dsn=forwarded(os.environ["AKS_EVALUATOR_DSN"]),
     ).with_database(database)
 
 

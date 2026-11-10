@@ -3,11 +3,6 @@ variable "location" {
   default = "swedencentral"
 }
 
-variable "owner_ip" {
-  description = "Public IPv4 address of the operator; allowed through the PostgreSQL firewall."
-  type        = string
-}
-
 variable "github_repository" {
   description = "owner/name of the repository whose main branch may deploy."
   type        = string
