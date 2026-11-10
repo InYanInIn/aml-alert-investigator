@@ -1,6 +1,6 @@
 # AML Alert Investigator — Plan
 
-Status: draft for approval · 2026-10-28
+Status: approved; milestones M0-M11 are complete (last updated 2026-11-10)
 
 Each milestone is a thin slice that runs end to end and ends with a check that proves it. Numbers marked
 "N" are measured in that milestone and written into `docs/data-notes.md` or `docs/results.md`; nothing is
