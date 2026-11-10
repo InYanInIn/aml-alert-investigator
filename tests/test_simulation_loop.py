@@ -19,6 +19,7 @@ from aml_investigator.simulation.segments import load_segments
 from aml_investigator.simulation.world import (
     NotASimulationDatabaseError,
     build_world,
+    history_days,
     live_days,
     load_config,
 )
@@ -106,6 +107,22 @@ async def test_replay_prefix_then_advance_matches_uninterrupted_timeline(setting
     assert resumed.tape.next_txn_id == uninterrupted.tape.next_txn_id
     assert resumed_ids == [txn_id for txn_id in direct_ids if txn_id >= prefix_end_txn_id]
     assert resumed.blocked == uninterrupted.blocked == {blocked_actor.account_id: split + timedelta(days=1)}
+
+
+@pytest.mark.anyio
+async def test_advance_keeps_last_completed_day_and_does_not_continue_after_cap(settings: Settings) -> None:
+    with psycopg.connect(settings.owner_conninfo, autocommit=True) as conn:
+        days = WorldDays(conn, build_world(31, load_config()))
+        days.populate()
+        loop = DailyLoop(days, {}, load_segments(settings.database), 1, MAX_INVESTIGATIONS)
+        await loop.advance([], Fixed("b4", "close"), Fixed("b4", "close"), None)
+        loop.truncated = True
+        before = (days.tape.sha256, days.tape.next_txn_id)
+
+        await loop.advance([live_days()[0]], Fixed("b4", "close"), Fixed("b4", "close"), None)
+
+    assert before == (days.tape.sha256, days.tape.next_txn_id)
+    assert loop.last_day == history_days()[-1]
 
 
 @pytest.mark.anyio

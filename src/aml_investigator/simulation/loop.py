@@ -164,7 +164,7 @@ class DailyLoop:
         self.decided: list[Decided] = []
         self.truncated = False
         self.undecided_alerts = 0
-        self.last_day = live_days()[-1]
+        self.last_day = history_days()[-1]
 
     async def run(self, system: System, shadow: System, point: OperatingPoint | None) -> None:
         self.replay(history_days(), write=True)
@@ -188,6 +188,8 @@ class DailyLoop:
         *,
         stop_on_cap: bool = True,
     ) -> None:
+        if stop_on_cap and self.truncated:
+            return
         ordered_days = list(days)
         if not ordered_days:
             return
