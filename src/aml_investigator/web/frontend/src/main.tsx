@@ -42,6 +42,7 @@ function App() {
   const inspector = useRef<HTMLElement>(null);
   const clientSearch = useRef<HTMLInputElement>(null);
   const backToClients = useRef<HTMLButtonElement>(null);
+  const mapHeading = useRef<HTMLDivElement>(null);
   const previousClient = useRef<string | null>(null);
   const latest = world?.day ?? 0;
   const day = Math.min(pinned ?? latest, latest);
@@ -195,9 +196,10 @@ function App() {
       {jobError && <p className="error" role="alert">Simulation status unavailable. Retrying. {jobError}</p>}
       <div className="workspace-grid">
         <section className="network-panel" aria-labelledby="network-title">
-          <div className="section-heading network-heading">
+          <div ref={mapHeading} className="section-heading network-heading">
             <div className="map-window">
               <h2 id="network-title" className="sr-only">{selectedName ? `Payments for ${selectedName}` : "Flow map"}</h2>
+              {selected && <button className="secondary map-back" type="button" onClick={() => setSelected(null)}>← Back to network</button>}
               <span>{windowName}</span>
               {chartPending ? <span className="quiet" role="status">Updating…</span>
                 : busy && <span className="run-state" role="status">Running</span>}
@@ -210,7 +212,7 @@ function App() {
           <div className="network-canvas" aria-busy={chartPending || (!network && !graphError && (!world || Boolean(day)))}>
             {network ? <Graph network={network} blocked={blocked} selected={selected} select={(id) => {
               selectClient(id);
-              if ((inspector.current?.getBoundingClientRect().top ?? 0) > window.innerHeight) showInspector();
+              mapHeading.current?.scrollIntoView({ block: "nearest" });
             }} outlined={outlined} /> :
               <div className="graph-placeholder"><Signal /><h3>{graphError ? "Map unavailable" : day || !world ? "Loading payments…" : "No world yet"}</h3>
                 {graphError && <p>{graphError}</p>}
@@ -226,7 +228,7 @@ function App() {
               {blocked.size > 0 && <span><i className="legend-blocked">×</i> Blocked</span>}
               {evaluator && <span><i className="legend-evaluator" /> Evaluator outline</span>}
             </div>
-            {selected && <button className="text-button" type="button" onClick={() => setSelected(null)}>Clear focus</button>}
+            {selected && <button className="text-button map-client-link" type="button" onClick={() => { setPanel("clients"); showInspector(); }}>View client</button>}
           </div>}
         </section>
         <aside ref={inspector} className="inspector" aria-label="Clients and simulation">

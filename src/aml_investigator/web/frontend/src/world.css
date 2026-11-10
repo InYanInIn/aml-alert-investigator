@@ -67,6 +67,7 @@ h1 { font-size: clamp(29px, 3.05vw, 40px); line-height: 1.12; letter-spacing: -.
 h2 { font-size: 20px; line-height: 1.2; font-weight: 650; letter-spacing: -.025em; }
 .network-heading { padding: 13px 17px; min-height: 47px; color: var(--muted); font-size: 13px; }
 .map-window, .network-metrics { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.map-back { min-height: 34px; padding: 4px 9px; color: var(--chartreuse); font-size: 12px; }
 .network-metrics { justify-content: flex-end; font-variant-numeric: tabular-nums; }
 .network-metrics strong { color: var(--ivory); font-weight: 600; }
 .network-metrics > strong { border-left: 1px solid var(--edge); padding-left: 12px; }
@@ -112,6 +113,7 @@ h2 { font-size: 20px; line-height: 1.2; font-weight: 650; letter-spacing: -.025e
 .graph-placeholder h3 { font-size: 19px; font-weight: 600; }
 .graph-placeholder p { color: var(--muted); max-width: 34ch; font-size: 13px; }
 .network-footer { min-height: 42px; display: flex; gap: 10px; justify-content: space-between; align-items: center; padding: 6px 17px; border-top: 1px solid var(--edge); }
+.map-client-link { display: none; flex-shrink: 0; }
 .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; color: var(--muted); font-size: 11px; }
 .legend > span { display: inline-flex; gap: 6px; align-items: center; }
 .legend i { display: inline-block; font-style: normal; line-height: 1; }
@@ -234,6 +236,7 @@ legend { font-size: 12px; font-weight: 600; margin-bottom: 6px; padding: 0; }
 @media (max-width: 860px) {
   .workspace-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "network" "timeline" "inspector"; }
   .inspector { max-height: none; }
+  .map-client-link { display: inline-block; }
   .network-canvas { height: clamp(260px, 58vw, 450px); }
 }
 @media (max-width: 540px) {
