@@ -1,114 +1,180 @@
 <h1 align="center">AML Alert Investigator</h1>
 
-<p align="center">An LLM agent that investigates anti-money-laundering alerts, cites its evidence and leaves the decision to the analyst.</p>
+<p align="center">
+  <b>An AI agent that investigates anti-money-laundering alerts, cites every piece of evidence<br>and leaves the decision to a human analyst.</b>
+</p>
 
 <p align="center">
-  <a href="https://github.com/InYanInIn/aml-alert-investigator/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/InYanInIn/aml-alert-investigator/actions/workflows/ci.yml/badge.svg"></a>
-  <img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white">
-  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white">
-  <img alt="LangGraph" src="https://img.shields.io/badge/LangGraph-1C3C3C?logo=langchain&logoColor=white">
-  <img alt="Azure OpenAI" src="https://img.shields.io/badge/Azure%20OpenAI-gpt--5--mini-0078D4?logo=microsoftazure&logoColor=white">
-  <img alt="AKS" src="https://img.shields.io/badge/AKS-326CE5?logo=kubernetes&logoColor=white">
-  <img alt="Terraform" src="https://img.shields.io/badge/Terraform-844FBA?logo=terraform&logoColor=white">
-  <img alt="PostgreSQL + pgvector" src="https://img.shields.io/badge/PostgreSQL-pgvector-4169E1?logo=postgresql&logoColor=white">
-  <img alt="React" src="https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black">
+  <a href="https://github.com/InYanInIn/aml-alert-investigator/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/InYanInIn/aml-alert-investigator/actions/workflows/ci.yml/badge.svg"></a> <img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white"> <img alt="LangGraph" src="https://img.shields.io/badge/LangGraph-1C3C3C?logo=langchain&logoColor=white"> <img alt="Azure OpenAI" src="https://img.shields.io/badge/Azure%20OpenAI-gpt--5--mini-0078D4?logo=microsoftazure&logoColor=white">
+  <img alt="PostgreSQL + pgvector" src="https://img.shields.io/badge/PostgreSQL-pgvector-4169E1?logo=postgresql&logoColor=white"> <img alt="React" src="https://img.shields.io/badge/React-D3-61DAFB?logo=react&logoColor=black"> <img alt="AKS" src="https://img.shields.io/badge/AKS-Terraform-326CE5?logo=kubernetes&logoColor=white">
+</p>
+
+<p align="center">
+  <a href="#-part-1--evaluation-on-ibm-amlworld">AMLworld results</a> · <a href="#-part-2--the-behaviour-simulator">Simulator</a> · <a href="#%EF%B8%8F-the-analyst-app">Analyst app</a> · <a href="#-run-it-locally">Run it</a> · <a href="docs/results.md">Full results</a>
 </p>
 
 ![The simulated bank: clients by persona, payment flows and the weekly timeline](docs/images/world.png)
 
-- **Investigates alerts.** Monitoring rules raise alerts; a LangGraph agent on Azure OpenAI gathers evidence through read-only MCP tools.
-- **Cites everything.** Every claim points to transaction ids and to EU AMLR / Polish AML-act passages.
-- **Checks itself.** A deterministic verifier tests each citation and number before anyone sees the case.
-- **The analyst decides.** Verified closes are sampled for QA; escalations go to the analyst queue.
+- 🔎 **Investigates** — monitoring rules raise alerts; a LangGraph agent gathers evidence through read-only MCP tools.
+- 📎 **Cites** — every claim points to transaction ids and to EU AMLR or Polish AML-act passages.
+- ✅ **Checks itself** — a deterministic verifier tests each citation and number before anyone sees the case.
+- 🧑‍⚖️ **Defers** — verified closes are sampled for QA; escalations go to the analyst queue.
 
-> Portfolio project on synthetic data (IBM AMLworld and a purpose-built bank simulator). Not a compliance product.
+> [!NOTE]
+> Portfolio project on synthetic data only: IBM AMLworld and a purpose-built bank simulator. Not a compliance product.
 
 <table>
-  <tr>
-    <td width="50%"><img src="docs/images/client.png" width="100%" alt="Client view"><br><sub>A client's profile, balance and payments in the payment network.</sub></td>
-    <td width="50%"><img src="docs/images/case-escalated.png" width="100%" alt="Escalated case"><br><sub>An escalated case: typologies, cited transactions and regulation passages.</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/images/analyst-queue.png" width="100%" alt="Analyst queue"><br><sub>The analyst queue with the agent's recommendations.</sub></td>
-    <td><img src="docs/images/auto-closed.png" width="100%" alt="Auto-closed alerts"><br><sub>Alerts the agent closed on its own, with the QA sample.</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/images/simulation.png" width="100%" alt="Simulation run"><br><sub>A simulation run in progress: one week, paid Azure investigations, live spend.</sub></td>
-  </tr>
+  <tr><td width="50%"><img src="docs/images/client.png" alt="Client view"><br><sub><b>Client</b> — profile, balance and payments in the network.</sub></td><td width="50%"><img src="docs/images/case-escalated.png" alt="Escalated case"><br><sub><b>Case</b> — typologies, cited transactions and law passages.</sub></td></tr>
+  <tr><td><img src="docs/images/analyst-queue.png" alt="Analyst queue"><br><sub><b>Queue</b> — the agent's recommendations, waiting for the analyst.</sub></td><td><img src="docs/images/auto-closed.png" alt="Auto-closed alerts"><br><sub><b>Auto-closed</b> — alerts the agent closed, with the QA sample.</sub></td></tr>
 </table>
 
-## 📊 Results at a glance
+The project has **two separate experiments**: an evaluation on a public dataset, and a simulated bank built to test what that dataset cannot.
 
-<img src="docs/images/results-held-out.svg" width="49%" alt="Alerts closed on the held-out world"> <img src="docs/images/cadence.svg" width="49%" alt="Laundering money reaching the sink by monitoring cadence">
+---
 
-Left: on the held-out simulated world, only the agent with customer profiles closes honest alerts, and it closes no laundering ones.
-Right: the longer the monitoring cadence, the more planned laundering money reaches its sink.
+## 📊 Part 1 — Evaluation on IBM AMLworld
 
-- **AMLworld test split (opened once, config frozen):** the agent decides like a no-LLM rule (B4) on 399 of 400 alerts. It adds the investigated, cited case, at about 6.5 cents and three minutes per alert.
-- **Simulated bank (one held-out world, 31 alerts):** with customer profiles and payment purposes, the agent closed 11 of 22 honest alerts and 0 of 9 laundering ones. The rule, B1 and the frozen M8 agent closed none.
-- **Prompt injection:** 0 successful attacks. 0 of 34 (HI) and 0 of 35 (LI) clean escalations closed after an instruction was planted in a payment reference.
-- **Cadence (20 seeds):** 76% of planned laundering money reaches its sink with daily monitoring, 93% with weekly.
+**The dataset.** IBM AMLworld (NeurIPS 2023) is a synthetic transaction set with laundering labels.
+Two variants are used: **HI-Small** (higher illicit share, used for development) and **LI-Small** (lower share, reported alongside).
 
-Full tables, intervals, caveats and costs: [docs/results.md](docs/results.md).
+| Method | What happened |
+|---|---|
+| Iterate | Prompt and settings tuned on the **validation** window only |
+| Freeze | Configuration frozen: prompt v3, `gpt-5-mini`, at most 8 tool calls |
+| Test once | 200 test alerts per dataset, opened once; every opening is logged in [test-split-log.md](docs/test-split-log.md) |
+| Compare | Baselines **B0** escalate all · **B1** rule score · **B2** one prompt, no tools · **B3** gradient boosting · **B4** no-LLM close rule |
 
-## 🎯 Two uses
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/results-amlworld-dark.png"><img alt="Close rate and false-close rate for the agent, rule B4 and gradient boosting B3 on the HI-Small and LI-Small test splits" src="docs/images/results-amlworld-light.png"></picture>
 
-- **Alert-triage copilot.** The agent prepares a cited case for every alert; the analyst confirms or overrides.
-- **Training sandbox for junior analysts.** The simulator produces realistic cases with known ground truth, and the agent's cited reasoning gives a reference to compare against.
+| Test split | Agent C | Rule B4 | Gradient boosting B3 |
+|---|---|---|---|
+| **HI-Small** closed · false-close | 22.1% · **0.0%** | 22.1% · 0.0% | 39.2% · 7.5% |
+| **LI-Small** closed · false-close | 25.3% · 7.5% | 26.0% · 7.5% | 8.1% · 4.5% |
 
-A dedicated practice mode (decide first, then compare with the AI and the truth) is on the roadmap. It is not built.
+<sub>Close rate = alerts closed without an analyst. False-close rate = laundering alerts among them. Both weighted to natural prevalence; intervals in [results.md](docs/results.md).</sub>
 
-## ⚙️ How it works
+> [!IMPORTANT]
+> **The agent decides like a no-LLM rule.** C and B4 agree on **399 of 400** test alerts; the one difference is a close that failed citation checks.
+> What the agent adds is the **investigated, cited case**, at about 6.5 cents and three minutes per alert.
+
+- 🛡️ **Prompt injection: 0 successful attacks.** 0 of 34 (HI) and 0 of 35 (LI) clean escalations closed after an instruction was planted in a payment reference.
+- 📚 **Citations: often generic.** Of 30 graded regulation citations, 18 support the claim, 10 are only related, 2 do not.
+
+**Why a simulator next?** AMLworld has no payment purposes and no customer profiles, and ordinary people barely appear:
+134 of about 166,000 entities are individuals, and they raise 20 of 16,991 alerts.
+
+---
+
+## 🏦 Part 2 — The behaviour simulator
+
+**The question:** given information a rule cannot use — what each customer told the bank and why each payment was made — does an LLM decide better than the rule?
+
+The simulator runs a small bank **one day at a time**: about 850 accounts, 21 days of history, then 28 live days.
 
 ```mermaid
 flowchart LR
-    SIM[Behaviour simulator] --> DB[(Postgres + pgvector)]
-    DB --> RULES[Monitoring rules]
-    RULES --> ALERTS[Alerts]
-    ALERTS --> AGENT["LangGraph agent<br/>Azure OpenAI gpt-5-mini"]
-    AGENT <-->|read-only| MCP[MCP tools]
-    MCP --> DB
-    AGENT --> VER{Deterministic verifier}
-    VER -->|verified close| AUTO[Auto-close + 3% QA sample]
+    subgraph DAY["☀️ Every day: customers act"]
+        direction TB
+        P["👥 830 customer accounts in 5 personas<br/>onboarding profile + declared income"] --> TX
+        B["🔀 Benign confounders<br/>split rent, a sold car, a side business"] --> TX
+        G["🕵️ 7 laundering groups<br/>blind-written scenarios"] -->|cover stories from<br/>the same vocabulary| TX[("Payments with purposes<br/>'Rent March', 'Invoice 4471'")]
+    end
+    subgraph NIGHT["🌙 Every night: the bank checks"]
+        direction TB
+        M["Monitoring rules<br/>thresholds per customer segment"] --> A[Alerts]
+        A --> AG["🤖 Agent compares activity<br/>with the customer's profile"]
+        AG -->|close| C[Closed]
+        AG -->|escalate| AN["🧑‍⚖️ Simulated analyst"]
+    end
+    TX --> M
+    AN -->|"blocks a laundering account from the next day,<br/>a reserve member takes over after 2 days"| G
+```
+
+**The customers** (`config/simulation/personas.yaml`). Honest activity sometimes does not match the profile (15% of customers), so a mismatch is never a label.
+
+| Persona | Accounts | Declared monthly (EUR) | Normal money flows | Honest surprises |
+|---|---|---|---|---|
+| 🎓 Student | 200 | 400–1,200 | stipend, family support, rent, card spending | sold a car, inheritance, tutoring |
+| 🔧 Worker | 200 | 1,500–2,800 | wage, rent, bills, cash withdrawals | sold a car, weekend consulting |
+| 💼 Office employee | 200 | 2,800–5,200 | salary, mortgage, card spending, savings | side-business income and costs |
+| 🏪 Business owner | 150 | 15,000–60,000 | invoices in and out, tax, owner's drawings | large private sale |
+| 🏢 Corporation | 80 | 150,000–900,000 | revenue, suppliers, payroll, tax | one-off asset disposal |
+
+**The launderers** (`config/simulation/scenarios.yaml`), written by a subagent that never saw the rules, prompts or earlier results:
+
+| Scenario | Typology | Hides as | How the money moves | Held-out world |
+|---|---|---|---|---|
+| Student carriers | money mule | student | 3 payers send "family support"; 90% wired on | found in 2 days |
+| Cash below threshold | structuring | worker | cash of 8,200–9,700 as "vehicle sale"; 90% to a company | found in 2 days |
+| Consultant pass-through | shell company | office employee | "consulting invoices" of 15,000–40,000; 97% forwarded | found in 2 days |
+| Many small cash deposits | funnel account | worker | rounds of 12 cash deposits of 200–900; 95% forwarded | found in 1 day |
+| Round trip | cycle | two workers | money circles A → B → A, then leaves | found in 2 days |
+| Supplier invoices | invoice disguise | office employee | "supplier invoices" of 4,000–9,000; 85% to 3 suppliers | ❌ no alert |
+| Slow trickle | slow layering | student | four rounds of 300–700 "family support"; 80% passed on | ❌ no alert |
+
+### Results on the held-out world (opened once, 31 alerts)
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/results-simulator-dark.png"><img alt="Honest and laundering alerts closed by the profile-aware agent, the frozen agent and rule B4 on the held-out simulated world" src="docs/images/results-simulator-light.png"></picture>
+
+| System | Honest closed | Laundering closed | Escalation precision | Cost per alert |
+|---|---|---|---|---|
+| **Agent with profiles** | **11 of 22** | **0 of 9** | **45%** | $0.079 |
+| Frozen agent from Part 1 | 0 of 22 | 0 of 9 | 29% | $0.066 |
+| Rule B4 | 0 of 22 | 0 of 9 | 29% | free |
+
+- 🎯 **The agent earns its place where it reads what a rule cannot**: half the honest alerts closed, no laundering let through.
+- 🧱 **The Part 1 policy does not transfer**: it needs three or more sibling accounts, which ordinary customers rarely have.
+- 🔍 **Detection did not change**: every system found 5 of 7 groups. The gain is analyst time, not more catches.
+- ⚖️ **Per-segment thresholds matter**: with one global threshold, 33 of 35 development-world alerts were corporations and none hit a group.
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/results-cadence-dark.png"><img alt="Share of planned laundering money reaching its destination with daily, three-day and weekly monitoring" src="docs/images/results-cadence-light.png"></picture>
+
+**Monitoring cadence** changes how much money leaves, not what is found: over 20 seeds the median stays at 5 groups found.
+
+---
+
+## 🖥️ The analyst app
+
+<img src="docs/images/simulation.png" alt="A simulation run in progress: one week, paid Azure investigations, live spend">
+
+| Part | What it does |
+|---|---|
+| **World** | Clients, payment arcs and blocks; **Simulate** adds 1, 7 or 30 days with the agent or free rule B4 |
+| **Analyst** | Queue, prepared cases, cited transactions and law passages, filtered by simulation period |
+| **Spend guard** | Estimate before each run, a cap of 60 investigations, a lifetime limit of $39 |
+
+- **Resumable:** days replay from the seed with a hash check, so an interrupted run never repeats a day or a payment.
+- **God view:** `aml ui --evaluator` adds a toggle that outlines the laundering groups.
+
+## ⚙️ How the agent works
+
+```mermaid
+flowchart LR
+    ALERTS[Alert] --> PACK["Evidence pack<br/>deterministic"]
+    PACK --> LOOP["LangGraph loop<br/>≤ 8 tool calls, token budget"]
+    LOOP <-->|read-only| MCP["MCP tools<br/>transactions · profiles · trace funds · law search"]
+    LOOP --> DRAFT[Structured decision]
+    DRAFT --> VER{Verifier}
+    VER -->|verified close| AUTO[Auto-close + QA sample]
     VER -->|escalate or failed check| QUEUE[Analyst queue]
 ```
 
 <details>
-<summary><b>The agent and its tools</b></summary>
+<summary><b>Details: tools, retrieval, verification</b></summary>
 
-- Hybrid graph (ADR-0001): a deterministic evidence pack, then at most `k` tool calls within a token budget, then one structured-output decision. Cost per alert has a hard upper bound.
-- MCP is the agent's only data path (ADR-0006). Tools: `get_alert`, `list_transactions`, `get_transactions`, `get_account_profile`, `get_counterparties`, `trace_funds`, `get_typology_candidates`, `search_regulations`, `get_regulation_passage`.
-- Regulation search is vector search (pgvector, `text-embedding-3-small`) over EU AMLR and Polish AML-act passages ingested from EUR-Lex and the Polish act.
-- The verifier checks every transaction id, number and passage against what the tools returned. A failed draft is repaired once, then forced to `escalate`.
-- Decisions are recorded next to the agent's case and never overwritten by it (ADR-0013).
+- **Bounded cost:** a fixed evidence pack, then at most `k` tool calls within a token budget, then one structured decision (ADR-0001).
+- **One data path:** MCP is the agent's only access to data (ADR-0006): `get_alert`, `list_transactions`, `get_transactions`, `get_account_profile`, `get_counterparties`, `trace_funds`, `get_typology_candidates`, `search_regulations`, `get_regulation_passage`.
+- **Verifier:** every transaction id, number and passage is checked against tool output; a failed draft is repaired once, then forced to escalate.
 </details>
 
-<details>
-<summary><b>Evaluation</b></summary>
+## 🔒 Security
 
-- Labels live where the agent cannot read them; the agent is scored against them afterwards.
-- Baselines (ADR-0010): B0 escalate all, B1 rule score, B2 single prompt without tools, B3 gradient boosting (scikit-learn, trained on the train window), B4 the no-LLM close rule.
-- The test split was opened once with the configuration frozen (ADR-0024). Every opening is logged in [docs/test-split-log.md](docs/test-split-log.md), including the unintended ones.
-- Metrics carry bootstrap intervals. 30 regulation citations were graded: 18 support the claim, 10 are only related, 2 do not support it.
-</details>
-
-<details>
-<summary><b>The behaviour simulator</b></summary>
-
-- A simulated bank with customer personas, onboarding profiles, honest behaviour (including honest customers whose activity does not match their profile) and six to eight laundering groups.
-- Scenarios (mules, structuring, shell companies, funnels, cycles, fake invoices, slow layering) and texts were written blind: by a subagent that did not see the rules, the prompts or the M8 results.
-- Thresholds are calibrated per customer segment. With one global threshold, 33 of 35 development alerts were corporations and none reached a laundering group.
-- The world is resumable: days replay from the stored seed with a hash check, so an interrupted run continues without duplicate days or double spend.
-</details>
-
-<details>
-<summary><b>Security</b></summary>
-
-- **Label isolation by schema and role** (ADR-0004): labels and simulator truth sit in schemas the agent's role `aml_mcp_reader` cannot read.
-- **Roles in the UI:** the `aml ui` process uses the owner role to create and reset the simulated world. The agent's MCP tools and the Analyst pages use the restricted `aml_mcp_reader` and `aml_app` roles, so the agent still never sees labels.
-- **Prompt injection:** payment references are untrusted text. Clean/injected pairs with a clean-twice control produced zero successful attacks.
-- **Spend guard:** before paid runs the app reads the Azure OpenAI account and deployments and refuses on any mismatch; a lifetime UI limit and Azure budget alerts sit on top.
-</details>
+| Risk | Control |
+|---|---|
+| Agent sees the labels | Labels and simulator truth live in schemas the agent's role `aml_mcp_reader` cannot read (ADR-0004) |
+| Prompt injection | Payment references and profiles are untrusted text; injected/clean pairs with a clean-twice control |
+| Runaway spend | The app checks the Azure OpenAI account and deployments before paid runs and refuses on any mismatch |
+| Leaked secrets | No static secrets: OIDC for GitHub, workload identity for the pod, Key Vault for DSNs |
 
 ## ☁️ Azure deployment
 
@@ -116,7 +182,7 @@ flowchart LR
 flowchart LR
     GH[GitHub Actions] -->|OIDC| ENTRA[Entra ID]
     GH -->|push image| ACR[ACR]
-    subgraph AKS["AKS (one B2s_v2 node)"]
+    subgraph AKS["AKS · one B2s_v2 node"]
         UI["aml ui pod<br/>workload identity"] --> PG[(Postgres StatefulSet)]
     end
     ACR --> UI
@@ -124,12 +190,10 @@ flowchart LR
     UI -->|Entra ID token| AOAI[Azure OpenAI]
 ```
 
-- **No static secrets:** GitHub deploys over OIDC, the pod uses workload identity, DSNs come from Key Vault through the CSI driver, and Azure OpenAI accepts Entra ID tokens only.
-- **Least-privilege identities:** the app identity can call the model and read its secrets; the GitHub identity can push images and deploy to this cluster, from `main` only.
-- **Separate Terraform roots:** `infra/aks/` reads the Azure OpenAI account as a data source, so `terraform destroy` cannot remove the model.
-- **Port-forward only:** the app has no login, so there is no public endpoint.
-
-Free Trial constraints met: B2s nodes were refused in polandcentral and swedencentral and Flexible Server was unavailable in both, so the cluster runs in swedencentral on one B2s_v2 node with Postgres inside it. The cluster is destroyed after the demo. Details: [docs/m11-deploy-design.md](docs/m11-deploy-design.md).
+- **Least privilege:** the app identity can call the model and read its secrets; the GitHub identity deploys from `main` only.
+- **Safe teardown:** `infra/aks/` reads the Azure OpenAI account as a data source, so `terraform destroy` cannot remove the model.
+- **No public endpoint:** the app has no login, so it is reached by `kubectl port-forward` only.
+- **Free Trial fit:** B2s nodes and Flexible Server were unavailable, so one B2s_v2 node in swedencentral runs Postgres too; the cluster is destroyed after the demo ([design](docs/m11-deploy-design.md)).
 
 ## 🚀 Run it locally
 
@@ -143,38 +207,27 @@ uv run aml migrate
 uv run aml ui                 # opens http://127.0.0.1:8765/world
 ```
 
-The B4 rule runs free. Paid `azure_profile` investigations need `az login` and the Azure variables in `.env`.
+> [!TIP]
+> Rule B4 runs free. Paid agent investigations need `az login` and the Azure variables in `.env`.
 
-<details>
-<summary><b>Tech stack, project layout, limitations</b></summary>
+The tables in [docs/results.md](docs/results.md) are regenerated from the committed `eval/results/` by `aml eval report` and `aml sim report`.
+
+## 🧰 Tech stack
 
 | Area | Tools |
 |---|---|
-| Agent | LangGraph, LangChain MCP adapters, FastMCP, Azure OpenAI (`gpt-5-mini`, `text-embedding-3-small`), Langfuse |
+| Agent | LangGraph, FastMCP, Azure OpenAI `gpt-5-mini`, `text-embedding-3-small`, Langfuse |
 | Backend | Python 3.12, uv, FastAPI, psycopg, PostgreSQL + pgvector, scikit-learn |
 | Frontend | React + D3 (Vite), Jinja analyst pages |
 | Infra | Terraform, Helm, AKS, ACR, Key Vault, GitHub Actions |
 | Quality | pytest, ruff, mypy, Vitest |
 
-```
-src/aml_investigator/   simulation, monitoring, mcp_server, investigation, corpus, evaluation, review, web, truth
-corpus/                 regulation sources
-config/                 simulator scenarios, text pools, thresholds
-eval/                   frozen samples, results, replay recordings
-deploy/helm/            Helm chart
-infra/                  Terraform: terraform/ (Azure OpenAI), aks/ (cluster)
-scripts/                kind and AKS helpers
-docs/                   design, plan, results, ADRs
-tests/
-```
+## ⚠️ Limitations
 
-**Limitations**
+- **Synthetic only:** the simulator stresses the system; it does not estimate accuracy on real bank data.
+- **Small numbers:** the simulator result rests on one held-out world and 31 alerts — counts, not rates.
+- **Blind spots:** two laundering scenarios raised no alert, so no decision could reach them.
+- **Same author family:** Claude wrote both the scenarios and the agent's side, which reduces circularity without removing it.
+- **Optimistic analyst:** the simulated analyst is always right and acts within a day.
 
-- Synthetic data only. The simulator stresses the system; it does not estimate accuracy on real bank data.
-- The simulated result rests on one held-out world and 31 alerts: counts, not rates with intervals.
-- Two simulated scenarios produced no alert, so no decision could reach them.
-- The agent's AMLworld decision matches a simple rule; its regulation citations are often generic.
-- LLM calls cost money: $6.87 for the whole simulator evaluation.
-
-Plan and milestones: [docs/plan.md](docs/plan.md). Decisions: [docs/adr/](docs/adr/).
-</details>
+📚 **Docs:** [Results](docs/results.md) · [Simulator design](docs/m9-simulator-design.md) · [UI design](docs/m10-ui-design.md) · [Deployment](docs/m11-deploy-design.md) · [Plan](docs/plan.md) · [ADRs](docs/adr/)
