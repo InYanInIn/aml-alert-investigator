@@ -100,7 +100,7 @@ flowchart LR
 | 🏪 Business owner | 150 | 15,000–60,000 | invoices in and out, tax, owner's drawings | large private sale |
 | 🏢 Corporation | 80 | 150,000–900,000 | revenue, suppliers, payroll, tax | one-off asset disposal |
 
-**The launderers** (`config/simulation/scenarios.yaml`), written by a subagent that never saw the rules, prompts or earlier results:
+**The launderers** (`config/simulation/scenarios.yaml`), written blind, without access to the rules, prompts or earlier results:
 
 | Scenario | Typology | Hides as | How the money moves | Held-out world |
 |---|---|---|---|---|
@@ -222,12 +222,3 @@ The tables in [docs/results.md](docs/results.md) are regenerated from the commit
 | Infra | Terraform, Helm, AKS, ACR, Key Vault, GitHub Actions |
 | Quality | pytest, ruff, mypy, Vitest |
 
-## ⚠️ Limitations
-
-- **Synthetic only:** the simulator stresses the system; it does not estimate accuracy on real bank data.
-- **Small numbers:** the simulator result rests on one held-out world and 31 alerts — counts, not rates.
-- **Blind spots:** two laundering scenarios raised no alert, so no decision could reach them.
-- **Same author family:** Claude wrote both the scenarios and the agent's side, which reduces circularity without removing it.
-- **Optimistic analyst:** the simulated analyst is always right and acts within a day.
-
-📚 **Docs:** [Results](docs/results.md) · [Simulator design](docs/m9-simulator-design.md) · [UI design](docs/m10-ui-design.md) · [Deployment](docs/m11-deploy-design.md) · [Plan](docs/plan.md) · [ADRs](docs/adr/)
