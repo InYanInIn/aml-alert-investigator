@@ -118,7 +118,7 @@ export function Graph({ network, blocked, selected, select, outlined }: {
       })}
       {outside.map(({ client, position: [x, y] }) => {
         const align = x < -8 ? "end" : x > 8 ? "start" : "middle";
-        return <g key={client.id} className={`external-node${!connected.has(client.id) ? " dim" : ""}`} transform={`translate(${x} ${y})`}>
+        return <g key={client.id} className={`external-node${!connected.has(client.id) ? " dim" : ""}`} transform={`translate(${x} ${y})`} data-half={y < 0 ? "upper" : "lower"} data-edge={Math.abs(x) > 125 || undefined}>
           <title>{client.name}</title>
           <path d="M0 -3.5 3.5 0 0 3.5 -3.5 0Z" />
           {labeledExternals.has(client.id) &&

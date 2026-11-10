@@ -245,7 +245,16 @@ legend { font-size: 12px; font-weight: 600; margin-bottom: 6px; padding: 0; }
   .network-heading { font-size: 12px; }
   .map-window, .network-metrics { gap: 4px 7px; }
   .network-metrics > strong { padding-left: 7px; }
-  .network-canvas { height: 250px; }
+  .network-canvas { height: clamp(240px, 68vw, 306px); overflow: hidden; }
+  .network-svg { width: 124%; justify-self: center; }
+  .sector-label, .external-node text { font-size: 19px; }
+  .map-message { font-size: 22px; }
+  .external-node[data-half="upper"] text { translate: 0 -10px; }
+  .external-node[data-half="lower"] text { translate: 0 10px; }
+  .external-node[data-half="upper"] text[text-anchor="middle"] { translate: 0 4px; }
+  .external-node[data-half="lower"] text[text-anchor="middle"] { translate: 0 -6px; }
+  .external-node[data-edge] text[text-anchor="start"] { text-anchor: end; transform: translateX(-19px); }
+  .external-node[data-edge] text[text-anchor="end"] { text-anchor: start; transform: translateX(19px); }
   .day-controls { gap: 5px; }
 }
 @media (prefers-reduced-motion: reduce) {
