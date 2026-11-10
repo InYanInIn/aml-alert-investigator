@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { api, count, dayDate, errorText, eur, formatDate, usd, type Client, type ClientDetail, type Job, type Network, type Week, type World } from "./api";
+import { api, compactEur, count, dayDate, errorText, eur, formatDate, formatWindow, usd, type Client, type ClientDetail, type Job, type Network, type Week, type World } from "./api";
 import { ClientCard } from "./ClientCard";
 import { ClientList } from "./ClientList";
 import { Graph } from "./Graph";
@@ -39,6 +39,7 @@ function App() {
   const [overlayLoading, setOverlayLoading] = useState(false);
   const [overlayError, setOverlayError] = useState("");
   const [revision, setRevision] = useState(0);
+  const inspector = useRef<HTMLElement>(null);
   const latest = world?.day ?? 0;
   const day = Math.min(pinned ?? latest, latest);
   const busy = pending !== null || job?.status === "running";
@@ -143,84 +144,96 @@ function App() {
     setPanel("clients");
   }
 
-  const network = graph?.day === day ? graph.data : undefined;
+  function showInspector() {
+    inspector.current?.scrollIntoView({ block: "nearest" });
+  }
+
+  const network = graph?.data;
+  const chartDay = graph?.day ?? day;
+  const chartPending = Boolean(day) && chartDay !== day && !graphError;
   const outlined = useMemo(() => evaluator && network
     ? new Set(network.accounts.filter(({ id }) => evaluator.has(id)).map(({ client_id }) => client_id)) : emptyIds, [evaluator, network]);
   const blocked = useMemo(() => {
-    const date = dayDate(day).toISOString().slice(0, 10);
+    const date = dayDate(chartDay).toISOString().slice(0, 10);
     return new Set(clients.filter(({ blocked_from }) => blocked_from !== null && blocked_from <= date).map(({ id }) => id));
-  }, [clients, day]);
+  }, [clients, chartDay]);
   const arcs = network?.arcs ?? [];
-  const paymentCount = arcs.reduce((sum, flow) => sum + flow.count, 0);
-  const paymentEur = arcs.reduce((sum, flow) => sum + flow.eur, 0);
-  const windowName = day ? `${formatDate(dayDate(Math.max(1, day - 6)))} – ${formatDate(dayDate(day))}` : "Awaiting first publication";
+  const payments = selected ? arcs.filter(({ from_client, to_client }) => from_client === selected || to_client === selected) : arcs;
+  const paymentCount = payments.reduce((sum, flow) => sum + flow.count, 0);
+  const paymentEur = payments.reduce((sum, flow) => sum + flow.eur, 0);
+  const windowName = chartDay ? formatWindow(Math.max(1, chartDay - 6), chartDay) : "No published data";
   const selectedName = clients.find(({ id }) => id === selected)?.name;
 
   return <>
     <header className="masthead">
       <div className="brand"><Signal /><span>AML <strong>Investigator</strong></span></div>
-      <nav aria-label="Workspace"><a href="/world" aria-current="page">World</a><a href="/">Analyst <span aria-hidden="true">↗</span></a></nav>
-      <span className="environment"><i aria-hidden="true" /> Local simulation</span>
+      <nav aria-label="Workspace"><a href="/world" aria-current="page">World</a><a href="/">Analyst</a></nav>
     </header>
     <main className="workspace">
       <section className="workspace-header" aria-labelledby="workspace-title">
-        <div><p className="eyebrow">World / Transaction observatory</p><h1 id="workspace-title">Payment network<span>.</span></h1></div>
+        <div><h1 id="workspace-title">Payment network</h1>
+          <p className="world-date">{latest ? `Day ${latest} · ${formatDate(dayDate(latest))}` : "Local simulation"}</p>
+        </div>
         <div className="headline-data">
-          <div><span className="eyebrow">Published day</span><strong>{latest ? String(latest).padStart(2, "0") : "—"}</strong><small>{latest ? formatDate(dayDate(latest)) : "No world yet"}</small></div>
-          <div><span className="eyebrow">Investigation spend</span><strong>{world ? usd(world.spent_usd) : "—"}</strong><small>{world ? `of ${usd(world.limit_usd)} limit` : "Spend limit"}</small></div>
-          {world && <button className="primary" type="button" onClick={() => setPanel("simulate")}>{busy ? "View run" : "Simulate"} <span aria-hidden="true">↗</span></button>}
+          {world && <><div className="budget"><span>Spend</span><strong>{usd(world.spent_usd)}</strong><span>/ {usd(world.limit_usd)}</span></div>
+            <button className="primary" type="button" onClick={() => { setPanel("simulate"); showInspector(); }}>{busy ? "View run" : latest ? "Simulate" : "Set up"}</button>
+          </>}
         </div>
       </section>
       {worldError && <div className="notice error" role="alert">{worldError} <button type="button" className="text-button" onClick={() => void refreshWorld()}>Retry World</button></div>}
       {world?.thresholds_banner && <p className="notice">{world.thresholds_banner}</p>}
-      {busy && <p className="run-banner" role="status">Simulation running <span>· Reviewing published day {day}</span></p>}
       {jobError && <p className="error" role="alert">Simulation status unavailable. Retrying. {jobError}</p>}
       <div className="workspace-grid">
         <section className="network-panel" aria-labelledby="network-title">
           <div className="section-heading network-heading">
-            <div><p className="eyebrow">01 / Flow map</p><h2 id="network-title">{selectedName ?? "Network overview"}</h2><p className="window-date">{windowName}</p></div>
+            <div className="map-window">
+              <h2 id="network-title" className="sr-only">{selectedName ? `Payments for ${selectedName}` : "Flow map"}</h2>
+              <span>{windowName}</span>
+              {chartPending ? <span className="quiet" role="status">Updating…</span>
+                : busy && <span className="run-state" role="status">Running</span>}
+            </div>
             <div className="network-metrics">
-              <div><span className="eyebrow">Payments</span><strong>{network ? count(paymentCount) : "—"}</strong></div>
-              <div><span className="eyebrow">Volume</span><strong>{network ? eur(paymentEur) : "—"}</strong></div>
+              {network && <><span><strong>{count(paymentCount)}</strong> {paymentCount === 1 ? "payment" : "payments"}</span><strong title={eur(paymentEur)}>{compactEur(paymentEur)}</strong></>}
             </div>
           </div>
-          <div className="network-canvas" aria-busy={!network && !graphError && (!world || Boolean(day))}>
-            {network ? <Graph network={network} blocked={blocked} selected={selected} select={selectClient} outlined={outlined} /> :
-              <div className="graph-placeholder"><Signal /><h3>{graphError ? "Map unavailable" : day || !world ? "Loading the network" : "The network is quiet"}</h3>
-                <p>{graphError || (day || !world ? "Reading the published payment window." : "Create a world to see clients and their opening payment history.")}</p>
+          {network && graphError && <p className="map-error error" role="alert">{graphError} <button type="button" className="text-button" onClick={() => setGraphRetry(graphRetry + 1)}>Retry map</button></p>}
+          <div className="network-canvas" aria-busy={chartPending || (!network && !graphError && (!world || Boolean(day)))}>
+            {network ? <Graph network={network} blocked={blocked} selected={selected} select={(id) => {
+              selectClient(id);
+              if ((inspector.current?.getBoundingClientRect().top ?? 0) > window.innerHeight) showInspector();
+            }} outlined={outlined} /> :
+              <div className="graph-placeholder"><Signal /><h3>{graphError ? "Map unavailable" : day || !world ? "Loading payments…" : "No world yet"}</h3>
+                {graphError && <p>{graphError}</p>}
                 {graphError && <button type="button" className="secondary" onClick={() => setGraphRetry(graphRetry + 1)}>Retry map</button>}
               </div>}
           </div>
-          <div className="network-footer">
+          {network && <div className="network-footer">
             <div className="legend" aria-label="Map legend">
-              <span><i className="legend-client" /> Client</span><span><i className="legend-external" /> External kind</span>
-              <span><i className="legend-blocked">×</i> Blocked</span>
-              {selected ? <><span><i className="legend-in">→</i> Incoming</span><span><i className="legend-out">→</i> Outgoing</span></>
-                : <span><i className="legend-direction">→</i> Payment direction</span>}
+              {selected ? <><span><i className="legend-in" /> Received</span><span><i className="legend-out" /> Sent</span></>
+                : <><span><i className="legend-client" /> Client</span><span><i className="legend-external" /> External</span></>}
+              {selected && payments.some(({ from_client, to_client }) => from_client === to_client) &&
+                <span><i className="legend-internal" /> Internal</span>}
+              {blocked.size > 0 && <span><i className="legend-blocked">×</i> Blocked</span>}
               {evaluator && <span><i className="legend-evaluator" /> Evaluator outline</span>}
             </div>
             {selected && <button className="text-button" type="button" onClick={() => setSelected(null)}>Clear focus</button>}
-          </div>
+          </div>}
         </section>
-        <aside className="inspector" aria-label="World controls and client inspector">
-          <div className="panel-tabs" aria-label="Inspector view">
-            <button type="button" aria-pressed={panel === "clients" && Boolean(latest)} disabled={!latest} onClick={() => setPanel("clients")}>Inspector</button>
-            <button type="button" aria-pressed={panel === "simulate" || !latest} onClick={() => setPanel("simulate")}>Simulation</button>
+        <aside ref={inspector} className="inspector" aria-label="Clients and simulation">
+          <div className="panel-tabs" aria-label="Side panel">
+            <button type="button" aria-pressed={panel === "clients" && Boolean(latest)} disabled={!latest} onClick={() => setPanel("clients")}>Clients</button>
+            <button type="button" aria-pressed={panel === "simulate" || !latest} onClick={() => setPanel("simulate")}>{latest ? "Simulation" : "World setup"}</button>
           </div>
           <div className="inspector-body">
-            {world && (panel === "simulate" || !latest) ? <>
-              <p className="eyebrow">Controls / World</p><h2>{latest ? "Advance the world" : "Create a world"}</h2>
+            {world && (panel === "simulate" || !latest) ?
               <SimulatePanel job={job} pending={pending !== null} busy={busy} world={world} start={setPending} reset={reset} />
-            </> : latest ? <>
-              <p className="eyebrow">Directory / Clients</p>
-              <div className="inspector-heading"><h2>{selected ? "Client profile" : "Explore clients"}</h2>
-                {selected && <button type="button" className="text-button" onClick={() => setSelected(null)}>All clients</button>}
-              </div>
+              : latest ? <>
+              {selected && <button type="button" className="text-button back-to-clients" onClick={() => setSelected(null)}>← All clients</button>}
               {selected ? (detail?.id === selected
-                ? <ClientCard client={detail} windowDay={day} blocked={blocked.has(selected)} />
+                ? <ClientCard client={detail} blocked={blocked.has(selected)} />
                 : detailError ? <p className="error" role="alert">{detailError} <button type="button" className="text-button" onClick={() => setDetailRetry(detailRetry + 1)}>Retry client</button></p>
                 : <p className="quiet" role="status">Loading client profile…</p>)
-                : <ClientList clients={clients} selected={selected} select={selectClient} blocked={blocked} />}
+                : <ClientList clients={clients} select={selectClient} blocked={blocked} />}
             </> : <p className="quiet">Connecting to the World API…</p>}
           </div>
           {latest > 0 && <div className="inspector-footer">
@@ -229,7 +242,7 @@ function App() {
             {overlayError && <p className="error" role="alert">{overlayError}</p>}
           </div>}
         </aside>
-        <Timeline weeks={weeks} day={day} latest={latest} firstLive={world?.first_live_day ?? 22} selectDay={setPinned} />
+        <Timeline weeks={weeks} day={day} latest={latest} firstLive={world?.first_live_day ?? 22} pinned={pinned !== null} selectDay={setPinned} />
       </div>
     </main>
   </>;

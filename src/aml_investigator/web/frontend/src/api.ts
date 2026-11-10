@@ -79,11 +79,17 @@ const money = (currency: string, digits: number) => new Intl.NumberFormat("en", 
   style: "currency", currency, maximumFractionDigits: digits, minimumFractionDigits: digits,
 });
 const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const shortDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 const firstDay = Date.UTC(2025, 2, 3);
 export const dayDate = (day: number) => new Date(firstDay + (day - 1) * 86_400_000);
 export const formatDate = (date: string | Date) => dateFormat.format(new Date(date));
+export const formatWindow = (start: number, end: number) => shortDate.formatRange(dayDate(start), dayDate(end));
 export const count = (value: number) => value.toLocaleString("en");
+export const countLabel = (value: number, noun: string) => `${count(value)} ${noun}${value === 1 ? "" : "s"}`;
 export const eur = money("EUR", 2).format;
+export const compactEur = new Intl.NumberFormat("en", {
+  style: "currency", currency: "EUR", notation: "compact", maximumFractionDigits: 1,
+}).format;
 export const usd = money("USD", 2).format;
 export const label = (value: string) => value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
 export const errorText = (error: unknown) => error instanceof Error ? error.message : "Something went wrong.";

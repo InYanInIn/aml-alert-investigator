@@ -1,25 +1,25 @@
 import { count, eur, formatDate, label, type ClientDetail } from "./api";
 
-export function ClientCard({ client, windowDay, blocked }: { client: ClientDetail; windowDay: number; blocked: boolean }) {
+export function ClientCard({ client, blocked }: { client: ClientDetail; blocked: boolean }) {
   return <article className="client-card">
     <div className="profile-title">
-      <span className="eyebrow">{label(client.persona)} / {client.id}</span>
-      <h3>{client.name}</h3>
-      <p>{client.occupation ?? "Occupation unavailable"}</p>
-      <span className={blocked ? "blocked-tag" : "active-tag"}>{blocked ? "Blocked" : "Active"} on day {windowDay}</span>
+      <h2>{client.name}</h2>
+      <p>{client.occupation ? `${client.occupation} · ${label(client.persona)}` : label(client.persona)}</p>
+      {blocked && <span className="blocked-tag">Blocked</span>}
     </div>
     <div className="profile-metrics">
-      <div><span className="eyebrow">Latest balance</span><strong>{eur(client.balance)}</strong></div>
-      <div><span className="eyebrow">Declared / month</span><strong>{eur(client.declared_income)}</strong></div>
+      <div><span>Latest balance</span><strong>{eur(client.balance)}</strong></div>
+      <div><span>Declared / mo.</span><strong>{eur(client.declared_income)}</strong></div>
     </div>
-    <details open>
+    <details>
       <summary>Profile &amp; accounts</summary>
       {client.description && <p>{client.description}</p>}
       <dl>
+        <dt>Client ID</dt><dd className="identifier">{client.id}</dd>
         {client.since && <><dt>Customer since</dt><dd>{formatDate(client.since)}</dd></>}
         {client.purpose && <><dt>Purpose</dt><dd>{client.purpose}</dd></>}
         {client.expected_activity && <><dt>Expected activity</dt><dd>{client.expected_activity}</dd></>}
-        <dt>Accounts</dt><dd>{client.accounts.join(", ")}</dd>
+        <dt>Accounts</dt><dd className="identifier">{client.accounts.join(", ")}</dd>
         {client.blocked_from && <><dt>Blocked from</dt><dd>{formatDate(client.blocked_from)}</dd></>}
       </dl>
     </details>

@@ -34,11 +34,10 @@ export function WorldSetup({ world, busy, done }: { world: World; busy: boolean;
   }
 
   return <form className="world-setup" onSubmit={submit}>
-    <p className="quiet">Generate a synthetic client population and its opening payment history.</p>
     <fieldset disabled={busy || saving || confirm}>
       <label className="setup-field">Seed<input type="number" required min={0} step={1} value={Number.isNaN(seed) ? "" : seed}
         onChange={(event) => setSeed(event.currentTarget.valueAsNumber)} /></label>
-      <p className="eyebrow">Accounts by persona</p>
+      <p className="setup-label">Accounts by persona</p>
       {Object.entries(counts).map(([persona, value]) => <label className="setup-field" key={persona}>
         {label(persona)}
         <input type="number" required min={minimumPersonaCount} step={1} value={Number.isNaN(value) ? "" : value}
@@ -96,44 +95,46 @@ export function SimulatePanel({ job, pending, busy, world, start, reset }: {
   if (!world.day) return <WorldSetup world={world} busy={busy} done={reset} />;
 
   return <>
-    {pending || starting ? <div className="job-notice" role="status"><p className="eyebrow">Starting simulation…</p></div>
-      : job && <div className="job-notice" role="status">
-        <p className="eyebrow">{job.status === "failed" ? "Run interrupted" : busy ? "Run in progress" : "Last simulation"}</p>
-        <strong>Period {job.period_id} · {formatDate(job.day)}</strong><p>{count(job.investigations)} investigations · {usd(job.cost_usd)}</p>
+    {pending || starting ? <div className="job-notice" role="status">Starting simulation…</div>
+      : job && job.period_id > 0 && (busy || job.status === "failed") && <div className="job-notice" role="status">
+        <strong>{job.status === "failed" ? "Run interrupted" : "Run in progress"}</strong>
+        <span>{count(job.investigations)} investigations · {usd(job.cost_usd)}</span>
         {job.error && <p className="error">{job.error}</p>}
       </div>}
     <form className="simulation-form" onSubmit={run}>
       <fieldset disabled={busy || starting}>
-        <legend>Advance by</legend>
+        <legend>Duration</legend>
         <div className="day-options">{([1, 7, 30] as const).map((value) => <label key={value}>
           <input type="radio" name="days" value={value} checked={days === value} onChange={() => { setEstimate(null); setDays(value); }} />
           <span>{value} {value === 1 ? "day" : "days"}</span>
         </label>)}</div>
       </fieldset>
       <fieldset disabled={busy || starting}>
-        <legend>Decision system</legend>
+        <legend>System</legend>
         <div className="model-options">
-          {([["azure_profile", "Azure Profile", "Paid · AI investigation"], ["b4", "B4 rules", "Free · rule-based decisions"]] as const).map(([value, name, copy]) => (
+          {([["azure_profile", "Azure Profile", "Paid"], ["b4", "B4 rules", "Free"]] as const).map(([value, name, copy]) => (
             <label key={value}><input type="radio" name="system" value={value} checked={system === value}
               onChange={() => { setEstimate(null); setSystem(value); }} />
-              <span><strong>{name}</strong><small>{copy}</small></span>
+              <strong>{name}</strong><small>{copy}</small>
             </label>
           ))}
         </div>
       </fieldset>
       {!busy && <div className="estimate" aria-live="polite">
         {estimate ? <>
-          <span>{count(estimate.expected_alerts)} expected alerts · cap {count(estimate.cap)}</span>
-          <strong>{usd(estimate.cost_usd)} est.</strong>
+          <span>{system === "b4" ? `≈${count(Math.round(estimate.expected_alerts))} alerts` : `Up to ${count(estimate.cap)} investigations`}</span>
+          <strong>{usd(estimate.cost_usd)}{system === "b4" ? "" : " est."}</strong>
           {!estimate.within_limit && <p className="error">This run would exceed the spend limit. Select fewer days or switch to B4 rules.</p>}
         </> : estimateError ? <><p className="error">{estimateError}</p><button type="button" className="text-button" onClick={() => setRefreshEstimate(refreshEstimate + 1)}>Retry estimate</button></>
           : <span>Estimating run…</span>}
       </div>}
       {submitError && <p className="error" role="alert">{submitError}</p>}
       <button className="primary" type="submit" disabled={busy || starting || !estimate?.within_limit}>
-        {busy || starting ? "Simulation in progress" : "Run simulation"} <span aria-hidden="true">↗</span>
+        {busy || starting ? "Simulation in progress" : "Run simulation"}
       </button>
     </form>
+    {!busy && !pending && !starting && job?.status === "done" && job.period_id > 0 &&
+      <p className="last-run" title={`Period ${job.period_id} · ${count(job.investigations)} investigations`}>Last run · {formatDate(job.day)} · {usd(job.cost_usd)}</p>}
     <details className="reset-details"><summary>World settings</summary><WorldSetup world={world} busy={busy} done={reset} /></details>
   </>;
 }
