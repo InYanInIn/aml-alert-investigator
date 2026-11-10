@@ -1,9 +1,9 @@
 import asyncio
 import json
-import shutil
-import subprocess
+from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Literal
 
 import httpx
@@ -13,6 +13,7 @@ from fastapi import FastAPI
 from aml_investigator.core.logging import JsonFormatter
 from aml_investigator.investigation.agent.nodes import NO_DECISION
 from aml_investigator.investigation.models import azure
+from aml_investigator.simulation import azure_spend
 from aml_investigator.web.jobs import AlertProgress, JobConflictError, SimulationJobs
 from aml_investigator.web.routes.alerts import rerun_router
 from tests.conftest import Database, load_regulations
@@ -21,6 +22,7 @@ from tests.test_azure_model import completion, tool_call_message
 from tests.test_simulation_resume import finished
 
 ENDPOINT = "https://aml-investigator-01234567.openai.azure.com"
+SUBSCRIPTION = "01234567-89ab-cdef-0123-456789abcdef"
 EMBEDDING = [1.0] + [0.0] * 1535
 
 
@@ -33,6 +35,15 @@ def anyio_backend() -> str:
 def azure_auth(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(azure, "DefaultAzureCredential", lambda: None)
     monkeypatch.setattr(azure, "get_bearer_token_provider", lambda *_: lambda: "offline-test-token")
+
+
+def arm_client(handler: Callable[[httpx.Request], httpx.Response]) -> type[httpx.Client]:
+    class MockedClient(httpx.Client):
+        def __init__(self, **options: Any) -> None:
+            options.setdefault("transport", httpx.MockTransport(handler))
+            super().__init__(**options)
+
+    return MockedClient
 
 
 @pytest.fixture
@@ -54,32 +65,55 @@ def azure_deployments(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, str | N
         )
     ]
 
-    def run(arguments: list[str], **options: object) -> subprocess.CompletedProcess[str]:
-        assert arguments[0] == "/test/az"
-        assert arguments[1:3] == ["cognitiveservices", "account"]
-        assert "rg-aml-investigator" in arguments
-        assert "aml-investigator-openai" in arguments
-        assert options["stderr"] == subprocess.DEVNULL
-        assert options["timeout"] == 10
-        if arguments[3] == "show":
-            payload: object = {
-                "name": "aml-investigator-openai",
-                "kind": "OpenAI",
-                "endpoint": f"{ENDPOINT}/",
-                "subdomain": "aml-investigator-01234567",
-                "state": "Succeeded",
-            }
-        else:
-            assert arguments[3:5] == ["deployment", "list"]
-            includes_tier = "service_tier:properties.serviceTier" in arguments[-1]
-            payload = [
-                {key: value for key, value in deployment.items() if key != "service_tier" or includes_tier}
-                for deployment in deployments
-            ]
-        return subprocess.CompletedProcess(arguments, 0, json.dumps(payload))
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "GET"
+        assert request.url.host == "management.azure.com"
+        assert request.headers["authorization"] == "Bearer offline-arm-token"
+        assert request.url.params["api-version"] == azure_spend.ARM_API_VERSION
+        account = (
+            f"/subscriptions/{SUBSCRIPTION}/resourceGroups/rg-aml-investigator"
+            "/providers/Microsoft.CognitiveServices/accounts/aml-investigator-openai"
+        )
+        if request.url.path == account:
+            return httpx.Response(
+                200,
+                json={
+                    "name": "aml-investigator-openai",
+                    "kind": "OpenAI",
+                    "properties": {
+                        "endpoint": f"{ENDPOINT}/",
+                        "customSubDomainName": "aml-investigator-01234567",
+                        "provisioningState": "Succeeded",
+                    },
+                },
+            )
+        assert request.url.path == f"{account}/deployments"
+        return httpx.Response(
+            200,
+            json={
+                "value": [
+                    {
+                        "name": item["deployment"],
+                        "sku": {"name": item["sku"]},
+                        "properties": {
+                            "model": {"format": item["format"], "name": item["model"], "version": item["version"]},
+                            "provisioningState": item["state"],
+                            "spilloverDeploymentName": item["spillover"],
+                            **({"serviceTier": item["service_tier"]} if item["service_tier"] else {}),
+                        },
+                    }
+                    for item in deployments
+                ]
+            },
+        )
 
-    monkeypatch.setattr(shutil, "which", lambda _: "/test/az")
-    monkeypatch.setattr(subprocess, "run", run)
+    class Credential:
+        def get_token(self, scope: str) -> SimpleNamespace:
+            assert scope == "https://management.azure.com/.default"
+            return SimpleNamespace(token="offline-arm-token")  # noqa: S106
+
+    monkeypatch.setattr(azure_spend, "DefaultAzureCredential", Credential)
+    monkeypatch.setattr(httpx, "Client", arm_client(handler))
     return deployments
 
 
@@ -122,7 +156,9 @@ async def test_rerun_charges_new_requests_without_republishing_the_alert(
             return fake_embedding_response()
         return httpx.Response(200, json=completion({"content": "No decision."}))
 
-    settings = settings_for(world_db).model_copy(update={"azure_openai_endpoint": ENDPOINT})
+    settings = settings_for(world_db).model_copy(
+        update={"azure_openai_endpoint": ENDPOINT, "azure_subscription_id": SUBSCRIPTION}
+    )
     jobs = SimulationJobs(settings, azure_transport=httpx.MockTransport(handler))
     await jobs.create(51, {})
     initial = await finished(jobs, await jobs.start(7, "azure_profile"))
@@ -231,7 +267,9 @@ async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert
         assert request.url.path.endswith("/chat/completions")
         return fake_chat_response(body)
 
-    settings = settings_for(world_db).model_copy(update={"azure_openai_endpoint": ENDPOINT})
+    settings = settings_for(world_db).model_copy(
+        update={"azure_openai_endpoint": ENDPOINT, "azure_subscription_id": SUBSCRIPTION}
+    )
     low_limit = settings.model_copy(update={"ui_spend_limit_usd": Decimal("0.001")})
     rejected = SimulationJobs(low_limit, azure_transport=httpx.MockTransport(handler))
     await rejected.create(51, {})
@@ -323,7 +361,9 @@ async def test_unverified_deployment_rejects_the_paid_job_before_any_send(
         requested.append(request)
         return httpx.Response(500)
 
-    settings = settings_for(world_db).model_copy(update={"azure_openai_endpoint": ENDPOINT})
+    settings = settings_for(world_db).model_copy(
+        update={"azure_openai_endpoint": ENDPOINT, "azure_subscription_id": SUBSCRIPTION}
+    )
     jobs = SimulationJobs(settings, azure_transport=httpx.MockTransport(handler))
     await jobs.create(51, {})
     try:
@@ -354,7 +394,9 @@ async def test_azure_does_not_send_or_reserve_after_mcp_sql_fails(
             fake_embedding_response() if operation == "embeddings" else fake_chat_response(json.loads(request.content))
         )
 
-    settings = settings_for(world_db).model_copy(update={"azure_openai_endpoint": ENDPOINT})
+    settings = settings_for(world_db).model_copy(
+        update={"azure_openai_endpoint": ENDPOINT, "azure_subscription_id": SUBSCRIPTION}
+    )
     jobs = SimulationJobs(settings, azure_transport=httpx.MockTransport(handler))
     await jobs.create(51, {})
     with world_db.owner() as conn:
@@ -390,3 +432,31 @@ async def test_azure_does_not_send_or_reserve_after_mcp_sql_fails(
             conn.execute("DROP POLICY reject_passage_read ON corpus.passages")
             conn.execute("ALTER TABLE corpus.passages DISABLE ROW LEVEL SECURITY")
             conn.execute("DROP FUNCTION corpus.reject_passage_read()")
+
+
+@pytest.mark.anyio
+@pytest.mark.usefixtures("azure_deployments", "azure_auth")
+@pytest.mark.parametrize("failure", ["no_subscription", "arm_forbidden", "no_credential"])
+async def test_deployment_metadata_that_cannot_be_read_rejects_the_paid_job(
+    world_db: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: str
+) -> None:
+    prepare_workspace(tmp_path, "aml_sim_dev")
+    monkeypatch.chdir(tmp_path)
+    update: dict[str, str | None] = {"azure_openai_endpoint": ENDPOINT, "azure_subscription_id": SUBSCRIPTION}
+    if failure == "no_subscription":
+        update["azure_subscription_id"] = None
+    elif failure == "arm_forbidden":
+        monkeypatch.setattr(httpx, "Client", arm_client(lambda _: httpx.Response(403)))
+    else:
+
+        def unauthenticated() -> None:
+            raise RuntimeError("no credential")
+
+        monkeypatch.setattr(azure_spend, "DefaultAzureCredential", unauthenticated)
+    jobs = SimulationJobs(settings_for(world_db).model_copy(update=update))
+    await jobs.create(51, {})
+    try:
+        with pytest.raises(JobConflictError, match="could not be verified"):
+            await jobs.start(7, "azure_profile")
+    finally:
+        await jobs.close()
