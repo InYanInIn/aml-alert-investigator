@@ -137,14 +137,19 @@ Design: `docs/m9-simulator-design.md`.
 Check: identical tape for identical seed; no look-ahead in candidates; `truth.sim_actors` closed to runtime roles;
 `docs/results.md` reports groups found, days to detection, money that left and per-persona rates, zeros included.
 
-### M10 — AKS demo and teardown
-- Terraform (second part): AKS Free tier with one B2s node, ACR, PostgreSQL Flexible Server B1ms with
-  `vector`, Key Vault, workload identity; GitHub OIDC deploy workflow.
-- Load HI-Small into Flexible Server; deploy; record the screencast via port-forward.
-- `terraform destroy`; close the subscription before day 30 unless you decide otherwise.
+### M10 — Local UI
+Design: `docs/m10-ui-design.md`. A local UI with a simulated world (World tab) and an analyst desk (Analyst tab); merged in PR #14.
 
-Check: smoke test passes on AKS; one live investigation and one analyst decision recorded; after destroy, the
-resource group no longer exists; final spend recorded in `docs/results.md`.
+### M11 — AKS demo and teardown
+Design: `docs/m11-deploy-design.md`.
+- Terraform root `infra/aks/`: AKS Free with one B2s node, ACR, PostgreSQL Flexible Server B1ms with `vector`, Key Vault,
+  workload identity, GitHub OIDC; the existing Azure OpenAI account is a data source only.
+- Deploy the UI world (not HI-Small) with a `workflow_dispatch` workflow; paid investigations run in the pod; screencast
+  through `kubectl port-forward`.
+- `terraform destroy` the same day; close the subscription before day 30 unless you decide otherwise.
+
+Check: one paid investigation and one analyst decision recorded on AKS (or the kind fallback, documented); after destroy,
+the resource group no longer exists; final spend recorded in `docs/results.md`.
 
 ## Teardown checklist (Phase B)
 - [ ] `terraform destroy` completed without errors
