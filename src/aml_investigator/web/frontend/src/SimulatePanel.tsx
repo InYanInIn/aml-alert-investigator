@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, count, errorText, formatDate, label, usd, type Days, type Estimate, type Job, type System, type World } from "./api";
 
+const minimumPersonaCount = 1;
+
 export function WorldSetup({ world, busy, done }: { world: World; busy: boolean; done: () => Promise<void> }) {
   const [seed, setSeed] = useState(1001);
   const [counts, setCounts] = useState(world.persona_counts);
@@ -10,6 +12,10 @@ export function WorldSetup({ world, busy, done }: { world: World; busy: boolean;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (Object.values(counts).some((value) => !Number.isInteger(value) || value < minimumPersonaCount)) {
+      setError("Enter a whole number of at least 1 for each persona.");
+      return;
+    }
     if (world.day > 0 && !confirm) {
       setConfirm(true);
       return;
@@ -35,7 +41,7 @@ export function WorldSetup({ world, busy, done }: { world: World; busy: boolean;
       <p className="eyebrow">Accounts by persona</p>
       {Object.entries(counts).map(([persona, value]) => <label className="setup-field" key={persona}>
         {label(persona)}
-        <input type="number" required min={0} step={1} value={Number.isNaN(value) ? "" : value}
+        <input type="number" required min={minimumPersonaCount} step={1} value={Number.isNaN(value) ? "" : value}
           onChange={(event) => setCounts({ ...counts, [persona]: event.currentTarget.valueAsNumber })} />
       </label>)}
     </fieldset>
@@ -90,11 +96,12 @@ export function SimulatePanel({ job, pending, busy, world, start, reset }: {
   if (!world.day) return <WorldSetup world={world} busy={busy} done={reset} />;
 
   return <>
-    {(job || pending) && <div className="job-notice" role="status">
-      <p className="eyebrow">{job?.status === "failed" ? "Run interrupted" : busy ? "Run in progress" : "Last simulation"}</p>
-      {job && <><strong>Period {job.period_id} · {formatDate(job.day)}</strong><p>{count(job.investigations)} investigations · {usd(job.cost_usd)}</p></>}
-      {job?.error && <p className="error">{job.error}</p>}
-    </div>}
+    {pending || starting ? <div className="job-notice" role="status"><p className="eyebrow">Starting simulation…</p></div>
+      : job && <div className="job-notice" role="status">
+        <p className="eyebrow">{job.status === "failed" ? "Run interrupted" : busy ? "Run in progress" : "Last simulation"}</p>
+        <strong>Period {job.period_id} · {formatDate(job.day)}</strong><p>{count(job.investigations)} investigations · {usd(job.cost_usd)}</p>
+        {job.error && <p className="error">{job.error}</p>}
+      </div>}
     <form className="simulation-form" onSubmit={run}>
       <fieldset disabled={busy || starting}>
         <legend>Advance by</legend>
