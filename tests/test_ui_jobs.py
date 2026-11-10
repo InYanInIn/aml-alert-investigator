@@ -1,3 +1,4 @@
+import asyncio
 import json
 import shutil
 import subprocess
@@ -110,8 +111,13 @@ async def test_rerun_charges_new_requests_without_republishing_the_alert(
     prepare_workspace(tmp_path, "aml_sim_dev")
     monkeypatch.chdir(tmp_path)
     load_regulations(world_db)
+    entered, release = asyncio.Event(), asyncio.Event()
+    pause = False
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        if pause:
+            entered.set()
+            await release.wait()
         if request.url.path.endswith("/embeddings"):
             return fake_embedding_response()
         return httpx.Response(200, json=completion({"content": "No decision."}))
@@ -156,7 +162,21 @@ async def test_rerun_charges_new_requests_without_republishing_the_alert(
         endpoint = f"/alerts/{alert_id}/rerun"
         body = {"investigation_id": investigation_id}
         assert (await client.post(endpoint, data=body)).status_code == 422
-        assert (await client.post(endpoint, json=body)).status_code == 204
+        pause = True
+        rerun = asyncio.create_task(client.post(endpoint, json=body))
+        try:
+            await asyncio.wait_for(entered.wait(), timeout=5)
+            assert (await client.get(f"{endpoint}-status")).json() == {
+                "running": True,
+                "investigation_id": investigation_id,
+            }
+        finally:
+            release.set()
+            response = await rerun
+        assert response.status_code == 204
+        completed = (await client.get(f"{endpoint}-status")).json()
+        assert not completed["running"]
+        assert completed["investigation_id"] > investigation_id
         assert (await client.post(endpoint, json=body)).status_code == 409
 
     assert jobs.spent() > spent

@@ -72,7 +72,7 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 {% endif %}
 {% if page.can_rerun %}
 <form id="rerun-investigation" action="/alerts/{{ page.alert.alert_id }}/rerun" method="post" data-investigation-id="{{ investigation.investigation_id }}">
-<button type="submit">Rerun investigation</button>
+<button type="submit" disabled>Rerun investigation</button>
 <small>Runs Azure again. Uses the current spend limit.</small>
 <p class="rerun-status" role="status"></p>
 </form>
@@ -81,15 +81,44 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
   const form = document.getElementById("rerun-investigation");
   const button = form.querySelector("button");
   const status = form.querySelector(".rerun-status");
+  const investigationId = Number(form.dataset.investigationId);
+  const inProgress = "Investigation in progress. This can take several minutes.";
+
+  async function watchRerun(wasRunning = false, confirmingStop = false) {
+    const response = await fetch(`${form.action}-status`, { cache: "no-store" }).catch(() => null);
+    if (response?.ok) {
+      const state = await response.json();
+      if (state.investigation_id !== investigationId) {
+        window.location.reload();
+        return;
+      }
+      if (!state.running) {
+        if (wasRunning && !confirmingStop) {
+          window.setTimeout(() => void watchRerun(true, true), 1000);
+          return;
+        }
+        status.textContent = wasRunning ? "The rerun ended without saving a new report." : "";
+        button.disabled = false;
+        return;
+      }
+      wasRunning = true;
+      status.textContent = inProgress;
+    } else {
+      status.textContent = "Checking investigation status…";
+    }
+    window.setTimeout(() => void watchRerun(wasRunning), 2000);
+  }
+
+  void watchRerun();
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     button.disabled = true;
-    status.textContent = "Investigation in progress. This can take several minutes.";
+    status.textContent = inProgress;
     try {
       const response = await fetch(form.action, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ investigation_id: Number(form.dataset.investigationId) }),
+        body: JSON.stringify({ investigation_id: investigationId }),
       });
       if (response.ok) {
         window.location.reload();

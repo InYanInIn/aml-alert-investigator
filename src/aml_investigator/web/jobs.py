@@ -82,6 +82,12 @@ class AlertProgress:
 
 
 @dataclass(frozen=True)
+class RerunStatus:
+    running: bool
+    investigation_id: int | None
+
+
+@dataclass(frozen=True)
 class JobStatus:
     period_id: int
     status: PeriodStatus
@@ -220,6 +226,7 @@ class SimulationJobs:
             if periods.spent() + CHAT.bound > self.settings.ui_spend_limit_usd:
                 raise JobConflictError("The Azure spend limit would be exceeded.")
             alert, period_id = candidate
+            periods.mark_rerun(alert_id)
             endpoint = await self._verified_endpoint()
             lock = asyncio.Lock()
             app, mcp = FixedRole(conn, lock, "app"), FixedRole(conn, lock, "mcp")
@@ -240,6 +247,10 @@ class SimulationJobs:
                     "investigation_rerun_failed", extra={"fields": {"alert_id": alert_id, "error_class": error_class}}
                 )
                 raise JobConflictError("The investigation could not be rerun.") from None
+
+    def rerun_status(self, alert_id: int) -> RerunStatus:
+        with self._connect() as conn:
+            return RerunStatus(*Periods(conn).rerun_status(alert_id))
 
     async def _verified_endpoint(self) -> httpx.URL | None:
         if self._profile_model is not None:

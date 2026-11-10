@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from aml_investigator.web.dependencies import Pages, Service
-from aml_investigator.web.jobs import JobConflictError
+from aml_investigator.web.jobs import JobConflictError, RerunStatus
 from aml_investigator.web.routes.simulate import simulation_jobs
 
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
@@ -104,3 +104,8 @@ async def rerun_investigation(
         await simulation_jobs(request).rerun_investigation(alert_id, investigation_id)
     except JobConflictError as error:
         raise HTTPException(status_code=409, detail=str(error)) from None
+
+
+@rerun_router.get("/alerts/{alert_id}/rerun-status")
+def rerun_status(request: Request, alert_id: int) -> RerunStatus:
+    return simulation_jobs(request).rerun_status(alert_id)

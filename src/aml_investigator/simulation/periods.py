@@ -39,6 +39,8 @@ COUNT_MONITORED = load(__package__, "count_ui_monitored")
 READ_SPEND = load(__package__, "read_azure_spend")
 READ_ATTEMPT = load(__package__, "read_azure_attempt")
 READ_RERUNNABLE_ALERT = load(__package__, "read_rerunnable_alert")
+MARK_RERUN = load(__package__, "mark_rerun")
+READ_RERUN_STATUS = load(__package__, "read_rerun_status")
 
 
 class StoredThresholds(TypedDict):
@@ -173,3 +175,10 @@ class Periods:
             return None
         alert_id, account_id, alert_date, period_id = row
         return EvalAlert(alert_id, account_id, alert_date), period_id
+
+    def mark_rerun(self, alert_id: int) -> None:
+        self.conn.execute(MARK_RERUN, (alert_id,))
+
+    def rerun_status(self, alert_id: int) -> tuple[bool, int | None]:
+        [(running, investigation_id)] = self.conn.execute(READ_RERUN_STATUS, {"alert_id": alert_id}).fetchall()
+        return bool(running), investigation_id
