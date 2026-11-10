@@ -40,6 +40,9 @@ function App() {
   const [overlayError, setOverlayError] = useState("");
   const [revision, setRevision] = useState(0);
   const inspector = useRef<HTMLElement>(null);
+  const clientSearch = useRef<HTMLInputElement>(null);
+  const backToClients = useRef<HTMLButtonElement>(null);
+  const previousClient = useRef<string | null>(null);
   const latest = world?.day ?? 0;
   const day = Math.min(pinned ?? latest, latest);
   const busy = pending !== null || job?.status === "running";
@@ -109,6 +112,13 @@ function App() {
     });
     return () => controller.abort();
   }, [selected, latest, detailRetry]);
+
+  useEffect(() => {
+    if (panel === "clients" && selected !== previousClient.current) {
+      (selected ? backToClients.current : clientSearch.current)?.focus({ preventScroll: true });
+    }
+    previousClient.current = selected;
+  }, [panel, selected]);
 
   async function reset() {
     setPinned(null);
@@ -228,12 +238,14 @@ function App() {
             {world && (panel === "simulate" || !latest) ?
               <SimulatePanel job={job} pending={pending !== null} busy={busy} world={world} start={setPending} reset={reset} />
               : latest ? <>
-              {selected && <button type="button" className="text-button back-to-clients" onClick={() => setSelected(null)}>← All clients</button>}
-              {selected ? (detail?.id === selected
+              <div hidden={selected !== null}>
+                <ClientList clients={clients} select={selectClient} blocked={blocked} searchRef={clientSearch} />
+              </div>
+              {selected && <button ref={backToClients} type="button" className="text-button back-to-clients" onClick={() => setSelected(null)}>← All clients</button>}
+              {selected && (detail?.id === selected
                 ? <ClientCard client={detail} blocked={blocked.has(selected)} />
                 : detailError ? <p className="error" role="alert">{detailError} <button type="button" className="text-button" onClick={() => setDetailRetry(detailRetry + 1)}>Retry client</button></p>
-                : <p className="quiet" role="status">Loading client profile…</p>)
-                : <ClientList clients={clients} select={selectClient} blocked={blocked} />}
+                : <p className="quiet" role="status">Loading client profile…</p>)}
             </> : <p className="quiet">Connecting to the World API…</p>}
           </div>
           {latest > 0 && <div className="inspector-footer">

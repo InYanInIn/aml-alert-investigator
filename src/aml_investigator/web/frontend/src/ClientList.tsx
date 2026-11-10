@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, type Ref } from "react";
 import { count, label, type Client } from "./api";
 
-export function ClientList({ clients, select, blocked }: {
-  clients: Client[]; select: (id: string) => void; blocked: ReadonlySet<string>;
+export function ClientList({ clients, select, blocked, searchRef }: {
+  clients: Client[]; select: (id: string) => void; blocked: ReadonlySet<string>; searchRef: Ref<HTMLInputElement>;
 }) {
   const [query, setQuery] = useState("");
   const [persona, setPersona] = useState("");
@@ -16,7 +16,7 @@ export function ClientList({ clients, select, blocked }: {
   }
   return <div className="directory">
     <div className="client-filters">
-      <input aria-label="Search clients" type="search" placeholder="Find a client" value={query} onChange={(event) => setQuery(event.currentTarget.value)} />
+      <input ref={searchRef} aria-label="Search clients" type="search" placeholder="Find a client" value={query} onChange={(event) => setQuery(event.currentTarget.value)} />
       <select aria-label="Filter by persona" value={persona} onChange={(event) => setPersona(event.currentTarget.value)}>
         <option value="">All personas</option>
         {[...new Set(clients.map((client) => client.persona))].sort().map((value) => <option value={value} key={value}>{label(value)}</option>)}
