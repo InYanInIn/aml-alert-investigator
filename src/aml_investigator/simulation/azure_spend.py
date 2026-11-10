@@ -14,6 +14,7 @@ import httpx
 from psycopg import Connection
 from psycopg.rows import TupleRow
 
+from aml_investigator.core.db import FixedRole
 from aml_investigator.core.errors import DomainError
 from aml_investigator.core.sql import load
 from aml_investigator.corpus.embeddings import EMBEDDING_MODEL, QueryEmbedder
@@ -36,7 +37,8 @@ ACCOUNT_FIELDS = (
 )
 DEPLOYMENT_FIELDS = (
     "[].{deployment:name,format:properties.model.format,model:properties.model.name,version:properties.model.version,"
-    "sku:sku.name,state:properties.provisioningState,spillover:properties.spilloverDeploymentName}"
+    "sku:sku.name,state:properties.provisioningState,spillover:properties.spilloverDeploymentName,"
+    "service_tier:properties.serviceTier}"
 )
 METADATA_REFUSED = "Azure deployment metadata does not match the supported AML deployments."
 METADATA_UNAVAILABLE = "Azure deployment metadata could not be verified."
@@ -135,17 +137,18 @@ def verify_azure_deployments(endpoint: httpx.URL) -> None:
         raise AzureGuardError(METADATA_REFUSED)
     for tariff in TARIFFS.values():
         matches = [item for item in deployments if isinstance(item, dict) and item.get("deployment") == tariff.model]
-        if matches != [
-            {
-                "deployment": tariff.model,
-                "format": "OpenAI",
-                "model": tariff.model,
-                "version": tariff.version,
-                "sku": tariff.sku,
-                "state": "Succeeded",
-                "spillover": None,
-            }
-        ]:
+        expected = {
+            "format": "OpenAI",
+            "model": tariff.model,
+            "version": tariff.version,
+            "sku": tariff.sku,
+            "state": "Succeeded",
+            "spillover": None,
+        }
+        deployment = matches[0] if len(matches) == 1 else {}
+        if deployment.get("service_tier") not in (None, "Default") or any(
+            deployment.get(field) != value for field, value in expected.items()
+        ):
             raise AzureGuardError(METADATA_REFUSED)
 
 
@@ -186,6 +189,7 @@ def _azure_metadata(executable: str, command: tuple[str, ...], fields: str) -> o
 @dataclass
 class AlertSpend:
     alert: EvalAlert
+    mcp: FixedRole
     chat: int = 0
     embedding: int = 0
     failure: AzureGuardError | None = None
@@ -227,24 +231,22 @@ class AzureSpendTransport(httpx.AsyncBaseTransport):
 
     def embedder(self, embed: QueryEmbedder) -> QueryEmbedder:
         async def query(text: str) -> list[float]:
+            active = self._request_scope()
             try:
                 return await embed(text)
             except Exception as error:
-                active = self._active
-                if active is not None and active.failure is not None:
+                if active.failure is not None:
                     raise active.failure from None
-                failure = AzureGuardError("The Azure embedding request failed.", cause=type(error).__name__)
-                if active is not None:
-                    active.failure = failure
-                raise failure from None
+                active.failure = AzureGuardError("The Azure embedding request failed.", cause=type(error).__name__)
+                raise active.failure from None
 
         return query
 
     @contextmanager
-    def alert(self, alert: EvalAlert) -> Iterator[None]:
+    def alert(self, alert: EvalAlert, mcp: FixedRole) -> Iterator[None]:
         if self._active is not None:
             raise AzureGuardError("Another Azure investigation is active.")
-        active = self._active = AlertSpend(alert)
+        active = self._active = AlertSpend(alert, mcp)
         try:
             yield
         finally:
@@ -253,11 +255,7 @@ class AzureSpendTransport(httpx.AsyncBaseTransport):
                 raise active.failure from None
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
-        active = self._active
-        if active is None:
-            raise AzureGuardError("An Azure request requires an active simulation alert.")
-        if active.failure is not None:
-            raise active.failure
+        active = self._request_scope()
         try:
             kind = self._request_kind(request)
             ordinal = active.next_ordinal(kind)
@@ -282,6 +280,15 @@ class AzureSpendTransport(httpx.AsyncBaseTransport):
 
     async def aclose(self) -> None:
         await self._transport.aclose()
+
+    def _request_scope(self) -> AlertSpend:
+        active = self._active
+        if active is None:
+            raise AzureGuardError("An Azure request requires an active simulation alert.")
+        active.mcp.raise_if_failed()
+        if active.failure is not None:
+            raise active.failure
+        return active
 
     def _identity(self, alert: EvalAlert) -> tuple[UUID, str, date]:
         return self._generation, alert.account_id, alert.alert_date

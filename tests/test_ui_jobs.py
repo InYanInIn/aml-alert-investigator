@@ -3,7 +3,7 @@ import shutil
 import subprocess
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import httpx
 import pytest
@@ -18,11 +18,18 @@ from tests.test_azure_model import completion, tool_call_message
 from tests.test_simulation_resume import finished
 
 ENDPOINT = "https://aml-investigator-01234567.openai.azure.com"
+EMBEDDING = [1.0] + [0.0] * 1535
 
 
 @pytest.fixture
 def anyio_backend() -> str:
     return "asyncio"
+
+
+@pytest.fixture
+def azure_auth(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(azure, "DefaultAzureCredential", lambda: None)
+    monkeypatch.setattr(azure, "get_bearer_token_provider", lambda *_: lambda: "offline-test-token")
 
 
 @pytest.fixture
@@ -36,6 +43,7 @@ def azure_deployments(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, str | N
             "sku": sku,
             "state": "Succeeded",
             "spillover": None,
+            "service_tier": "Default" if sku == "GlobalStandard" else None,
         }
         for model, version, sku in (
             ("gpt-5-mini", "2025-08-07", "GlobalStandard"),
@@ -60,7 +68,11 @@ def azure_deployments(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, str | N
             }
         else:
             assert arguments[3:5] == ["deployment", "list"]
-            payload = deployments
+            includes_tier = "service_tier:properties.serviceTier" in arguments[-1]
+            payload = [
+                {key: value for key, value in deployment.items() if key != "service_tier" or includes_tier}
+                for deployment in deployments
+            ]
         return subprocess.CompletedProcess(arguments, 0, json.dumps(payload))
 
     monkeypatch.setattr(shutil, "which", lambda _: "/test/az")
@@ -68,8 +80,27 @@ def azure_deployments(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, str | N
     return deployments
 
 
+def fake_embedding_response() -> httpx.Response:
+    return httpx.Response(
+        200,
+        json={
+            "object": "list",
+            "data": [{"index": 0, "object": "embedding", "embedding": EMBEDDING}],
+            "model": "text-embedding-3-small",
+            "usage": {"prompt_tokens": 3, "total_tokens": 3},
+        },
+    )
+
+
+def fake_chat_response(body: dict[str, Any]) -> httpx.Response:
+    assert body["max_completion_tokens"] == 8192
+    tools = {tool["function"]["name"] for tool in body.get("tools", [])}
+    message = tool_call_message(NO_DECISION.model_dump_json()) if "Decision" in tools else {"content": "Done."}
+    return httpx.Response(200, json=completion(message))
+
+
 @pytest.mark.anyio
-@pytest.mark.usefixtures("azure_deployments")
+@pytest.mark.usefixtures("azure_deployments", "azure_auth")
 @pytest.mark.parametrize("resume_system", ["azure_profile", "b4"])
 async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert_after_restart(
     world_db: Database,
@@ -83,9 +114,6 @@ async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert
     load_regulations(world_db)
     with world_db.owner() as conn:
         conn.execute("TRUNCATE sim.azure_spend")
-    monkeypatch.setattr(azure, "DefaultAzureCredential", lambda: None)
-    monkeypatch.setattr(azure, "get_bearer_token_provider", lambda *_: lambda: "offline-test-token")
-
     requested: list[str] = []
     interrupt_embedding = True
 
@@ -98,20 +126,9 @@ async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert
             if interrupt_embedding:
                 interrupt_embedding = False
                 raise httpx.ReadTimeout("private provider details")
-            return httpx.Response(
-                200,
-                json={
-                    "object": "list",
-                    "data": [{"index": 0, "object": "embedding", "embedding": [1.0] + [0.0] * 1535}],
-                    "model": "text-embedding-3-small",
-                    "usage": {"prompt_tokens": 3, "total_tokens": 3},
-                },
-            )
+            return fake_embedding_response()
         assert request.url.path.endswith("/chat/completions")
-        assert body["max_completion_tokens"] == 8192
-        tools = {tool["function"]["name"] for tool in body.get("tools", [])}
-        message = tool_call_message(NO_DECISION.model_dump_json()) if "Decision" in tools else {"content": "Done."}
-        return httpx.Response(200, json=completion(message))
+        return fake_chat_response(body)
 
     settings = settings_for(world_db).model_copy(update={"azure_openai_endpoint": ENDPOINT})
     low_limit = settings.model_copy(update={"ui_spend_limit_usd": Decimal("0.001")})
@@ -174,12 +191,23 @@ async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert
 
 
 @pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("deployment", "field", "value"),
+    [(1, "version", "unexpected-version"), (0, "service_tier", "Priority")],
+    ids=["unknown_version", "priority"],
+)
 async def test_unverified_deployment_rejects_the_paid_job_before_any_send(
-    world_db: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, azure_deployments: list[dict[str, str | None]]
+    world_db: Database,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    azure_deployments: list[dict[str, str | None]],
+    deployment: int,
+    field: str,
+    value: str,
 ) -> None:
     prepare_workspace(tmp_path, "aml_sim_dev")
     monkeypatch.chdir(tmp_path)
-    azure_deployments[1]["version"] = "unexpected-version"
+    azure_deployments[deployment][field] = value
     requested: list[httpx.Request] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -198,3 +226,58 @@ async def test_unverified_deployment_rejects_the_paid_job_before_any_send(
     status = jobs.current()
     assert status is not None
     assert status.period_id == 0
+
+
+@pytest.mark.anyio
+@pytest.mark.usefixtures("azure_deployments", "azure_auth")
+async def test_azure_does_not_send_or_reserve_after_mcp_sql_fails(
+    world_db: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    prepare_workspace(tmp_path, "aml_sim_dev")
+    monkeypatch.chdir(tmp_path)
+    load_regulations(world_db)
+    requested: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        operation = request.url.path.rsplit("/", 1)[-1]
+        requested.append(operation)
+        return (
+            fake_embedding_response() if operation == "embeddings" else fake_chat_response(json.loads(request.content))
+        )
+
+    settings = settings_for(world_db).model_copy(update={"azure_openai_endpoint": ENDPOINT})
+    jobs = SimulationJobs(settings, azure_transport=httpx.MockTransport(handler))
+    await jobs.create(51, {})
+    with world_db.owner() as conn:
+        conn.execute("TRUNCATE sim.azure_spend")
+        conn.execute("INSERT INTO corpus.documents VALUES ('AMLR', 'AMLR', 'en', '2024', 'https://example.test', 'x')")
+        conn.execute(
+            "UPDATE corpus.passages SET doc_id = 'AMLR', embedding = %s::vector WHERE doc_id = 'amlr'",
+            (str(EMBEDDING),),
+        )
+        conn.execute(
+            "CREATE FUNCTION corpus.reject_passage_read() RETURNS boolean LANGUAGE plpgsql AS "
+            "$$ BEGIN RAISE EXCEPTION 'private corpus database detail'; END $$"
+        )
+        conn.execute("ALTER TABLE corpus.passages ENABLE ROW LEVEL SECURITY")
+        conn.execute(
+            "CREATE POLICY reject_passage_read ON corpus.passages FOR SELECT TO aml_mcp_reader "
+            "USING (corpus.reject_passage_read())"
+        )
+    try:
+        failed = await finished(jobs, await jobs.start(7, "azure_profile"))
+        assert failed.status == "failed"
+        assert failed.investigations == 0
+        assert requested == ["completions", "embeddings"]
+        assert all("private corpus database detail" not in JsonFormatter().format(record) for record in caplog.records)
+        with world_db.owner() as conn:
+            assert conn.execute("SELECT kind, settled_usd FROM sim.azure_spend ORDER BY ordinal").fetchall() == [
+                ("chat", Decimal("0.000015")),
+                ("embedding", Decimal("0.00000009")),
+            ]
+            assert conn.execute("SELECT count(*) FROM review.investigations").fetchone() == (0,)
+    finally:
+        with world_db.owner() as conn:
+            conn.execute("DROP POLICY reject_passage_read ON corpus.passages")
+            conn.execute("ALTER TABLE corpus.passages DISABLE ROW LEVEL SECURITY")
+            conn.execute("DROP FUNCTION corpus.reject_passage_read()")

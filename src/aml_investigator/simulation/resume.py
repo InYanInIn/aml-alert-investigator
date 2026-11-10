@@ -79,7 +79,7 @@ async def advance_day(
                 truncated = True
                 continue
             try:
-                with spend.alert(alert) if spend is not None else nullcontext():
+                with spend.alert(alert, mcp) if spend is not None else nullcontext():
                     recommendation = final_recommendation(await system.decide(alert), None)
             finally:
                 mcp.raise_if_failed()
