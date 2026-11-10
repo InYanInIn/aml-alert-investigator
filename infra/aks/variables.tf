@@ -4,9 +4,9 @@ variable "location" {
 }
 
 variable "github_repository" {
-  description = "owner/name of the repository whose main branch may deploy."
+  description = "GitHub OIDC repository subject (owner@owner_id/name@repo_id) whose main branch may deploy."
   type        = string
-  default     = "InYanInIn/aml-alert-investigator"
+  default     = "InYanInIn@61251392/aml-alert-investigator@1437724437"
 }
 
 variable "namespace" {
