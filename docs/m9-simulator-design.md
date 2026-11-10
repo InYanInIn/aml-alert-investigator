@@ -81,7 +81,7 @@ reference). A small interpreter executes them; there is no code per scenario.
 **Against circularity.** A subagent writes this file from public typologies, seeing only the transaction schema and
 the persona list, and not `monitoring/`, the prompts or the M8 results. It is committed before the first alert of any
 world. It also sets how often honest customers do not match their profile, so a mismatch is not a label in disguise.
-Scenarios the rules probably cannot see stay in, and zeros are reported. The same author family (Claude)
+Scenarios the rules probably cannot see stay in, and zeros are reported. The same LLM family
 wrote both sides, so this reduces the circularity without removing it.
 
 **No learning adversary.** A blocked account is replaced by a reserve member after two days; a group stops when it has

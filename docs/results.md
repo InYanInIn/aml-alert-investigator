@@ -499,7 +499,7 @@ Source: `docs/test-split-log.md`.
 | 2026-11-08 | M8 | aml_li_small: azure evaluated on the test sample (200 alerts); metrics with intervals. Reason: M8 final evaluation: config frozen after val (prompt v3 2f5f830, gpt-5-mini high, k=8) | None. |
 | 2026-11-08 | M8 | aml_li_small: azure_k0 evaluated on the test sample (200 alerts); metrics with intervals. Reason: M8 final evaluation: config frozen after val (prompt v3 2f5f830, gpt-5-mini high, k=8) | None. |
 | 2026-11-08 | M8 | aml_li_small: b2 evaluated on the test sample (200 alerts); metrics with intervals. Reason: M8 final evaluation: config frozen after val (prompt v3 2f5f830, gpt-5-mini high, k=8) | None. |
-| 2026-11-08 | M8 | Two more azure (C) starts on the test sample ended without results and are not counted: on 7 November at 09:25 the run stopped within a minute when the Claude Code session that launched it closed (Postgres then went down and the remaining steps failed to connect, reading nothing); on 7 November at 22:48 the aml_li_small run failed on its first saved investigation because migration 0005 had not been applied to that database. Labels were not read in either. | Migration 0005 applied to aml_li_small; the run was restarted from that step. |
+| 2026-11-08 | M8 | Two more azure (C) starts on the test sample ended without results and are not counted: on 7 November at 09:25 the run stopped within a minute when the session that launched it closed (Postgres then went down and the remaining steps failed to connect, reading nothing); on 7 November at 22:48 the aml_li_small run failed on its first saved investigation because migration 0005 had not been applied to that database. Labels were not read in either. | Migration 0005 applied to aml_li_small; the run was restarted from that step. |
 
 ### Retrieval
 
@@ -537,7 +537,7 @@ not run
   escalation (9 of the 15 false escalations analysed), and in 5 of those the written case leans on a
   pass-through story the data supports only weakly.
 - **Regulation citations are often generic** (`docs/m8-citation-grading.md`, 30 sampled citations graded by
-  Claude, a Sonnet subagent, against a 0–2 rubric): 16 support the claim, 12 are only related, 2 do not
+  an LLM grader, against a 0–2 rubric): 16 support the claim, 12 are only related, 2 do not
   support it (mean 1.47). The author spot-checked 8 of the 30 (not a random sample) and agreed on 6, raising
   two from 1 to 2, which gives 18 / 10 / 2 and mean 1.53. The agent falls back on AMLR art. 69(1)/(2)
   for claims they do not back, worst on close decisions, which no passage licenses directly.
@@ -853,6 +853,6 @@ Sources:
 - **Cost.** $6.87 in total: $2.37 for one tuning run of 30 investigations, $2.05 for `azure`, $2.45 for `azure_profile`.
 
 Limits: one world and 31 alerts, so counts without intervals. The data is synthetic; the scenarios and texts were written
-by a Claude subagent without access to the rules or prompts, from search-result summaries, and it inherited project memory.
+by an isolated LLM author without access to the rules or prompts, from search-result summaries, and it inherited project memory.
 The honest-mismatch share of 15% is that author's uncalibrated choice. The simulated analyst is perfect and acts in a day.
 The `azure_profile` prompt was reviewed on 30 development alerts and not changed afterwards.

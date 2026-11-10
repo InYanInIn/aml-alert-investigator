@@ -1,7 +1,7 @@
 # Citation grading, M8 test run (agent C, system azure)
 
 ## Method
-Population: latest row per alert_id in review.investigations inside the test windows (aml_hi_small 2026-11-07 18:09-19:37 UTC, 200 alerts: 170 escalate, 30 close; aml_li_small 21:49-23:09 UTC, 200 alerts: 160 escalate, 40 close). A citation is one (claim, passage_id) pair from the who/what/when/where/why/how claims. Sampling: Python random, seed 8; per dataset first the alerts (HI: 2 close + 13 escalate; LI: 3 close + 12 escalate, roughly proportional), then one random citation per alert, so alerts are distinct. Passage texts come from corpus.passages. Rubric: 2 supports (passage states the obligation, risk factor or definition the claim relies on), 1 related (same topic, does not back the specific statement), 0 does not support (unrelated, contradicts, or wrong article for the content). Graded by Claude (Sonnet subagent); one grader, no second opinion. Only the sampled passage was graded; other passages on the same claim were not. n=30 is small, so the mean has a wide margin.
+Population: latest row per alert_id in review.investigations inside the test windows (aml_hi_small 2026-11-07 18:09-19:37 UTC, 200 alerts: 170 escalate, 30 close; aml_li_small 21:49-23:09 UTC, 200 alerts: 160 escalate, 40 close). A citation is one (claim, passage_id) pair from the who/what/when/where/why/how claims. Sampling: Python random, seed 8; per dataset first the alerts (HI: 2 close + 13 escalate; LI: 3 close + 12 escalate, roughly proportional), then one random citation per alert, so alerts are distinct. Passage texts come from corpus.passages. Rubric: 2 supports (passage states the obligation, risk factor or definition the claim relies on), 1 related (same topic, does not back the specific statement), 0 does not support (unrelated, contradicts, or wrong article for the content). Graded by an LLM grader; one grader, no second opinion. Only the sampled passage was graded; other passages on the same claim were not. n=30 is small, so the mean has a wide margin.
 
 ## Table
 | DS | alert_id | rec | field | claim (short) | passage_id | grade | reason |
@@ -57,10 +57,10 @@ Also: on close decisions the passages do not support closing at all, because no 
 8. LI alert 1029, why, grade 1 (Unqualified reporting duty asserted from a return pattern; PL art. 35 ust. 1 cited alongside is a CDD trigger). Claim: Recommend escalation: funds sent out and returned from same counterparty; reporting obligations apply (69(1), PL 35 ust. 1). Passage AMLR art. 69(1): "Obliged entities, and, where applicable, their directors and employees, shall cooperate fully with the FIU by promptly: (a) reporting to the FIU,..."
 
 ## Human spot-check
-The author graded the 8 rows above after Claude had graded them, seeing Claude's grade and reason. The rows are
-a mix of grades chosen by the grader, not a random sample; the other 22 citations have Claude's grade only.
+The author graded the 8 rows above after the LLM grader had graded them, seeing its grade and reason. The rows are
+a mix of grades chosen by the grader, not a random sample; the other 22 citations have the LLM grader's grade only.
 
-| Row | Dataset, alert | Passage | Claude | Author |
+| Row | Dataset, alert | Passage | LLM grader | Author |
 |---|---|---|---|---|
 | 1 | HI 5146 | AMLR art. 26(1) | 0 | 0 |
 | 2 | LI 7163 | AMLR art. 2(1)(20) | 1 | 1 |
@@ -71,6 +71,6 @@ a mix of grades chosen by the grader, not a random sample; the other 22 citation
 | 7 | HI 862 | PL-AML art. 72 ust. 1 | 2 | 2 |
 | 8 | LI 1029 | AMLR art. 69(1) | 1 | 2 |
 
-Agreement on 6 of 8. Both differences raise a 1 to a 2: the author raised 2 of the 5 rows Claude had graded 1.
+Agreement on 6 of 8. Both differences raise a 1 to a 2: the author raised 2 of the 5 rows the LLM grader had graded 1.
 With the author's grades on these rows the distribution over all 30 is 18 / 10 / 2 (grades 2 / 1 / 0), mean
-1.53, against 16 / 12 / 2 and 1.47 for Claude alone.
+1.53, against 16 / 12 / 2 and 1.47 for the LLM grader alone.

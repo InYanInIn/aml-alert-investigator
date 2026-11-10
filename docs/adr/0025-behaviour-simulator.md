@@ -19,7 +19,7 @@ rule does not.
   their profile, keep a mismatch from being a label.
 - **Against circularity.** `config/simulation/scenarios.yaml` and the text pools are written from public typologies by
   an isolated subagent that does not see `monitoring/`, the prompts or the M8 results, and they are committed before
-  the first alert of any world. The same author family (Claude) wrote both sides, so this reduces the circularity
+  the first alert of any world. The same LLM family wrote both sides, so this reduces the circularity
   without removing it.
 - **Two agent variants.** `azure` is M8 as merged, prompt version `2f43327f402d`. `azure_profile` has the same model
   and tools, a rewritten "How to decide" in its own prompt file with its own version, and customer profiles through
