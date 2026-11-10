@@ -9,6 +9,7 @@ export type World = {
   thresholds_banner: string | null;
   spent_usd: number;
   limit_usd: number;
+  periods: { period_id: number; first_day: number; last_day: number }[];
 };
 
 export type Flow = { from_client: string; to_client: string; count: number; eur: number };

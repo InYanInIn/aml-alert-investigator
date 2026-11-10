@@ -94,10 +94,19 @@ export function SimulatePanel({ job, pending, busy, world, start, reset }: {
 
   if (!world.day) return <WorldSetup world={world} busy={busy} done={reset} />;
 
+  const period = world.periods.find(({ period_id }) => period_id === job?.period_id);
+  const completed = job?.status === "done" ? job.days_total : period ? period.last_day - period.first_day + 1 : 0;
+
   return <>
-    {pending || starting ? <div className="job-notice" role="status">Starting simulation…</div>
+    {pending || starting ? <div className="job-notice" role="status">
+      <strong>Starting simulation…</strong>
+      <progress aria-label="Starting simulation" />
+    </div>
       : job && job.period_id > 0 && (busy || job.status === "failed") && <div className="job-notice" role="status">
         <strong>{job.status === "failed" ? "Run interrupted" : "Run in progress"}</strong>
+        <progress aria-label="Simulation days completed" max={job.days_total} value={completed || job.status === "failed" ? completed : undefined} />
+        <span>{completed} of {job.days_total} {job.days_total === 1 ? "day" : "days"} completed
+          {job.status === "running" && completed < job.days_total && ` · Processing day ${completed + 1}`}</span>
         <span>{count(job.investigations)} investigations · {usd(job.cost_usd)}</span>
         {job.error && <p className="error">{job.error}</p>}
       </div>}
@@ -134,7 +143,10 @@ export function SimulatePanel({ job, pending, busy, world, start, reset }: {
       </button>
     </form>
     {!busy && !pending && !starting && job?.status === "done" && job.period_id > 0 &&
-      <p className="last-run" title={`Period ${job.period_id} · ${count(job.investigations)} investigations`}>Last run · {formatDate(job.day)} · {usd(job.cost_usd)}</p>}
+      <div className="last-run" title={`Period ${job.period_id} · ${count(job.investigations)} investigations`}>
+        <progress aria-label="Simulation completed" max={job.days_total} value={completed} />
+        <span>Last run · {formatDate(job.day)} · {usd(job.cost_usd)}</span>
+      </div>}
     <details className="reset-details"><summary>World settings</summary><WorldSetup world={world} busy={busy} done={reset} /></details>
   </>;
 }
