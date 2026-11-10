@@ -17,3 +17,5 @@ The M9 world can run in batches but has no local visual inspection surface. Its 
 ## Consequences
 
 The app is a local single-user tool without login. Node is needed to build the frontend; it is not needed at runtime. The UI polls committed day snapshots and cannot mutate Analyst decisions.
+
+From a clean checkout, run `make ui` to build assets, then `uv run aml ui` to start the local app.

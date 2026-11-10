@@ -43,7 +43,10 @@ def run_ui(args: argparse.Namespace) -> None:
     from aml_investigator.investigation.models.rule_score import RuleScoreChatModel
     from aml_investigator.mcp_server.server import build_server
     from aml_investigator.simulation.world import COUNT_PASSAGES_SQL, copy_corpus
-    from aml_investigator.web.app import create_app
+    from aml_investigator.web import app as web_app
+
+    if not (web_app.WORLD_STATIC_DIR / "index.html").is_file():
+        raise SystemExit(web_app.WORLD_BUILD_MESSAGE)
 
     base = settings_for(args)
     settings = base.with_database("aml_sim_ui")
@@ -63,7 +66,7 @@ def run_ui(args: argparse.Namespace) -> None:
                             break
                 except (psycopg.errors.InvalidCatalogName, psycopg.errors.UndefinedTable):
                     continue
-    app = create_app(
+    app = web_app.create_app(
         settings,
         mcp=build_server(settings.mcp_conninfo, customer_profile=True),
         model=RuleScoreChatModel(thresholds={}, close_below=0.0),

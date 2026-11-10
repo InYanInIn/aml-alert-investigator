@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastmcp import FastMCP
 from langchain.mcp import MCPAdapter
@@ -21,6 +21,9 @@ from aml_investigator.review.pages import ReviewPages
 from aml_investigator.web.jobs import SimulationJobs
 from aml_investigator.web.routes import alerts, health, investigations, simulate, world
 from aml_investigator.web.routes import evaluator as evaluator_routes
+
+WORLD_STATIC_DIR = Path(__file__).parent / "static" / "world"
+WORLD_BUILD_MESSAGE = "World UI assets are missing. Run make ui before aml ui."
 
 
 def create_app(
@@ -66,12 +69,14 @@ def create_app(
         app.include_router(simulate.router)
         if evaluator:
             app.include_router(evaluator_routes.router)
-        static = Path(__file__).parent / "static" / "world"
-        app.mount("/static/world", StaticFiles(directory=static, check_dir=False), name="world-static")
+        app.mount("/static/world", StaticFiles(directory=WORLD_STATIC_DIR, check_dir=False), name="world-static")
 
-        @app.get("/world", response_class=FileResponse)
-        async def world_page() -> FileResponse:
-            return FileResponse(static / "index.html")
+        @app.get("/world")
+        async def world_page() -> Response:
+            index = WORLD_STATIC_DIR / "index.html"
+            if not index.is_file():
+                return PlainTextResponse(WORLD_BUILD_MESSAGE, status_code=503)
+            return FileResponse(index)
     else:
         app.include_router(alerts.write_router)
         app.include_router(investigations.router)
