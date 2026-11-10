@@ -1,6 +1,6 @@
 import json
 import logging
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import date, timedelta
 from pathlib import Path
@@ -137,9 +137,9 @@ class WorldDays:
         reset_world(self.conn)
         insert_population(self.conn, self.world)
 
-    def generate(self, day: date) -> None:
+    def generate(self, day: date, *, write: bool = True) -> None:
         payments = normal_day(self.world, day, self.balances, self.blocked)
-        self.tape.append(self.conn, [*payments, *self.laundering.payments_on(day, self.balances)])
+        self.tape.append(self.conn if write else None, [*payments, *self.laundering.payments_on(day, self.balances)])
 
     def block(self, actor: Actor, decided_on: date) -> None:
         if actor.group_id is not None and actor.account_id not in self.blocked:
@@ -167,17 +167,39 @@ class DailyLoop:
         self.last_day = live_days()[-1]
 
     async def run(self, system: System, shadow: System, point: OperatingPoint | None) -> None:
-        for day in history_days():
+        self.replay(history_days(), write=True)
+        await self.advance(live_days(), system, shadow, point)
+
+    def replay(
+        self, days: Iterable[date], blocks: Mapping[date, Sequence[Actor]] | None = None, *, write: bool = False
+    ) -> None:
+        scheduled = blocks or {}
+        for day in days:
+            self.days.generate(day, write=write)
+            for actor in scheduled.get(day, ()):
+                self.days.block(actor, day)
+
+    async def advance(
+        self,
+        days: Iterable[date],
+        system: System,
+        shadow: System,
+        point: OperatingPoint | None,
+        *,
+        stop_on_cap: bool = True,
+    ) -> None:
+        ordered_days = list(days)
+        if not ordered_days:
+            return
+        since = ordered_days[0]
+        for index, day in enumerate(ordered_days, start=1):
             self.days.generate(day)
-        since = live_days()[0]
-        for index, day in enumerate(live_days(), start=1):
-            self.days.generate(day)
+            self.last_day = day
             if monitoring_day(index, self.cadence):
                 await self.monitor(DayRange(since, day), system, shadow, point)
                 since = day + timedelta(days=1)
-                if self.truncated:
-                    self.last_day = day
-                    return
+            if stop_on_cap and self.truncated:
+                return
 
     async def monitor(self, days: DayRange, system: System, shadow: System, point: OperatingPoint | None) -> None:
         conn = self.days.conn

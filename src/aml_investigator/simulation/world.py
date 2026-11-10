@@ -648,7 +648,7 @@ class Tape:
         text = f"{self.seed}|{payment.line}"
         return payment.ts, hashlib.sha256(text.encode()).hexdigest()
 
-    def append(self, conn: psycopg.Connection[Any], payments: Iterable[Payment]) -> None:
+    def append(self, conn: psycopg.Connection[Any] | None, payments: Iterable[Payment]) -> None:
         ordered = sorted(payments, key=self.order_key)
         numbered = list(enumerate(ordered, start=self.next_txn_id))
         self.next_txn_id += len(ordered)
@@ -657,6 +657,9 @@ class Tape:
         transactions = [(txn_id, *payment.row) for txn_id, payment in numbered]
         labels = [(txn_id, payment.is_laundering) for txn_id, payment in numbered]
         attempts = [(p.attempt_id, p.typology, txn_id) for txn_id, p in numbered if p.is_laundering]
-        copy_frame(conn, "core", "transactions", pl.DataFrame(transactions, schema=TRANSACTION_SCHEMA, orient="row"))
-        copy_frame(conn, "truth", "transaction_labels", pl.DataFrame(labels, schema=LABEL_SCHEMA, orient="row"))
-        copy_frame(conn, "truth", "pattern_attempts", pl.DataFrame(attempts, schema=ATTEMPT_SCHEMA, orient="row"))
+        if conn is not None:
+            copy_frame(
+                conn, "core", "transactions", pl.DataFrame(transactions, schema=TRANSACTION_SCHEMA, orient="row")
+            )
+            copy_frame(conn, "truth", "transaction_labels", pl.DataFrame(labels, schema=LABEL_SCHEMA, orient="row"))
+            copy_frame(conn, "truth", "pattern_attempts", pl.DataFrame(attempts, schema=ATTEMPT_SCHEMA, orient="row"))
