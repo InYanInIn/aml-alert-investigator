@@ -13,6 +13,7 @@ Everything below is destroyed the same day. Hard stop 01:00 local.
 1. Everything runs in the cloud, including paid `azure_profile` investigations started from the pod. Only the one-time database load runs on the laptop.
 2. Workload identity, Key Vault and GitHub OIDC are in scope. No client secret exists anywhere.
 3. Fallback and cut-offs stay (below). No public endpoint.
+4. The `aml ui` process uses the owner role because it creates and resets the simulated world, while the agent's MCP tools and the Analyst pages use the restricted `aml_mcp_reader` and `aml_app` roles, so the agent still never sees labels; production would split world administration out of the serving pod.
 
 ## What is deployed
 - Separate Terraform root `infra/aks/` with its own state and resource group `rg-aml-demo`. The existing Azure OpenAI account is read as a data source only, so `terraform destroy` cannot delete it; the role assignments on it are the only resources created against it.

@@ -30,3 +30,6 @@ dist/
 .claude/worktrees/
 /src/aml_investigator/web/frontend/node_modules/
 /src/aml_investigator/web/static/world/
+
+# Local scratch notes
+.superpowers/
