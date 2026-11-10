@@ -6,6 +6,7 @@ image:
 database: aml_hi_small
 
 api:
+  enabled: true
   port: 8000
   secretName: aml-api
   resources:
@@ -13,8 +14,24 @@ api:
     limits: {memory: 768Mi}
 
 mcp:
+  enabled: true
   port: 8100
   secretName: aml-mcp
   resources:
     requests: {cpu: 100m, memory: 256Mi}
     limits: {memory: 512Mi}
+
+ui:
+  enabled: false
+  port: 8765
+  secretName: aml-ui
+  resources:
+    requests: {cpu: 250m, memory: 512Mi}
+    limits: {memory: 1536Mi}
+
+azure:
+  openaiEndpoint: ""
+  subscriptionId: ""
+  tenantId: ""
+  workloadIdentityClientId: ""
+  keyVaultName: ""
