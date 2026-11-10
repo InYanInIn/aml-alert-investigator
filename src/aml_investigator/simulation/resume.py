@@ -1,5 +1,6 @@
-from collections.abc import Iterator, Mapping
-from contextlib import nullcontext
+import asyncio
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import nullcontext, suppress
 from dataclasses import replace
 from datetime import date, timedelta
 
@@ -7,7 +8,7 @@ from aml_investigator.core.db import FixedRole
 from aml_investigator.core.errors import DomainError
 from aml_investigator.data.splits import DayRange
 from aml_investigator.evaluation.runner import final_recommendation
-from aml_investigator.evaluation.systems import System
+from aml_investigator.evaluation.systems import EvalAlert, System
 from aml_investigator.simulation.azure_spend import AzureSpendTransport
 from aml_investigator.simulation.loop import DailyLoop, WorldDays, actors_on_connection, prepare_alerts
 from aml_investigator.simulation.periods import Period, Periods, StoredWorld
@@ -26,6 +27,21 @@ class WorldHashMismatchError(DomainError):
 def days_between(first: date, last: date) -> Iterator[date]:
     for index in range((last - first).days + 1):
         yield first + timedelta(days=index)
+
+
+async def finish_in_thread[Result, **Params](
+    operation: Callable[Params, Result], /, *args: Params.args, **kwargs: Params.kwargs
+) -> Result:
+    worker = asyncio.create_task(asyncio.to_thread(operation, *args, **kwargs))
+    try:
+        return await asyncio.shield(worker)
+    except asyncio.CancelledError:
+        while not worker.done():
+            with suppress(asyncio.CancelledError, Exception):
+                await asyncio.shield(worker)
+        if not worker.cancelled():
+            worker.exception()
+        raise
 
 
 def configured_world(seed: int, counts: Mapping[str, int]) -> World:
@@ -62,9 +78,12 @@ async def advance_day(
     spend: AzureSpendTransport | None,
     mcp: FixedRole,
 ) -> int:
-    with periods.conn.transaction():
+    def prepare() -> list[EvalAlert]:
         loop.days.generate(day)
-        alerts = prepare_alerts(periods.conn, DayRange(day, day), loop.segments)
+        return prepare_alerts(periods.conn, DayRange(day, day), loop.segments)
+
+    with periods.conn.transaction():
+        alerts = await finish_in_thread(prepare)
         periods.alerts(period.period_id, alerts)
         blocked = set(loop.days.blocked)
         investigated = 0

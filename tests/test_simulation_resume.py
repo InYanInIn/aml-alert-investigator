@@ -2,21 +2,29 @@ import asyncio
 from dataclasses import replace
 from datetime import date, timedelta
 from pathlib import Path
+from threading import Event
 from typing import Any, Literal
 
+import httpx
 import psycopg
 import pytest
+from fastapi import FastAPI
 
 from aml_investigator.core.db import FixedRole, ScopedDatabaseError
 from aml_investigator.core.logging import JsonFormatter
 from aml_investigator.core.settings import Settings
+from aml_investigator.data.splits import DayRange
 from aml_investigator.evaluation.baselines.agent import open_agent
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.systems import EvalAlert
 from aml_investigator.investigation.decision import Decision
 from aml_investigator.investigation.models.rule_score import RuleScoreChatModel
+from aml_investigator.simulation import resume
+from aml_investigator.simulation.loop import prepare_alerts
+from aml_investigator.simulation.segments import SegmentThresholds
 from aml_investigator.simulation.world import history_days, live_days
 from aml_investigator.web.jobs import JobConflictError, JobStatus, SimulationJobs
+from aml_investigator.web.routes.simulate import router
 from tests.conftest import Database, load_regulations
 from tests.simulation_fixtures import THRESHOLDS, prepare_workspace, settings_for
 
@@ -41,6 +49,55 @@ async def finished(jobs: SimulationJobs, period_id: int) -> JobStatus:
             if status is not None and status.period_id == period_id and status.status != "running":
                 return status
             await asyncio.sleep(0.05)
+
+
+@pytest.mark.anyio
+async def test_status_polls_during_day_preparation_and_shutdown_waits_for_rollback(
+    ui_settings: Settings, world_db: Database, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    jobs = SimulationJobs(ui_settings)
+    await jobs.create(51, {})
+    app = FastAPI()
+    app.state.simulation_jobs = jobs
+    app.include_router(router)
+    entered, release, prepared = Event(), Event(), Event()
+
+    def stalled_prepare(conn: psycopg.Connection[Any], days: DayRange, segments: SegmentThresholds) -> list[EvalAlert]:
+        entered.set()
+        assert release.wait(5)
+        alerts = prepare_alerts(conn, days, segments)
+        prepared.set()
+        return alerts
+
+    monkeypatch.setattr(resume, "prepare_alerts", stalled_prepare)
+    closing: asyncio.Task[None] | None = None
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://testserver") as client:
+        try:
+            started = await client.post("/api/simulate", json={"days": 1, "system": "b4"})
+            assert started.status_code == 202
+            assert await asyncio.to_thread(entered.wait, 5)
+
+            current = await asyncio.wait_for(client.get("/api/jobs/current"), timeout=2)
+            assert current.status_code == 200
+            assert current.json()["status"] == "running"
+            assert current.json()["day"] == history_days()[-1].isoformat()
+
+            closing = asyncio.create_task(jobs.close())
+            current = await asyncio.wait_for(client.get("/api/jobs/current"), timeout=2)
+            assert current.json()["status"] == "running"
+            assert not closing.done()
+        finally:
+            release.set()
+            await (closing if closing is not None else jobs.close())
+
+        assert prepared.is_set()
+        current = (await client.get("/api/jobs/current")).json()
+        assert current["status"] == "failed"
+        assert current["day"] == history_days()[-1].isoformat()
+    with world_db.owner() as conn:
+        assert conn.execute("SELECT count(*) FROM core.transactions WHERE ts >= %s", (live_days()[0],)).fetchone() == (
+            0,
+        )
 
 
 @pytest.mark.anyio

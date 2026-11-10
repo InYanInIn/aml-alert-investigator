@@ -22,6 +22,7 @@ from aml_investigator.review.repository import ReviewRepository
 from aml_investigator.simulation.world import FIRST_DAY
 
 logger = logging.getLogger(__name__)
+PERIOD_LENGTHS = {1: "1 day", 7: "1 week", 30: "1 month"}
 
 
 @dataclass(frozen=True)
@@ -62,14 +63,15 @@ class ReviewPages:
     async def periods(self) -> list[dict[str, Any]]:
         if not self.ui_mode:
             return []
-        return [
-            {
-                **period,
-                "first_day": (period["first_day"] - FIRST_DAY).days + 1,
-                "last_day": (period["last_day"] - FIRST_DAY).days + 1,
-            }
-            for period in await self.repository.periods()
-        ]
+        labels = []
+        for period in await self.repository.periods():
+            first = (period["first_day"] - FIRST_DAY).days + 1
+            target = (period["target_day"] - FIRST_DAY).days + 1
+            span = str(first) if first == target else f"{first}\u2013{target}"
+            length = target - first + 1
+            duration = PERIOD_LENGTHS.get(length, f"{length} days")
+            labels.append({"period_id": period["period_id"], "label": f"Day {span} ({duration}, {period['system']})"})
+        return labels
 
     async def alert_page(self, alert_id: int) -> AlertPage:
         with log_context(alert_id=alert_id), timed_event(logger, "alert_page"):

@@ -45,6 +45,7 @@ from aml_investigator.simulation.resume import (
     advance_day,
     configured_world,
     days_between,
+    finish_in_thread,
     restore_loop,
 )
 from aml_investigator.simulation.segments import load_segments
@@ -204,7 +205,7 @@ class SimulationJobs:
     async def _run(self, periods: Periods, world: StoredWorld, period: Period, endpoint: httpx.URL | None) -> None:
         day = period.first_day
         try:
-            loop = restore_loop(periods, world, period)
+            loop = await finish_in_thread(restore_loop, periods, world, period)
             remaining = period.investigation_cap
             lock = asyncio.Lock()
             app, mcp = FixedRole(periods.conn, lock, "app"), FixedRole(periods.conn, lock, "mcp")

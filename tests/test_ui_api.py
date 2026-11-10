@@ -143,6 +143,8 @@ def test_b4_period_filter_and_no_prepared_case(ui_client: tuple[TestClient, Data
         )
     page = client.get(f"/alerts?period={period_id}").text
     assert "Simulation period" in page
+    assert "Day 22\u201328 (1 week, b4)" in page
+    assert "Day 22\u201328 (1 week, b4)" in client.get(f"/?period={period_id}").text
     assert "rule B4, no prepared case" in page
     assert "not investigated" in page
     assert "rule B4, no prepared case" in client.get(f"/alerts/{alert_ids[0]}").text
