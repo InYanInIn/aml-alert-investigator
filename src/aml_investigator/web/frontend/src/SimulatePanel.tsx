@@ -95,7 +95,7 @@ export function SimulatePanel({ job, pending, busy, world, start, reset }: {
   if (!world.day) return <WorldSetup world={world} busy={busy} done={reset} />;
 
   const period = world.periods.find(({ period_id }) => period_id === job?.period_id);
-  const completed = job?.status === "done" ? job.days_total : period ? period.last_day - period.first_day + 1 : 0;
+  const completed = job?.days_completed ?? (job?.status === "done" ? job.days_total : period ? period.last_day - period.first_day + 1 : 0);
 
   return <>
     {pending || starting ? <div className="job-notice" role="status">
@@ -106,7 +106,8 @@ export function SimulatePanel({ job, pending, busy, world, start, reset }: {
         <strong>{job.status === "failed" ? "Run interrupted" : "Run in progress"}</strong>
         <progress aria-label="Simulation days completed" max={job.days_total} value={completed || job.status === "failed" ? completed : undefined} />
         <span>{completed} of {job.days_total} {job.days_total === 1 ? "day" : "days"} completed
-          {job.status === "running" && completed < job.days_total && ` · Processing day ${completed + 1}`}</span>
+          {job.status === "running" && completed < job.days_total && ` · Processing day ${completed + 1}`}
+          {job.alert_progress && ` · Alert ${job.alert_progress.number}/${job.alert_progress.total}`}</span>
         <span>{count(job.investigations)} investigations · {usd(job.cost_usd)}</span>
         {job.error && <p className="error">{job.error}</p>}
       </div>}

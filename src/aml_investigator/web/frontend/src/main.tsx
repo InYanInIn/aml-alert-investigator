@@ -74,7 +74,7 @@ function App() {
         setJob(current);
         setJobError("");
         if (current?.period_id === pending) setPending(null);
-        const next = JSON.stringify(current);
+        const next = current ? `${current.period_id}:${current.status}:${current.day}` : "";
         if (signature !== next && current) await refreshWorld();
         signature = next;
         if (alive && (current?.status === "running" || (pending !== null && current?.period_id !== pending))) {

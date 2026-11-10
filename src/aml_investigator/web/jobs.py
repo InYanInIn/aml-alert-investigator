@@ -3,7 +3,7 @@ import logging
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, replace
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from math import ceil
 
@@ -75,14 +75,22 @@ class Estimate:
 
 
 @dataclass(frozen=True)
+class AlertProgress:
+    number: int
+    total: int
+
+
+@dataclass(frozen=True)
 class JobStatus:
     period_id: int
     status: PeriodStatus
     day: date
     days_total: int
+    days_completed: int
     investigations: int
     cost_usd: float
     error: str | None
+    alert_progress: AlertProgress | None
 
 
 class SimulationJobs:
@@ -100,6 +108,7 @@ class SimulationJobs:
         self._profile_model = profile_model
         self._azure_transport = azure_transport
         self._task: asyncio.Task[None] | None = None
+        self._alert_progress: tuple[int, date, AlertProgress] | None = None
 
     async def create(self, seed: int, persona_counts: Mapping[str, int]) -> None:
         await asyncio.to_thread(self._create, seed, persona_counts)
@@ -148,14 +157,24 @@ class SimulationJobs:
             period = Periods(conn).latest()
         if period is None:
             return None
+        active = self._alert_progress
+        progress = (
+            active[2]
+            if period.status == "running"
+            and active is not None
+            and active[:2] == (period.period_id, period.last_day + timedelta(days=1))
+            else None
+        )
         return JobStatus(
             period.period_id,
             period.status,
             period.last_day,
             (period.target_day - period.first_day).days + 1,
+            (period.last_day - period.first_day).days + 1,
             period.investigations,
             float(period.cost_usd),
             period.error,
+            progress,
         )
 
     def spent(self) -> float:
@@ -204,6 +223,10 @@ class SimulationJobs:
 
     async def _run(self, periods: Periods, world: StoredWorld, period: Period, endpoint: httpx.URL | None) -> None:
         day = period.first_day
+
+        def report_alert(number: int, total: int) -> None:
+            self._alert_progress = (period.period_id, day, AlertProgress(number, total))
+
         try:
             loop = await finish_in_thread(restore_loop, periods, world, period)
             remaining = period.investigation_cap
@@ -211,7 +234,10 @@ class SimulationJobs:
             app, mcp = FixedRole(periods.conn, lock, "app"), FixedRole(periods.conn, lock, "mcp")
             async with self._system(world, period, endpoint, (app, mcp)) as (system, spend):
                 for day in days_between(period.first_day, period.target_day):
-                    remaining -= await advance_day(periods, period, loop, day, system, remaining, spend, mcp)
+                    self._alert_progress = None
+                    remaining -= await advance_day(
+                        periods, period, loop, day, system, remaining, spend, mcp, report_alert
+                    )
                     await asyncio.sleep(0)
             periods.finish()
         except asyncio.CancelledError:
@@ -227,6 +253,7 @@ class SimulationJobs:
             )
             periods.finish(str(error) if isinstance(error, (AzureGuardError, WorldHashMismatchError)) else FAILED)
         finally:
+            self._alert_progress = None
             periods.conn.close()
 
     @asynccontextmanager

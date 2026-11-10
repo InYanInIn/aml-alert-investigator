@@ -46,9 +46,11 @@ export type Job = {
   status: Status;
   day: string;
   days_total: number;
+  days_completed?: number;
   investigations: number;
   cost_usd: number;
   error: string | null;
+  alert_progress?: { number: number; total: number } | null;
 };
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {

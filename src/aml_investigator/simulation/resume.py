@@ -77,6 +77,7 @@ async def advance_day(
     remaining: int,
     spend: AzureSpendTransport | None,
     mcp: FixedRole,
+    report_alert: Callable[[int, int], None],
 ) -> int:
     def prepare() -> list[EvalAlert]:
         loop.days.generate(day)
@@ -88,7 +89,8 @@ async def advance_day(
         blocked = set(loop.days.blocked)
         investigated = 0
         truncated = False
-        for alert in alerts:
+        for number, alert in enumerate(alerts, start=1):
+            report_alert(number, len(alerts))
             if periods.was_paid_attempted(alert):
                 periods.decision(alert.alert_id, None, "prior_paid_attempt")
                 truncated = True

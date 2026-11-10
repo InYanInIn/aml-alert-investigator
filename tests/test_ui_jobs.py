@@ -11,7 +11,7 @@ import pytest
 from aml_investigator.core.logging import JsonFormatter
 from aml_investigator.investigation.agent.nodes import NO_DECISION
 from aml_investigator.investigation.models import azure
-from aml_investigator.web.jobs import JobConflictError, SimulationJobs
+from aml_investigator.web.jobs import AlertProgress, JobConflictError, SimulationJobs
 from tests.conftest import Database, load_regulations
 from tests.simulation_fixtures import prepare_workspace, settings_for
 from tests.test_azure_model import completion, tool_call_message
@@ -115,12 +115,17 @@ async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert
     with world_db.owner() as conn:
         conn.execute("TRUNCATE sim.azure_spend")
     requested: list[str] = []
+    observed_progress: list[AlertProgress | None] = []
     interrupt_embedding = True
 
     def handler(request: httpx.Request) -> httpx.Response:
         nonlocal interrupt_embedding
         body = json.loads(request.content)
         requested.append(request.url.path)
+        if interrupt_embedding:
+            current = jobs.current()
+            assert current is not None
+            observed_progress.append(current.alert_progress)
         if request.url.path.endswith("/embeddings"):
             assert len(body["input"]) == 1
             if interrupt_embedding:
@@ -148,6 +153,13 @@ async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert
     assert failed.status == "failed"
     assert failed.error == "The Azure request failed."
     assert failed.investigations == 0
+    assert len(observed_progress) == 2
+    progress = observed_progress[0]
+    assert progress is not None
+    assert observed_progress[1] == progress
+    assert progress.number == 1
+    assert progress.total >= 1
+    assert failed.alert_progress is None
     assert all("private provider details" not in JsonFormatter().format(record) for record in caplog.records)
     assert [path.rsplit("/", 1)[-1] for path in requested] == ["completions", "embeddings"]
     with world_db.owner() as conn:
@@ -166,6 +178,7 @@ async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert
     sent_before_resume = len(requested)
     resumed = await finished(restarted, await restarted.start(7, resume_system))
     assert resumed.status == "done"
+    assert resumed.days_completed == 7
     with world_db.owner() as conn:
         assert conn.execute(
             "SELECT skip_reason FROM sim.decision JOIN core.alerts USING (alert_id) "
