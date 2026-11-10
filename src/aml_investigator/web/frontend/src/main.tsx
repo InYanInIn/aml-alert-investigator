@@ -10,14 +10,6 @@ import "./world.css";
 
 const emptyIds = new Set<string>();
 
-function Signal({ className }: { className?: string }) {
-  return <svg className={className} aria-hidden="true" width="36" height="36" viewBox="0 0 36 36" fill="none">
-    <circle cx="18" cy="18" r="15" stroke="currentColor" opacity=".25" />
-    <path d="M4 20c8 0 13-3 18-11m-9 20c5-7 9-10 19-12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    <circle cx="22" cy="9" r="2.3" fill="currentColor" /><circle cx="13" cy="29" r="2.3" fill="currentColor" />
-  </svg>;
-}
-
 function App() {
   const [world, setWorld] = useState<World>();
   const [weeks, setWeeks] = useState<Week[]>([]);
@@ -177,7 +169,7 @@ function App() {
 
   return <>
     <header className="masthead">
-      <div className="brand"><Signal /><span>AML <strong>Investigator</strong></span></div>
+      <div className="brand"><span className="signal" aria-hidden="true" /><span>AML <strong>Investigator</strong></span></div>
       <nav aria-label="Workspace"><a href="/world" aria-current="page">World</a><a href="/">Analyst</a></nav>
     </header>
     <main className="workspace">
@@ -214,7 +206,7 @@ function App() {
               selectClient(id);
               mapHeading.current?.scrollIntoView({ block: "nearest" });
             }} outlined={outlined} /> :
-              <div className="graph-placeholder"><Signal /><h3>{graphError ? "Map unavailable" : day || !world ? "Loading payments…" : "No world yet"}</h3>
+              <div className="graph-placeholder"><span className="signal" aria-hidden="true" /><h3>{graphError ? "Map unavailable" : day || !world ? "Loading payments…" : "No world yet"}</h3>
                 {graphError && <p>{graphError}</p>}
                 {graphError && <button type="button" className="secondary" onClick={() => setGraphRetry(graphRetry + 1)}>Retry map</button>}
               </div>}

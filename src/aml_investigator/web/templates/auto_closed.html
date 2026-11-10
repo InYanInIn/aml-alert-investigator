@@ -1,10 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Auto-closed alerts{% endblock %}
 {% block content %}
-<h1>Auto-closed alerts</h1>
 {% set samples = alerts|selectattr("route", "equalto", "qa_sample")|list %}
+<div class="workspace-header">
+<div>
+<h1>Auto-closed alerts</h1>
 <p class="muted">Closed without an analyst decision because the recommendation was close and verification passed. {{ alerts|length }} auto-closed, {{ samples|length }} of them drawn as QA samples. Read-only, for audit.</p>
+</div>
+</div>
 {% if alerts %}
+<div class="alert-table" tabindex="0">
 <table>
 <thead>
 <tr><th>Alert</th><th>Account</th><th>Alert date</th><th>Closed</th><th>QA sample</th><th>QA status</th></tr>
@@ -13,7 +18,7 @@
 {% for alert in alerts %}
 <tr>
 <td><a href="/alerts/{{ alert.alert_id }}{% if ui_mode %}?source=auto-closed{% endif %}">{{ alert.alert_id }}</a></td>
-<td>{{ alert.account_id }}</td>
+<td class="account-id">{{ alert.account_id }}</td>
 <td>{{ alert.alert_date }}</td>
 <td>{{ alert.closed_at.strftime("%Y-%m-%d %H:%M") }}</td>
 <td>{{ "Yes" if alert.route == "qa_sample" else "No" }}</td>
@@ -22,7 +27,8 @@
 {% endfor %}
 </tbody>
 </table>
+</div>
 {% else %}
-<p class="muted">No alerts have been auto-closed.</p>
+<p class="analyst-empty muted">No alerts have been auto-closed.</p>
 {% endif %}
 {% endblock %}

@@ -23,6 +23,7 @@ from aml_investigator.web.routes import alerts, health, investigations, simulate
 from aml_investigator.web.routes import evaluator as evaluator_routes
 
 WORLD_STATIC_DIR = Path(__file__).parent / "static" / "world"
+WORKSPACE_STATIC_DIR = WORLD_STATIC_DIR.parent / "workspace"
 WORLD_BUILD_MESSAGE = "World UI assets are missing. Run make ui before aml ui."
 
 
@@ -63,6 +64,7 @@ def create_app(
                 yield
 
     app = FastAPI(lifespan=lifespan)
+    app.mount("/static/workspace", StaticFiles(directory=WORKSPACE_STATIC_DIR), name="workspace-static")
     app.include_router(alerts.router)
     if ui_mode:
         app.include_router(alerts.rerun_router)
@@ -89,6 +91,6 @@ def create_app(
 
     @app.exception_handler(McpUnavailableError)
     async def mcp_unavailable(request: Request, _: McpUnavailableError) -> HTMLResponse:
-        return alerts.templates.TemplateResponse(request, "unavailable.html", status_code=503)
+        return alerts.templates.TemplateResponse(request, "unavailable.html", {"ui_mode": ui_mode}, status_code=503)
 
     return app

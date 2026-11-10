@@ -28,12 +28,12 @@
 {% set route_labels = {"auto_closed": "Auto-closed", "qa_sample": "QA sample", "escalated": "Escalated"} %}
 {% set loop_stops = {"skipped": "loop skipped", "model_done": "model finished", "tool_call_limit": "tool call limit reached", "token_budget": "token budget exhausted"} %}
 {% set investigation = page.investigation %}
-<a class="alert-back" href="{{ back_url }}">← {{ back_label }}</a>
+<a class="alert-back text-button" href="{{ back_url }}">← {{ back_label }}</a>
 <h1>Alert {{ page.alert.alert_id }}{% if investigation %}<span class="badge {{ investigation.route }}">{{ route_labels[investigation.route] }}</span>{% endif %}</h1>
 
-<section>
+<section class="case-meta">
 <dl>
-<dt>Account</dt><dd>{{ page.alert.account_id }}</dd>
+<dt>Account</dt><dd class="account-id">{{ page.alert.account_id }}</dd>
 <dt>Alert date</dt><dd>{{ page.alert.alert_date }}</dd>
 <dt>Window</dt><dd>{{ page.alert.window_start }} to {{ page.alert.window_end }}</dd>
 </dl>
@@ -71,9 +71,10 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 <p class="muted">The alert was escalated for manual review.</p>
 {% endif %}
 {% if page.can_rerun %}
-<form id="rerun-investigation" action="/alerts/{{ page.alert.alert_id }}/rerun" method="post" data-investigation-id="{{ investigation.investigation_id }}">
-<button type="submit" disabled>Rerun investigation</button>
+<form id="rerun-investigation" class="rerun-form" action="/alerts/{{ page.alert.alert_id }}/rerun" method="post" data-investigation-id="{{ investigation.investigation_id }}">
+<button class="primary" type="submit" disabled>Rerun investigation</button>
 <small>Runs Azure again. Uses the current spend limit.</small>
+<progress class="rerun-progress" aria-label="Investigation progress" hidden></progress>
 <p class="rerun-status" role="status"></p>
 </form>
 <script>
@@ -81,6 +82,7 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
   const form = document.getElementById("rerun-investigation");
   const button = form.querySelector("button");
   const status = form.querySelector(".rerun-status");
+  const progress = form.querySelector("progress");
   const investigationId = Number(form.dataset.investigationId);
   const inProgress = "Investigation in progress. This can take several minutes.";
 
@@ -97,11 +99,13 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
           window.setTimeout(() => void watchRerun(true, true), 1000);
           return;
         }
+        progress.hidden = true;
         status.textContent = wasRunning ? "The rerun ended without saving a new report." : "";
         button.disabled = false;
         return;
       }
       wasRunning = true;
+      progress.hidden = false;
       status.textContent = inProgress;
     } else {
       status.textContent = "Checking investigation status…";
@@ -113,6 +117,7 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     button.disabled = true;
+    progress.hidden = false;
     status.textContent = inProgress;
     try {
       const response = await fetch(form.action, {
@@ -129,6 +134,7 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
     } catch {
       status.textContent = "The connection was interrupted. Refresh to check whether the rerun completed.";
     }
+    progress.hidden = true;
     button.disabled = false;
   });
 }
@@ -222,7 +228,7 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 </select>
 <label for="comment">Comment</label>
 <textarea id="comment" name="comment" rows="3"></textarea>
-<button type="submit">Confirm or override recommendation</button>
+<button class="primary" type="submit">Confirm or override recommendation</button>
 </form>
 </section>
 {% endif %}
@@ -248,7 +254,7 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 </select>
 <label for="qa_comment">Comment</label>
 <textarea id="qa_comment" name="comment" rows="3"></textarea>
-<button type="submit">Record QA review</button>
+<button class="primary" type="submit">Record QA review</button>
 </form>
 </section>
 {% endif %}
@@ -258,7 +264,7 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 
 {% if not ui_mode %}
 <form method="post" action="/alerts/{{ page.alert.alert_id }}/investigate">
-<button type="submit">{% if investigation %}Investigate again{% else %}Investigate{% endif %}</button>
+<button class="primary" type="submit">{% if investigation %}Investigate again{% else %}Investigate{% endif %}</button>
 </form>
 {% endif %}
 
