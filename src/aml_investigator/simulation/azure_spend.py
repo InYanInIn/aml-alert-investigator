@@ -1,7 +1,5 @@
 import json
 import re
-import shutil
-import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -11,6 +9,7 @@ from typing import Literal
 from uuid import UUID
 
 import httpx
+from azure.identity import DefaultAzureCredential
 from psycopg import Connection
 from psycopg.rows import TupleRow
 
@@ -31,15 +30,11 @@ SETTLE = load(__package__, "settle_azure_spend")
 AZURE_HOST = re.compile(r"aml-investigator-[a-f0-9]{8}\.openai\.azure\.com")
 AZURE_ACCOUNT = "aml-investigator-openai"
 AZURE_RESOURCE_GROUP = "rg-aml-investigator"
-ACCOUNT_FIELDS = (
-    "{name:name,kind:kind,endpoint:properties.endpoint,"
-    "subdomain:properties.customSubDomainName,state:properties.provisioningState}"
-)
-DEPLOYMENT_FIELDS = (
-    "[].{deployment:name,format:properties.model.format,model:properties.model.name,version:properties.model.version,"
-    "sku:sku.name,state:properties.provisioningState,spillover:properties.spilloverDeploymentName,"
-    "service_tier:properties.serviceTier}"
-)
+ARM_ORIGIN = "https://management.azure.com"
+ARM_SCOPE = f"{ARM_ORIGIN}/.default"
+ARM_API_VERSION = "2024-10-01"
+ARM_TIMEOUT_SECONDS = 10
+ARM_MAX_BYTES = 65_536
 METADATA_REFUSED = "Azure deployment metadata does not match the supported AML deployments."
 METADATA_UNAVAILABLE = "Azure deployment metadata could not be verified."
 
@@ -115,28 +110,47 @@ def azure_origin(endpoint: str | None) -> httpx.URL:
     return url
 
 
-def verify_azure_deployments(endpoint: httpx.URL) -> None:
-    executable = shutil.which("az")
-    if executable is None:
+def verify_azure_deployments(endpoint: httpx.URL, subscription_id: str | None) -> None:
+    if not subscription_id:
         raise AzureGuardError(METADATA_UNAVAILABLE)
-    account = _azure_metadata(executable, ("show",), ACCOUNT_FIELDS)
-    if not isinstance(account, dict):
+    account_path = (
+        f"/subscriptions/{subscription_id}/resourceGroups/{AZURE_RESOURCE_GROUP}"
+        f"/providers/Microsoft.CognitiveServices/accounts/{AZURE_ACCOUNT}"
+    )
+    account = _azure_metadata(account_path)
+    properties = account.get("properties")
+    if not isinstance(properties, dict):
         raise AzureGuardError(METADATA_REFUSED)
-    reported = account.get("endpoint")
+    reported = properties.get("endpoint")
     if (
         account.get("name") != AZURE_ACCOUNT
         or account.get("kind") != "OpenAI"
-        or account.get("state") != "Succeeded"
-        or account.get("subdomain") != endpoint.host.split(".", 1)[0]
+        or properties.get("provisioningState") != "Succeeded"
+        or properties.get("customSubDomainName") != endpoint.host.split(".", 1)[0]
         or not isinstance(reported, str)
         or reported.removesuffix("/") != str(endpoint).removesuffix("/")
     ):
         raise AzureGuardError(METADATA_REFUSED)
-    deployments = _azure_metadata(executable, ("deployment", "list"), DEPLOYMENT_FIELDS)
-    if not isinstance(deployments, list):
+    listing = _azure_metadata(f"{account_path}/deployments")
+    deployments = listing.get("value")
+    if not isinstance(deployments, list) or "nextLink" in listing:
         raise AzureGuardError(METADATA_REFUSED)
     for tariff in TARIFFS.values():
-        matches = [item for item in deployments if isinstance(item, dict) and item.get("deployment") == tariff.model]
+        matches = [item for item in deployments if isinstance(item, dict) and item.get("name") == tariff.model]
+        deployment = matches[0] if len(matches) == 1 else {}
+        sku = deployment.get("sku")
+        found = deployment.get("properties")
+        model = found.get("model") if isinstance(found, dict) else None
+        if not isinstance(sku, dict) or not isinstance(found, dict) or not isinstance(model, dict):
+            raise AzureGuardError(METADATA_REFUSED)
+        reported_values = {
+            "format": model.get("format"),
+            "model": model.get("name"),
+            "version": model.get("version"),
+            "sku": sku.get("name"),
+            "state": found.get("provisioningState"),
+            "spillover": found.get("spilloverDeploymentName"),
+        }
         expected = {
             "format": "OpenAI",
             "model": tariff.model,
@@ -145,45 +159,30 @@ def verify_azure_deployments(endpoint: httpx.URL) -> None:
             "state": "Succeeded",
             "spillover": None,
         }
-        deployment = matches[0] if len(matches) == 1 else {}
-        if deployment.get("service_tier") not in (None, "Default") or any(
-            deployment.get(field) != value for field, value in expected.items()
-        ):
+        if found.get("serviceTier") not in (None, "Default") or reported_values != expected:
             raise AzureGuardError(METADATA_REFUSED)
 
 
-def _azure_metadata(executable: str, command: tuple[str, ...], fields: str) -> object:
-    arguments = [
-        executable,
-        "cognitiveservices",
-        "account",
-        *command,
-        "--resource-group",
-        AZURE_RESOURCE_GROUP,
-        "--name",
-        AZURE_ACCOUNT,
-        "--only-show-errors",
-        "--output",
-        "json",
-        "--query",
-        fields,
-    ]
+def _azure_metadata(path: str) -> dict[str, object]:
     try:
-        result = subprocess.run(  # noqa: S603
-            arguments,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            check=True,
-            timeout=10,
-            text=True,
-        )
-        if len(result.stdout) > 65_536:
+        token = DefaultAzureCredential().get_token(ARM_SCOPE).token
+        with httpx.Client(
+            base_url=ARM_ORIGIN, timeout=ARM_TIMEOUT_SECONDS, follow_redirects=False, trust_env=False
+        ) as client:
+            response = client.get(
+                path, params={"api-version": ARM_API_VERSION}, headers={"Authorization": f"Bearer {token}"}
+            )
+        response.raise_for_status()
+        if len(response.content) > ARM_MAX_BYTES:
             raise AzureGuardError(METADATA_UNAVAILABLE)
-        payload: object = json.loads(result.stdout)
-        return payload
-    except (OSError, subprocess.SubprocessError, ValueError) as error:
+        payload: object = response.json()
+    except AzureGuardError:
+        raise
+    except Exception as error:
         raise AzureGuardError(METADATA_UNAVAILABLE, cause=type(error).__name__) from None
+    if not isinstance(payload, dict):
+        raise AzureGuardError(METADATA_REFUSED)
+    return payload
 
 
 @dataclass

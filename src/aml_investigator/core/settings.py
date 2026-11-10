@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     langfuse_secret_key: SecretStr | None = None
     langfuse_host: str | None = None
     azure_openai_endpoint: str | None = None
+    azure_subscription_id: str | None = None
     ui_spend_limit_usd: Decimal = Field(default=Decimal("39.00"), ge=0, allow_inf_nan=False)
 
     @property
