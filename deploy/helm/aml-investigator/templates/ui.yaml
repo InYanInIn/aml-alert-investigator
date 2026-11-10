@@ -1,0 +1,222 @@
+{{- if .Values.ui.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-ui
+  labels:
+    {{- include "aml.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ui
+  annotations:
+    azure.workload.identity/client-id: {{ required "azure.workloadIdentityClientId is required" .Values.azure.workloadIdentityClientId | quote }}
+    azure.workload.identity/tenant-id: {{ required "azure.tenantId is required" .Values.azure.tenantId | quote }}
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: {{ .Release.Name }}-ui
+  labels:
+    {{- include "aml.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ui
+spec:
+  provider: azure
+  parameters:
+    usePodIdentity: "false"
+    clientID: {{ .Values.azure.workloadIdentityClientId | quote }}
+    keyvaultName: {{ required "azure.keyVaultName is required" .Values.azure.keyVaultName | quote }}
+    tenantId: {{ .Values.azure.tenantId | quote }}
+    objects: |
+      array:
+        {{- range $secret := list "aml-postgres-password" "aml-owner-dsn" "aml-mcp-dsn" "aml-app-dsn" "aml-evaluator-dsn" }}
+        - |
+          objectName: {{ $secret }}
+          objectType: secret
+        {{- end }}
+  secretObjects:
+    - secretName: {{ .Values.postgres.secretName }}
+      type: Opaque
+      data:
+        - {objectName: aml-postgres-password, key: POSTGRES_PASSWORD}
+    - secretName: {{ .Values.ui.secretName }}
+      type: Opaque
+      data:
+        - {objectName: aml-owner-dsn, key: AML_OWNER_DSN}
+        - {objectName: aml-mcp-dsn, key: AML_MCP_DSN}
+        - {objectName: aml-app-dsn, key: AML_APP_DSN}
+        - {objectName: aml-evaluator-dsn, key: AML_EVALUATOR_DSN}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-ui
+  labels:
+    {{- include "aml.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ui
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: ui
+  template:
+    metadata:
+      labels:
+        {{- include "aml.labels" . | nindent 8 }}
+        app.kubernetes.io/component: ui
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: {{ .Release.Name }}-ui
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile: {type: RuntimeDefault}
+      initContainers:
+        - name: wait-for-postgres
+          image: "{{ .Values.postgres.image }}"
+          command: [sh, -c, "until pg_isready -h postgres -p 5432; do sleep 2; done"]
+          securityContext:
+            {{- include "aml.securityContext" . | nindent 12 }}
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {memory: 64Mi}
+      containers:
+        - name: ui
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["ui", "--no-browser", "--host", "0.0.0.0", "--port", {{ .Values.ui.port | quote }}]
+          ports:
+            - {name: http, containerPort: {{ .Values.ui.port }}}
+          env:
+            - {name: AML_AZURE_OPENAI_ENDPOINT, value: {{ .Values.azure.openaiEndpoint | quote }}}
+            - {name: AML_AZURE_SUBSCRIPTION_ID, value: {{ .Values.azure.subscriptionId | quote }}}
+          envFrom:
+            - secretRef: {name: {{ .Values.ui.secretName }}}
+          securityContext:
+            {{- include "aml.securityContext" . | nindent 12 }}
+          startupProbe:
+            tcpSocket: {port: http}
+            periodSeconds: 5
+            failureThreshold: 60
+          livenessProbe:
+            tcpSocket: {port: http}
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket: {port: http}
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.ui.resources | nindent 12 }}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+            - {name: secrets, mountPath: /mnt/secrets, readOnly: true}
+      volumes:
+        - {name: tmp, emptyDir: {}}
+        - name: secrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Release.Name }}-ui
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-ui
+  labels:
+    {{- include "aml.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ui
+spec:
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: ui
+  ports:
+    - {name: http, port: {{ .Values.ui.port }}, targetPort: http}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  labels:
+    {{- include "aml.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: postgres
+  template:
+    metadata:
+      labels:
+        {{- include "aml.labels" . | nindent 8 }}
+        app.kubernetes.io/component: postgres
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: {{ .Release.Name }}-ui
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: postgres
+          image: {{ .Values.postgres.image | quote }}
+          ports:
+            - {name: postgres, containerPort: 5432}
+          env:
+            - {name: POSTGRES_USER, value: amladmin}
+            - {name: PGDATA, value: /var/lib/postgresql/data/pgdata}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: {{ .Values.postgres.secretName }}, key: POSTGRES_PASSWORD}
+          securityContext:
+            {{- include "aml.securityContext" . | nindent 12 }}
+          readinessProbe:
+            exec: {command: [pg_isready, -U, amladmin, -d, postgres]}
+            periodSeconds: 5
+          livenessProbe:
+            exec: {command: [pg_isready, -U, amladmin, -d, postgres]}
+            periodSeconds: 10
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.postgres.resources | nindent 12 }}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/postgresql/data}
+            - {name: run, mountPath: /var/run/postgresql}
+            - {name: tmp, mountPath: /tmp}
+            - {name: secrets, mountPath: /mnt/secrets, readOnly: true}
+      volumes:
+        - {name: run, emptyDir: {}}
+        - {name: tmp, emptyDir: {}}
+        - name: secrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Release.Name }}-ui
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: {{ .Values.postgres.storage }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    {{- include "aml.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+spec:
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: postgres
+  ports:
+    - {name: postgres, port: 5432, targetPort: postgres}
+{{- end }}

@@ -5,3 +5,5 @@
 !src
 !config/thresholds
 !eval/results
+!config/simulation
+**/node_modules

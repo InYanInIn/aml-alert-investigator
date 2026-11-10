@@ -257,7 +257,7 @@ class SimulationJobs:
             return None
         try:
             endpoint = azure_origin(self.settings.azure_openai_endpoint)
-            await asyncio.to_thread(verify_azure_deployments, endpoint)
+            await asyncio.to_thread(verify_azure_deployments, endpoint, self.settings.azure_subscription_id)
         except AzureGuardError as error:
             raise JobConflictError(str(error)) from None
         return endpoint

@@ -75,7 +75,7 @@ def run_ui(args: argparse.Namespace) -> None:
     )
     if not args.no_browser:
         webbrowser.open(f"http://127.0.0.1:{args.port}/world")
-    uvicorn.run(app, host="127.0.0.1", port=args.port, log_config=None)
+    uvicorn.run(app, host=args.host, port=args.port, log_config=None)
 
 
 def run_investigate(args: argparse.Namespace) -> None:
@@ -139,6 +139,7 @@ def register(commands: Commands) -> None:
     api.set_defaults(handler=run_api)
 
     ui = commands.add_parser("ui")
+    ui.add_argument("--host", default="127.0.0.1")
     ui.add_argument("--port", type=int, default=8765)
     ui.add_argument("--evaluator", action="store_true")
     ui.add_argument("--no-browser", action="store_true")

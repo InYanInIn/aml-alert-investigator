@@ -1,0 +1,52 @@
+name: deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      IMAGE: ${{ vars.ACR_NAME }}.azurecr.io/aml
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push the image
+        run: |
+          az acr login --name "${{ vars.ACR_NAME }}"
+          docker build --tag "$IMAGE:$GITHUB_SHA" .
+          docker push "$IMAGE:$GITHUB_SHA"
+
+      - name: Connect to the cluster
+        run: |
+          az aks get-credentials --admin --overwrite-existing \
+            --resource-group "${{ vars.RESOURCE_GROUP }}" --name "${{ vars.AKS_NAME }}"
+
+      - name: Deploy the chart
+        run: |
+          helm upgrade --install aml deploy/helm/aml-investigator \
+            --namespace aml --create-namespace \
+            --set api.enabled=false --set mcp.enabled=false --set ui.enabled=true \
+            --set image.repository="$IMAGE" --set image.tag="$GITHUB_SHA" \
+            --set azure.tenantId="${{ vars.AZURE_TENANT_ID }}" \
+            --set azure.subscriptionId="${{ vars.AZURE_SUBSCRIPTION_ID }}" \
+            --set azure.keyVaultName="${{ vars.KEY_VAULT_NAME }}" \
+            --set azure.workloadIdentityClientId="${{ vars.APP_IDENTITY_CLIENT_ID }}" \
+            --set azure.openaiEndpoint="${{ vars.AZURE_OPENAI_ENDPOINT }}" \
+            --wait --timeout 10m
