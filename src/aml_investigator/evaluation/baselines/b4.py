@@ -2,7 +2,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
-from aml_investigator.core.db import Pool, open_read_only_pool
+from aml_investigator.core.db import QuerySource, open_read_only_pool
 from aml_investigator.core.sql import load
 from aml_investigator.evaluation.systems import EvalAlert, SystemDecision
 
@@ -11,7 +11,7 @@ SPENDS_OWN_MONEY_SQL = load(__package__, "spends_own_money")
 
 @dataclass(frozen=True)
 class OwnMoneyRule:
-    pool: Pool
+    pool: QuerySource
     name: str = "b4"
 
     async def decide(self, alert: EvalAlert) -> SystemDecision:

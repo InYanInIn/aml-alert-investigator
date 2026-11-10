@@ -33,7 +33,18 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: src/aml_investigator/web/frontend/package-lock.json
       - run: uv sync --locked
+      - run: npm ci
+        working-directory: src/aml_investigator/web/frontend
+      - run: npm run check
+        working-directory: src/aml_investigator/web/frontend
+      - run: npm run build
+        working-directory: src/aml_investigator/web/frontend
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy

@@ -1,8 +1,16 @@
 {% extends "base.html" %}
 {% block title %}All alerts{% endblock %}
 {% block content %}
-<h1>All alerts</h1>
+<div class="workspace-header">
+<div>
+<h1>All alerts</h1><p class="muted">{{ alerts|length }} alert{{ "" if alerts|length == 1 else "s" }}</p>
+</div>
+{% if ui_mode %}
+<form class="period-filter" method="get" action="/alerts"><label for="period">Simulation period</label><select id="period" name="period" onchange="this.form.submit()"><option value="">All periods</option>{% for period in periods %}<option value="{{ period.period_id }}"{% if selected_period == period.period_id %} selected{% endif %}>{{ period.label }}</option>{% endfor %}</select></form>
+{% endif %}
+</div>
 {% if alerts %}
+<div class="alert-table" tabindex="0">
 <table>
 <thead>
 <tr><th>Alert</th><th>Account</th><th>Alert date</th><th>Rules (score)</th><th>Investigation</th></tr>
@@ -10,8 +18,8 @@
 <tbody>
 {% for alert in alerts %}
 <tr>
-<td><a href="/alerts/{{ alert.alert_id }}">{{ alert.alert_id }}</a></td>
-<td>{{ alert.account_id }}</td>
+<td><a href="/alerts/{{ alert.alert_id }}{% if ui_mode and selected_period is not none %}?period={{ selected_period }}{% endif %}">{{ alert.alert_id }}</a></td>
+<td class="account-id">{{ alert.account_id }}</td>
 <td>{{ alert.alert_date }}</td>
 <td>{{ alert.rule_hits }}</td>
 <td>{{ alert.status }}</td>
@@ -19,7 +27,8 @@
 {% endfor %}
 </tbody>
 </table>
+</div>
 {% else %}
-<p class="muted">No alerts.</p>
+<p class="analyst-empty muted">No alerts.</p>
 {% endif %}
 {% endblock %}

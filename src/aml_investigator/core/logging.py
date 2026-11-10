@@ -51,13 +51,16 @@ def log_context(**fields: object) -> Iterator[None]:
 
 
 @contextmanager
-def timed_event(logger: logging.Logger, event: str, **fields: object) -> Iterator[dict[str, object]]:
+def timed_event(
+    logger: logging.Logger, event: str, include_error_detail: bool = True, /, **fields: object
+) -> Iterator[dict[str, object]]:
     outcome: dict[str, object] = {}
     started = time.perf_counter()
     try:
         yield outcome
     except Exception as error:
-        logger.warning(event, extra={"fields": {**fields, **outcome, **elapsed(started), "error": repr(error)}})
+        failure = {"error": repr(error)} if include_error_detail else {"error_class": type(error).__name__}
+        logger.warning(event, extra={"fields": {**fields, **outcome, **elapsed(started), **failure}})
         raise
     logger.info(event, extra={"fields": {**fields, **outcome, **elapsed(started)}})
 

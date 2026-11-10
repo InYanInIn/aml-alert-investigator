@@ -3,7 +3,7 @@ from datetime import datetime
 from psycopg import AsyncConnection, sql
 from psycopg.rows import DictRow
 
-from aml_investigator.core.db import Pool
+from aml_investigator.core.db import QuerySource, RoleConnection
 from aml_investigator.core.errors import DomainError
 from aml_investigator.core.sql import load
 from aml_investigator.corpus.embeddings import QueryEmbedder, vector_literal
@@ -68,7 +68,7 @@ class InvalidArgumentError(CaseDataError):
 
 class CaseStore:
     def __init__(
-        self, pool: Pool, reference_variant: ReferenceVariant, embed_query: QueryEmbedder | None = None
+        self, pool: QuerySource, reference_variant: ReferenceVariant, embed_query: QueryEmbedder | None = None
     ) -> None:
         self.pool = pool
         self.embed_query = embed_query
@@ -213,7 +213,7 @@ class CaseStore:
         return RegulationPassage(**row)
 
 
-async def load_alert(conn: AsyncConnection[DictRow], alert_id: int) -> Alert:
+async def load_alert(conn: AsyncConnection[DictRow] | RoleConnection, alert_id: int) -> Alert:
     cursor = await conn.execute(ALERT_SQL, (alert_id,))
     alert = await cursor.fetchone()
     if alert is None:

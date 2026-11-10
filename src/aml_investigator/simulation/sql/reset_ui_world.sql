@@ -1,0 +1,1 @@
+TRUNCATE sim.world, sim.period RESTART IDENTITY CASCADE

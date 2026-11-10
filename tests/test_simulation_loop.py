@@ -16,7 +16,13 @@ from aml_investigator.simulation.loop import (
     simulate,
 )
 from aml_investigator.simulation.segments import load_segments
-from aml_investigator.simulation.world import NotASimulationDatabaseError, build_world, live_days, load_config
+from aml_investigator.simulation.world import (
+    NotASimulationDatabaseError,
+    build_world,
+    history_days,
+    live_days,
+    load_config,
+)
 from tests.conftest import Database, load_regulations
 from tests.simulation_fixtures import prepare_workspace, settings_for
 
@@ -71,6 +77,52 @@ async def drive(
 @pytest.mark.anyio
 async def test_the_same_seed_and_system_give_the_same_transaction_hash(settings: Settings) -> None:
     assert (await b4_run(settings)).tape_sha256 == (await b4_run(settings)).tape_sha256
+
+
+@pytest.mark.anyio
+async def test_replay_prefix_then_advance_matches_uninterrupted_timeline(settings: Settings) -> None:
+    dates = live_days()[:4]
+    split = dates[1]
+    segments = load_segments(settings.database)
+    with psycopg.connect(settings.owner_conninfo, autocommit=True) as conn:
+        uninterrupted = WorldDays(conn, build_world(31, load_config()))
+        uninterrupted.populate()
+        actors = read_actors(settings.evaluator_conninfo)
+        blocked_actor = next(actor for actor in actors.values() if actor.group_id is not None)
+        direct = DailyLoop(uninterrupted, actors, segments, 1, MAX_INVESTIGATIONS)
+        direct.replay(dates, {split: [blocked_actor]}, write=True)
+        direct_ids = [row[0] for row in conn.execute("SELECT txn_id FROM core.transactions ORDER BY txn_id").fetchall()]
+
+        resumed = WorldDays(conn, build_world(31, load_config()))
+        resumed.populate()
+        prefix = DailyLoop(resumed, actors, segments, 1, MAX_INVESTIGATIONS)
+        prefix.replay(dates[:2], {split: [blocked_actor]})
+        prefix_end_txn_id = resumed.tape.next_txn_id
+        await prefix.advance(dates[2:], Fixed("b4", "close"), Fixed("b4", "close"), None)
+        resumed_ids = [
+            row[0] for row in conn.execute("SELECT txn_id FROM core.transactions ORDER BY txn_id").fetchall()
+        ]
+
+    assert resumed.tape.sha256 == uninterrupted.tape.sha256
+    assert resumed.tape.next_txn_id == uninterrupted.tape.next_txn_id
+    assert resumed_ids == [txn_id for txn_id in direct_ids if txn_id >= prefix_end_txn_id]
+    assert resumed.blocked == uninterrupted.blocked == {blocked_actor.account_id: split + timedelta(days=1)}
+
+
+@pytest.mark.anyio
+async def test_advance_keeps_last_completed_day_and_does_not_continue_after_cap(settings: Settings) -> None:
+    with psycopg.connect(settings.owner_conninfo, autocommit=True) as conn:
+        days = WorldDays(conn, build_world(31, load_config()))
+        days.populate()
+        loop = DailyLoop(days, {}, load_segments(settings.database), 1, MAX_INVESTIGATIONS)
+        await loop.advance([], Fixed("b4", "close"), Fixed("b4", "close"), None)
+        loop.truncated = True
+        before = (days.tape.sha256, days.tape.next_txn_id)
+
+        await loop.advance([live_days()[0]], Fixed("b4", "close"), Fixed("b4", "close"), None)
+
+    assert before == (days.tape.sha256, days.tape.next_txn_id)
+    assert loop.last_day == history_days()[-1]
 
 
 @pytest.mark.anyio

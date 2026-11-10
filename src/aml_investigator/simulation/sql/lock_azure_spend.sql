@@ -1,0 +1,1 @@
+LOCK TABLE sim.azure_spend IN SHARE ROW EXCLUSIVE MODE
