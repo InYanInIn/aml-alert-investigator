@@ -222,3 +222,7 @@ The tables in [docs/results.md](docs/results.md) are regenerated from the commit
 | Infra | Terraform, Helm, AKS, ACR, Key Vault, GitHub Actions |
 | Quality | pytest, ruff, mypy, Vitest |
 
+
+## 👤 Author
+
+Designed and built by **Jan Jurinok** · [GitHub](https://github.com/InYanInIn)
