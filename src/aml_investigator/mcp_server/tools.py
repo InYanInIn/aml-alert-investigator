@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from aml_investigator.core.db import ScopedDatabaseError
 from aml_investigator.core.logging import timed_event
 from aml_investigator.mcp_server.schemas import (
     AccountProfile,
@@ -30,8 +31,8 @@ def tool_call(tool: str, **fields: object) -> Iterator[dict[str, object]]:
     with timed_event(logger, "tool_call", tool=tool, **fields) as event:
         try:
             yield event
-        except CaseDataError as error:
-            raise ToolError(str(error)) from error
+        except (CaseDataError, ScopedDatabaseError) as error:
+            raise ToolError(str(error)) from None
 
 
 def case_store(ctx: Context) -> CaseStore:

@@ -7,6 +7,8 @@ SELECT a.alert_id,
            ''
        ) AS rule_hits,
        CASE
+           WHEN i.investigation_id IS NULL AND sd.recommendation IS NOT NULL THEN 'rule B4, no prepared case'
+           WHEN i.investigation_id IS NULL AND sd.skip_reason IS NOT NULL THEN 'not investigated'
            WHEN i.investigation_id IS NULL THEN 'none'
            WHEN i.route = 'escalated' AND d.final_decision IS NULL THEN 'awaiting review'
            WHEN i.route = 'escalated' THEN 'decided: ' || d.final_decision
@@ -21,4 +23,7 @@ LEFT JOIN LATERAL (
 ) i ON true
 LEFT JOIN review.decisions d ON d.investigation_id = i.investigation_id
 LEFT JOIN review.qa_reviews q ON q.investigation_id = i.investigation_id
+LEFT JOIN sim.decision sd ON sd.alert_id = a.alert_id
+LEFT JOIN sim.alert_period ap ON ap.alert_id = a.alert_id
+WHERE %(period)s::bigint IS NULL OR ap.period_id = %(period)s
 ORDER BY a.alert_date DESC, a.alert_id

@@ -1,14 +1,97 @@
+import asyncio
 from collections.abc import AsyncIterator
-from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from contextlib import AbstractAsyncContextManager, ExitStack, asynccontextmanager
+from types import TracebackType
+from typing import Literal, Self
 
-from psycopg import AsyncConnection
-from psycopg.rows import DictRow, dict_row
+from psycopg import AsyncConnection, Connection, Cursor, Error
+from psycopg.abc import Params, QueryNoTemplate
+from psycopg.pq import TransactionStatus
+from psycopg.rows import DictRow, RowFactory, TupleRow, dict_row
 from psycopg_pool import AsyncConnectionPool
+
+from aml_investigator.core.errors import DomainError
+from aml_investigator.core.sql import load
 
 MIN_CONNECTIONS = 1
 MAX_CONNECTIONS = 10
 
 Pool = AsyncConnectionPool[AsyncConnection[DictRow]]
+SET_ROLE = {"app": load(__package__, "set_app_role"), "mcp": load(__package__, "set_mcp_role")}
+RESET_ROLE = load(__package__, "reset_role")
+
+
+class RoleCursor[Row]:
+    def __init__(self, cursor: Cursor[Row]) -> None:
+        self._cursor = cursor
+
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(
+        self, _error_type: type[BaseException] | None, _error: BaseException | None, _traceback: TracebackType | None
+    ) -> None:
+        self._cursor.close()
+
+    async def execute(self, query: QueryNoTemplate, params: Params | None = None) -> None:
+        self._cursor.execute(query, params)
+
+    async def fetchone(self) -> Row | None:
+        return self._cursor.fetchone()
+
+    async def fetchall(self) -> list[Row]:
+        return self._cursor.fetchall()
+
+
+class RoleConnection:
+    def __init__(self, conn: Connection[TupleRow], cursors: ExitStack) -> None:
+        self._conn = conn
+        self._cursors = cursors
+
+    def cursor[Row](self, *, row_factory: RowFactory[Row]) -> RoleCursor[Row]:
+        return RoleCursor(self._cursors.enter_context(self._conn.cursor(row_factory=row_factory)))
+
+    async def execute(self, query: QueryNoTemplate, params: Params | None = None) -> RoleCursor[DictRow]:
+        cursor = self.cursor(row_factory=dict_row)
+        await cursor.execute(query, params)
+        return cursor
+
+
+class ScopedDatabaseError(DomainError):
+    def __init__(self, cause: str) -> None:
+        super().__init__("A simulation database query failed.")
+        self.cause = cause
+
+
+class FixedRole:
+    def __init__(self, conn: Connection[TupleRow], lock: asyncio.Lock, role: Literal["app", "mcp"]) -> None:
+        self._conn = conn
+        self._lock = lock
+        self._role = role
+        self._failure_class: str | None = None
+
+    def raise_if_failed(self) -> None:
+        if self._failure_class is not None:
+            raise ScopedDatabaseError(self._failure_class)
+
+    @asynccontextmanager
+    async def connection(self) -> AsyncIterator[RoleConnection]:
+        async with self._lock:
+            self.raise_if_failed()
+            if self._conn.info.transaction_status != TransactionStatus.INTRANS:
+                raise RuntimeError("Role queries require an active owner transaction.")
+            try:
+                with self._conn.transaction():
+                    with self._conn.execute(SET_ROLE[self._role]), ExitStack() as cursors:
+                        yield RoleConnection(self._conn, cursors)
+                    with self._conn.execute(RESET_ROLE):
+                        pass
+            except Error as error:
+                self._failure_class = type(error).__name__
+                raise ScopedDatabaseError(self._failure_class) from None
+
+
+type QuerySource = Pool | FixedRole
 
 
 def open_app_pool(app_dsn: str) -> AbstractAsyncContextManager[Pool]:

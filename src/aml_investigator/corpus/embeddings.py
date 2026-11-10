@@ -3,13 +3,13 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Protocol
 
+import httpx
 import psycopg
 import tiktoken
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from langchain_openai import AzureOpenAIEmbeddings
 
 from aml_investigator.core.sql import load
-from aml_investigator.investigation.models.azure import API_VERSION, TOKEN_SCOPE
+from aml_investigator.investigation.models.azure import API_VERSION, azure_token_provider
 
 EMBEDDING_MODEL = "text-embedding-3-small"
 BATCH_SIZE = 64
@@ -33,14 +33,20 @@ class EmbedReport:
         return f"embedded {self.passages} passages, {self.tokens} tokens"
 
 
-def azure_embeddings(endpoint: str) -> AzureOpenAIEmbeddings:
+def azure_embeddings(
+    endpoint: str, *, sync_client: httpx.Client | None = None, async_client: httpx.AsyncClient | None = None
+) -> AzureOpenAIEmbeddings:
     return AzureOpenAIEmbeddings(
         azure_endpoint=endpoint,
         deployment=EMBEDDING_MODEL,
         model=EMBEDDING_MODEL,
         openai_api_version=API_VERSION,
         openai_api_key=None,
-        azure_ad_token_provider=get_bearer_token_provider(DefaultAzureCredential(), TOKEN_SCOPE),
+        azure_ad_token_provider=azure_token_provider(guarded=async_client is not None),
+        http_client=sync_client,
+        http_async_client=async_client,
+        max_retries=2 if async_client is None else 0,
+        check_embedding_ctx_length=async_client is None,
     )
 
 

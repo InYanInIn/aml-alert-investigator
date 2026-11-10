@@ -1,6 +1,6 @@
 import uuid
 from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import psycopg
 import pytest
@@ -13,10 +13,10 @@ from aml_investigator.simulation.world import reset_world
 
 @dataclass(frozen=True)
 class Database:
-    owner_dsn: str
-    mcp_dsn: str
-    app_dsn: str
-    evaluator_dsn: str
+    owner_dsn: str = field(repr=False)
+    mcp_dsn: str = field(repr=False)
+    app_dsn: str = field(repr=False)
+    evaluator_dsn: str = field(repr=False)
 
     def owner(self) -> psycopg.Connection[tuple[object, ...]]:
         return psycopg.connect(self.owner_dsn, autocommit=True)

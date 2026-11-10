@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from langchain.mcp import MCPAdapter
 from langchain_core.language_models import BaseChatModel
 
-from aml_investigator.corpus.embeddings import query_embedder
+from aml_investigator.core.db import FixedRole
+from aml_investigator.corpus.embeddings import QueryEmbedder, query_embedder
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
 from aml_investigator.evaluation.recordings import CassetteRecorder
 from aml_investigator.evaluation.systems import EvalAlert, SystemDecision
@@ -45,20 +46,28 @@ class AgentInvestigation:
 
 @asynccontextmanager
 async def open_agent(
-    settings: RuntimeSettings, model: BaseChatModel, name: str, *, max_tool_calls: int = MAX_TOOL_CALLS
+    settings: RuntimeSettings,
+    model: BaseChatModel,
+    name: str,
+    *,
+    max_tool_calls: int = MAX_TOOL_CALLS,
+    transaction_roles: tuple[FixedRole, FixedRole] | None = None,
+    embed_query: QueryEmbedder | None = None,
 ) -> AsyncIterator[AgentInvestigation]:
     recorder = (
         None
         if settings.recordings is None
         else CassetteRecorder(settings.recordings, settings.database, model.get_name(), settings.reference_variant)
     )
+    app_role, mcp_role = transaction_roles or (None, None)
     async with (
         MCPAdapter(
             build_server(
                 settings.mcp_conninfo,
                 reference_variant=settings.reference_variant,
-                embed_query=query_embedder(settings.azure_endpoint),
+                embed_query=query_embedder(settings.azure_endpoint) if transaction_roles is None else embed_query,
                 customer_profile=settings.customer_profile,
+                transaction_role=mcp_role,
             )
         ) as mcp,
         open_investigation_service(
@@ -69,6 +78,7 @@ async def open_agent(
             reference_variant=settings.reference_variant,
             max_tool_calls=max_tool_calls,
             prompt=PROFILE_PROMPT if settings.customer_profile else STANDARD_PROMPT,
+            transaction_role=app_role,
         ) as service,
     ):
         yield AgentInvestigation(service, name, recorder)

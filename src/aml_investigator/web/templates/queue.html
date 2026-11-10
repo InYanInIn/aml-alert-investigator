@@ -1,10 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Analyst queue{% endblock %}
 {% block content %}
-<h1>Analyst queue</h1>
 {% set escalations = items|selectattr("kind", "equalto", "escalation")|list %}
+<div class="workspace-header">
+<div>
+<h1>Analyst queue</h1>
 <p class="muted">{{ items|length }} awaiting review: {{ escalations|length }} escalation{{ "" if escalations|length == 1 else "s" }}, {{ items|length - escalations|length }} QA sample{{ "" if items|length - escalations|length == 1 else "s" }}.</p>
+</div>
+{% if ui_mode %}
+<form class="period-filter" method="get" action="/"><label for="period">Simulation period</label><select id="period" name="period" onchange="this.form.submit()"><option value="">All periods</option>{% for period in periods %}<option value="{{ period.period_id }}"{% if selected_period == period.period_id %} selected{% endif %}>{{ period.label }}</option>{% endfor %}</select></form>
+{% endif %}
+</div>
 {% if items %}
+<div class="alert-table" tabindex="0">
 <table>
 <thead>
 <tr><th>Alert</th><th>Account</th><th>Alert date</th><th>Rules (score)</th><th>Kind</th><th>Recommendation</th><th>Verification</th></tr>
@@ -12,8 +20,8 @@
 <tbody>
 {% for item in items %}
 <tr>
-<td><a href="/alerts/{{ item.alert_id }}">{{ item.alert_id }}</a></td>
-<td>{{ item.account_id }}</td>
+<td><a href="/alerts/{{ item.alert_id }}{% if ui_mode %}?source=queue{% if selected_period is not none %}&amp;period={{ selected_period }}{% endif %}{% endif %}">{{ item.alert_id }}</a></td>
+<td class="account-id">{{ item.account_id }}</td>
 <td>{{ item.alert_date }}</td>
 <td>{{ item.rule_hits }}</td>
 <td><span class="badge {{ item.kind }}">{{ "QA sample" if item.kind == "qa_sample" else "Escalation" }}</span></td>
@@ -23,7 +31,8 @@
 {% endfor %}
 </tbody>
 </table>
+</div>
 {% else %}
-<p class="muted">Nothing to review: no escalations or QA samples are waiting.</p>
+<p class="analyst-empty muted">Nothing to review: no escalations or QA samples are waiting.</p>
 {% endif %}
 {% endblock %}

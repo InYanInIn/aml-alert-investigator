@@ -18,5 +18,7 @@ JOIN LATERAL (
 ) i ON true
 LEFT JOIN review.decisions d ON d.investigation_id = i.investigation_id
 LEFT JOIN review.qa_reviews q ON q.investigation_id = i.investigation_id
-WHERE (i.route = 'escalated' AND d.decision_id IS NULL) OR (i.route = 'qa_sample' AND q.qa_review_id IS NULL)
+LEFT JOIN sim.alert_period ap ON ap.alert_id = a.alert_id
+WHERE ((i.route = 'escalated' AND d.decision_id IS NULL) OR (i.route = 'qa_sample' AND q.qa_review_id IS NULL))
+  AND (%(period)s::bigint IS NULL OR ap.period_id = %(period)s)
 ORDER BY i.investigation_id
