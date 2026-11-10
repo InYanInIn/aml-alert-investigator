@@ -1,6 +1,6 @@
 # M10 — Local UI: design
 
-Status: draft · 2026-11-09
+Status: accepted · 2026-11-10
 
 ## Goal
 A local app for Jan to run the simulated bank from M9 in steps and look at it: a World tab to watch clients, payments
@@ -26,10 +26,13 @@ Everything that defines the world is a seed plus settings plus blocks; the tape 
 
 Migration `0007` adds schema `sim` (owner and `aml_app` read, `aml_evaluator` read; not readable by `aml_mcp_reader`):
 - `sim.world (only_row, seed, persona_counts jsonb, thresholds_source, system, created_at)`. One row.
+  The seed and internal world generation identifier are owner-only.
 - `sim.period (period_id, first_day, last_day, system, investigation_cap, cost_usd, investigations, status, started_at,
   finished_at, tape_sha256)`. `status` is `running`, `done` or `failed`.
 - `sim.block (account_id, decided_on, period_id)`: the analyst's blocks, applied from `decided_on + 1`.
 - `sim.alert_period (alert_id, period_id)`: which period produced an alert.
+- `sim.decision`: the automatic decision or reason an alert was not investigated.
+- `sim.account_display`: opening balances and non-sensitive external counterparty kinds for World reads.
 
 A **simulation period** is one click of Simulate: the days it added (1, 7 or 30) and the money it spent. The Analyst
 filter lists periods as "Day 22–28 (1 week, azure_profile)". Periods are consecutive; the 21 history days form period 0,
@@ -43,7 +46,8 @@ needs no database writes and no Azure call; its cost is seconds, not money.
 
 **New world.** The panel lets Jan set the seed and a count per persona (defaults: 200 / 200 / 200 / 150 / 80, plus 20
 launderers by scenario, which are not editable). Starting a new world wipes the `sim.*` and world tables after a confirmation
-that names the days and dollars lost, then generates history.
+that names the days removed and the Azure spend retained, then generates history. The owner-only spend ledger is
+outside the reset and retains known and reserved spend.
 
 **Thresholds.** The calibrated segment thresholds of the M9 development world are copied into `aml_sim_ui` for every world
 (`sim.world.thresholds_source`). When the persona counts differ from the defaults, the World tab shows the banner
@@ -53,13 +57,15 @@ train window and costs a B1 pass.
 ## Long runs
 `POST /api/simulate` validates, creates a `running` period and starts one asyncio task, which advances day by day through
 the M9 `DailyLoop`, split into `replay(days)` and `advance(days)` (`run` becomes `replay(history)` plus `advance(live)`, so
-`aml sim run` produces the same hash). Each day is one transaction: tape rows, alerts, decisions, blocks, spend. The job
+`aml sim run` produces the same hash). Each day is one database transaction for tape rows, alerts, decisions, blocks and
+period progress. The Azure spend ledger commits independently before provider calls. The job
 updates `period.last_day`, `investigations` and `cost_usd` per day; the UI polls `GET /api/jobs/current` every 2 s.
 
 A second request while a job runs gets `409`. A failure (Azure error, process killed) rolls back the open day, sets the
 period to `failed` with the last full day, and leaves the world resumable: the next Simulate starts after that day. On
-startup, a stale `running` period is set to `failed` the same way. Alerts past the cap stay undecided and are marked "not
-investigated" in the Analyst list; the period is shown as truncated, as in M9.
+startup, a stale `running` period is set to `failed` the same way. A billed or uncertain investigation left by an aborted
+day is not sent again automatically. It and alerts past the cap stay undecided and are marked "not investigated" in the
+Analyst list. The period is shown as truncated when alerts were left out.
 
 ## Money
 - **Estimate before running**: expected alerts = 2 per day (the calibration budget) scaled by monitored accounts over 850,
@@ -67,8 +73,10 @@ investigated" in the Analyst list; the period is shown as truncated, as in M9.
   at most 60 investigations". `b4` shows $0.
 - **Cap per run**: `min(60, ceil(1.5 * expected alerts))`, using `MAX_INVESTIGATIONS`. Not user-editable.
 - **Lifetime guard**: `Settings.ui_spend_limit_usd = 39.0`, from about $69 of Azure credit left minus $30 kept for AKS.
-  `sim.period.cost_usd` summed is the spend; a run is refused when spent plus the cap times $0.07 would pass the limit.
-  The header always shows "spent $x of $39". Raising the limit means editing the setting; no UI for it.
+  The durable ledger is the source of spend. The estimate uses $0.07, while every paid call reserves a conservative bound
+  before sending and settles known usage afterward. If no safe bound is available, or it would exceed the remaining
+  budget, the call is refused. Uncertain requests retain their reservation. The header always shows "spent $x of $39".
+  Raising the limit means editing the setting.
 
 ## Label isolation (ADR-0004)
 The agent, the MCP reader, the Analyst pages and all `/api/world/*` endpoints never read `truth.sim_actors`, persona or group.
@@ -82,7 +90,8 @@ separate router that connects as `aml_evaluator`, is mounted only when the app s
 changes. The Analyst tab has no such toggle.
 
 ## JSON API (all under `/api`, read-only except `simulate` and `world`)
-- `GET /world`: `{seed, persona_counts, day, first_live_day, thresholds_banner, spent_usd, limit_usd, periods[]}`.
+- `GET /world`: `{persona_counts, day, first_live_day, thresholds_banner, spent_usd, limit_usd, periods[]}`. The seed
+  is accepted on creation and never returned by the normal API.
 - `GET /world/graph?day=D`: `{clients[{id, name, persona, blocked_from}], accounts[{id, client_id}],
   arcs[{from_client, to_client, count, eur}]}` for the week ending D; counterparties outside the bank are one node per
   kind. Arcs are aggregated server-side, so a month stays under about 3,000.
