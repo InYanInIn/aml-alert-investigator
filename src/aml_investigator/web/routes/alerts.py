@@ -12,7 +12,7 @@ from aml_investigator.web.routes.simulate import simulation_jobs
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
 router = APIRouter()
 write_router = APIRouter()
-retry_router = APIRouter()
+rerun_router = APIRouter()
 
 
 def see_alert(alert_id: int) -> RedirectResponse:
@@ -77,14 +77,14 @@ async def investigate(alert_id: int, service: Service) -> RedirectResponse:
     return see_alert(alert_id)
 
 
-@retry_router.post("/alerts/{alert_id}/retry", status_code=204)
-async def retry_investigation(
+@rerun_router.post("/alerts/{alert_id}/rerun", status_code=204)
+async def rerun_investigation(
     request: Request, alert_id: int, investigation_id: Annotated[int, Body(embed=True, gt=0)]
 ) -> None:
     content_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
     if content_type != "application/json":
-        raise HTTPException(status_code=415, detail="The retry requires a JSON request.")
+        raise HTTPException(status_code=415, detail="The rerun requires a JSON request.")
     try:
-        await simulation_jobs(request).retry_investigation(alert_id, investigation_id)
+        await simulation_jobs(request).rerun_investigation(alert_id, investigation_id)
     except JobConflictError as error:
         raise HTTPException(status_code=409, detail=str(error)) from None

@@ -34,6 +34,7 @@ class AlertPage:
     cited_transactions: list[dict[str, Any]]
     cited_passages: list[dict[str, Any]]
     simulation_status: str | None = None
+    can_rerun: bool = False
 
 
 class ReviewPages:
@@ -84,10 +85,13 @@ class ReviewPages:
             )
             decision = None if investigation is None else investigation.decision
             simulation = await self.repository.simulation_decision(alert_id) if self.ui_mode else None
+            system = simulation["system"] if simulation is not None else None
             simulation_status = None
             if simulation is not None:
                 simulation_status = (
-                    "rule B4, no prepared case" if simulation["recommendation"] is not None else "not investigated"
+                    "rule B4, no prepared case"
+                    if system == "b4" and simulation["recommendation"] is not None
+                    else "not investigated"
                 )
             return AlertPage(
                 alert=overview.alert,
@@ -97,6 +101,7 @@ class ReviewPages:
                 cited_transactions=[] if decision is None else await self.cited_transactions(alert_id, decision),
                 cited_passages=[] if decision is None else await self.cited_passages(decision),
                 simulation_status=simulation_status,
+                can_rerun=investigation is not None and system == "azure_profile",
             )
 
     async def cited_transactions(self, alert_id: int, decision: Decision) -> list[dict[str, Any]]:

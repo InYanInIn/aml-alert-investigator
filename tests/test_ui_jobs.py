@@ -13,7 +13,7 @@ from aml_investigator.core.logging import JsonFormatter
 from aml_investigator.investigation.agent.nodes import NO_DECISION
 from aml_investigator.investigation.models import azure
 from aml_investigator.web.jobs import AlertProgress, JobConflictError, SimulationJobs
-from aml_investigator.web.routes.alerts import retry_router
+from aml_investigator.web.routes.alerts import rerun_router
 from tests.conftest import Database, load_regulations
 from tests.simulation_fixtures import prepare_workspace, settings_for
 from tests.test_azure_model import completion, tool_call_message
@@ -103,8 +103,9 @@ def fake_chat_response(body: dict[str, Any]) -> httpx.Response:
 
 @pytest.mark.anyio
 @pytest.mark.usefixtures("azure_deployments", "azure_auth")
-async def test_retry_charges_new_requests_without_republishing_the_alert(
-    world_db: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("verification_status", ["failed", "passed"])
+async def test_rerun_charges_new_requests_without_republishing_the_alert(
+    world_db: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, verification_status: str
 ) -> None:
     prepare_workspace(tmp_path, "aml_sim_dev")
     monkeypatch.chdir(tmp_path)
@@ -126,6 +127,21 @@ async def test_retry_charges_new_requests_without_republishing_the_alert(
         candidate = rows.fetchone()
         assert candidate is not None
         alert_id, investigation_id = candidate
+        if verification_status == "passed":
+            verified = conn.execute(
+                "INSERT INTO review.investigations "
+                "(alert_id, thread_id, model, prompt_version, recommendation, decision, verification, route, trace) "
+                "SELECT alert_id, thread_id || ':verified', model, prompt_version, recommendation, decision, "
+                "jsonb_build_object('status', 'passed', 'errors', jsonb_build_array()), route, trace "
+                "FROM review.investigations WHERE investigation_id = %s RETURNING investigation_id",
+                (investigation_id,),
+            ).fetchone()
+            assert verified is not None
+            investigation_id = verified[0]
+        original_attempts = conn.execute(
+            "SELECT investigation_id FROM review.investigations WHERE alert_id = %s ORDER BY investigation_id",
+            (alert_id,),
+        ).fetchall()
         original_decisions = conn.execute("SELECT * FROM sim.decision ORDER BY alert_id").fetchall()
         original_blocks = conn.execute("SELECT * FROM sim.block ORDER BY account_id").fetchall()
         original_ordinals = conn.execute(
@@ -135,9 +151,9 @@ async def test_retry_charges_new_requests_without_republishing_the_alert(
 
     app = FastAPI()
     app.state.simulation_jobs = jobs
-    app.include_router(retry_router)
+    app.include_router(rerun_router)
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://testserver") as client:
-        endpoint = f"/alerts/{alert_id}/retry"
+        endpoint = f"/alerts/{alert_id}/rerun"
         body = {"investigation_id": investigation_id}
         assert (await client.post(endpoint, data=body)).status_code == 422
         assert (await client.post(endpoint, json=body)).status_code == 204
@@ -152,8 +168,8 @@ async def test_retry_charges_new_requests_without_republishing_the_alert(
             "SELECT investigation_id FROM review.investigations WHERE alert_id = %s ORDER BY investigation_id",
             (alert_id,),
         ).fetchall()
-        assert len(attempts) == 2
-        assert attempts[0] == (investigation_id,)
+        assert len(attempts) == len(original_attempts) + 1
+        assert attempts[:-1] == original_attempts
         ledger = conn.execute("SELECT * FROM sim.azure_spend ORDER BY account_id, alert_date, ordinal").fetchall()
         assert len(ledger) > len(original_ordinals)
         assert set(original_ordinals) <= set(ledger)

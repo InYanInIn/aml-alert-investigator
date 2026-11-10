@@ -38,7 +38,7 @@ INSERT_BLOCKS = load(__package__, "insert_ui_blocks")
 COUNT_MONITORED = load(__package__, "count_ui_monitored")
 READ_SPEND = load(__package__, "read_azure_spend")
 READ_ATTEMPT = load(__package__, "read_azure_attempt")
-READ_RETRYABLE_ALERT = load(__package__, "read_retryable_alert")
+READ_RERUNNABLE_ALERT = load(__package__, "read_rerunnable_alert")
 
 
 class StoredThresholds(TypedDict):
@@ -167,8 +167,8 @@ class Periods:
         [(ordinal,)] = self.conn.execute(READ_ATTEMPT, (alert.account_id, alert.alert_date)).fetchall()
         return int(ordinal)
 
-    def retryable_alert(self, alert_id: int, investigation_id: int) -> tuple[EvalAlert, int] | None:
-        row = self.conn.execute(READ_RETRYABLE_ALERT, (alert_id, investigation_id)).fetchone()
+    def rerunnable_alert(self, alert_id: int, investigation_id: int) -> tuple[EvalAlert, int] | None:
+        row = self.conn.execute(READ_RERUNNABLE_ALERT, (alert_id, investigation_id)).fetchone()
         if row is None:
             return None
         alert_id, account_id, alert_date, period_id = row

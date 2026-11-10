@@ -69,17 +69,18 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 {% if investigation.verification.status == 'failed' %}
 <h3>No verified report</h3>
 <p class="muted">The alert was escalated for manual review.</p>
-{% if ui_mode %}
-<form id="retry-investigation" action="/alerts/{{ page.alert.alert_id }}/retry" method="post" data-investigation-id="{{ investigation.investigation_id }}">
-<button type="submit">Retry investigation</button>
+{% endif %}
+{% if page.can_rerun %}
+<form id="rerun-investigation" action="/alerts/{{ page.alert.alert_id }}/rerun" method="post" data-investigation-id="{{ investigation.investigation_id }}">
+<button type="submit">Rerun investigation</button>
 <small>Runs Azure again. Uses the current spend limit.</small>
-<p class="retry-status" role="status"></p>
+<p class="rerun-status" role="status"></p>
 </form>
 <script>
 {
-  const form = document.getElementById("retry-investigation");
+  const form = document.getElementById("rerun-investigation");
   const button = form.querySelector("button");
-  const status = form.querySelector(".retry-status");
+  const status = form.querySelector(".rerun-status");
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     button.disabled = true;
@@ -95,15 +96,14 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
         return;
       }
       const result = await response.json();
-      status.textContent = typeof result.detail === "string" ? result.detail : "The investigation could not be retried.";
+      status.textContent = typeof result.detail === "string" ? result.detail : "The investigation could not be rerun.";
     } catch {
-      status.textContent = "The connection was interrupted. Refresh to check whether the retry completed.";
+      status.textContent = "The connection was interrupted. Refresh to check whether the rerun completed.";
     }
     button.disabled = false;
   });
 }
 </script>
-{% endif %}
 {% endif %}
 <dl>
 <dt>Recommendation</dt><dd><span class="badge {{ investigation.recommendation }}">{{ investigation.recommendation }}</span></dd>

@@ -210,13 +210,13 @@ class SimulationJobs:
             raise
         return period.period_id
 
-    async def retry_investigation(self, alert_id: int, investigation_id: int) -> None:
+    async def rerun_investigation(self, alert_id: int, investigation_id: int) -> None:
         with self._locked_connection() as conn:
             periods = Periods(conn)
             world = periods.world()
-            candidate = periods.retryable_alert(alert_id, investigation_id)
+            candidate = periods.rerunnable_alert(alert_id, investigation_id)
             if world is None or candidate is None:
-                raise JobConflictError("Only the latest failed Azure investigation can be retried. Refresh the page.")
+                raise JobConflictError("Only the latest Azure investigation can be rerun. Refresh the page.")
             if periods.spent() + CHAT.bound > self.settings.ui_spend_limit_usd:
                 raise JobConflictError("The Azure spend limit would be exceeded.")
             alert, period_id = candidate
@@ -237,9 +237,9 @@ class SimulationJobs:
             except Exception as error:
                 error_class = error.cause if isinstance(error, ScopedDatabaseError) else type(error).__name__
                 logger.error(
-                    "investigation_retry_failed", extra={"fields": {"alert_id": alert_id, "error_class": error_class}}
+                    "investigation_rerun_failed", extra={"fields": {"alert_id": alert_id, "error_class": error_class}}
                 )
-                raise JobConflictError("The investigation could not be retried.") from None
+                raise JobConflictError("The investigation could not be rerun.") from None
 
     async def _verified_endpoint(self) -> httpx.URL | None:
         if self._profile_model is not None:
