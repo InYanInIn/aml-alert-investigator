@@ -37,7 +37,7 @@ resource "azurerm_kubernetes_cluster" "demo" {
 
   default_node_pool {
     name            = "system"
-    vm_size         = "Standard_B2s"
+    vm_size         = "Standard_B2s_v2"
     node_count      = 1
     os_disk_size_gb = 30
   }
