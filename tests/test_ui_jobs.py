@@ -96,7 +96,7 @@ def fake_embedding_response() -> httpx.Response:
 
 
 def fake_chat_response(body: dict[str, Any]) -> httpx.Response:
-    assert body["max_completion_tokens"] == 8192
+    assert body["max_completion_tokens"] == 32768
     tools = {tool["function"]["name"] for tool in body.get("tools", [])}
     message = tool_call_message(NO_DECISION.model_dump_json()) if "Decision" in tools else {"content": "Done."}
     return httpx.Response(200, json=completion(message))
@@ -265,7 +265,7 @@ async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert
         ).fetchall()
     assert len(rows) == 2
     generation, account, alert_date, kind, reserved, settled = rows[0]
-    assert (kind, reserved, settled) == ("chat", Decimal("0.1012608"), Decimal("0.000015"))
+    assert (kind, reserved, settled) == ("chat", Decimal("0.1602432"), Decimal("0.000015"))
     assert rows[1] == (generation, account, alert_date, "embedding", Decimal("0.00024576"), None)
     assert jobs.spent() == pytest.approx(0.00026076)
 

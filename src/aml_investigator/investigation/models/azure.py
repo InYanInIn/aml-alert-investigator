@@ -13,7 +13,7 @@ API_VERSION = "2025-04-01-preview"
 TOKEN_SCOPE = "https://cognitiveservices.azure.com/.default"  # noqa: S105
 REASONING_EFFORT = "high"
 REQUEST_TIMEOUT_SECONDS = 600
-UI_COMPLETION_LIMIT = 8192
+UI_COMPLETION_LIMIT = 32768
 
 
 class ToolCallingAzureChatOpenAI(AzureChatOpenAI):
