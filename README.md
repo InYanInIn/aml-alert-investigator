@@ -116,7 +116,7 @@ flowchart LR
 flowchart LR
     GH[GitHub Actions] -->|OIDC| ENTRA[Entra ID]
     GH -->|push image| ACR[ACR]
-    subgraph AKS["AKS (one B2s node)"]
+    subgraph AKS["AKS (one B2s_v2 node)"]
         UI["aml ui pod<br/>workload identity"] --> PG[(Postgres StatefulSet)]
     end
     ACR --> UI
@@ -129,7 +129,7 @@ flowchart LR
 - **Separate Terraform roots:** `infra/aks/` reads the Azure OpenAI account as a data source, so `terraform destroy` cannot remove the model.
 - **Port-forward only:** the app has no login, so there is no public endpoint.
 
-Free Trial constraints met: the quota fits one B2s node, and Flexible Server is unavailable in swedencentral and polandcentral, so the cluster runs in swedencentral with Postgres inside it. The cluster is destroyed after the demo. Details: [docs/m11-deploy-design.md](docs/m11-deploy-design.md).
+Free Trial constraints met: B2s nodes were refused in polandcentral and swedencentral and Flexible Server was unavailable in both, so the cluster runs in swedencentral on one B2s_v2 node with Postgres inside it. The cluster is destroyed after the demo. Details: [docs/m11-deploy-design.md](docs/m11-deploy-design.md).
 
 ## 🚀 Run it locally
 
