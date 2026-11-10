@@ -1,6 +1,9 @@
 import json
+import shutil
+import subprocess
 from decimal import Decimal
 from pathlib import Path
+from typing import Literal
 
 import httpx
 import pytest
@@ -22,9 +25,58 @@ def anyio_backend() -> str:
     return "asyncio"
 
 
+@pytest.fixture
+def azure_deployments(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, str | None]]:
+    deployments: list[dict[str, str | None]] = [
+        {
+            "deployment": model,
+            "format": "OpenAI",
+            "model": model,
+            "version": version,
+            "sku": sku,
+            "state": "Succeeded",
+            "spillover": None,
+        }
+        for model, version, sku in (
+            ("gpt-5-mini", "2025-08-07", "GlobalStandard"),
+            ("text-embedding-3-small", "1", "DataZoneStandard"),
+        )
+    ]
+
+    def run(arguments: list[str], **options: object) -> subprocess.CompletedProcess[str]:
+        assert arguments[0] == "/test/az"
+        assert arguments[1:3] == ["cognitiveservices", "account"]
+        assert "rg-aml-investigator" in arguments
+        assert "aml-investigator-openai" in arguments
+        assert options["stderr"] == subprocess.DEVNULL
+        assert options["timeout"] == 10
+        if arguments[3] == "show":
+            payload: object = {
+                "name": "aml-investigator-openai",
+                "kind": "OpenAI",
+                "endpoint": f"{ENDPOINT}/",
+                "subdomain": "aml-investigator-01234567",
+                "state": "Succeeded",
+            }
+        else:
+            assert arguments[3:5] == ["deployment", "list"]
+            payload = deployments
+        return subprocess.CompletedProcess(arguments, 0, json.dumps(payload))
+
+    monkeypatch.setattr(shutil, "which", lambda _: "/test/az")
+    monkeypatch.setattr(subprocess, "run", run)
+    return deployments
+
+
 @pytest.mark.anyio
+@pytest.mark.usefixtures("azure_deployments")
+@pytest.mark.parametrize("resume_system", ["azure_profile", "b4"])
 async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert_after_restart(
-    world_db: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    world_db: Database,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    resume_system: Literal["azure_profile", "b4"],
 ) -> None:
     prepare_workspace(tmp_path, "aml_sim_dev")
     monkeypatch.chdir(tmp_path)
@@ -71,11 +123,11 @@ async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert
     assert not estimate.within_limit
     assert rejected.estimate(7, "b4").within_limit
     with pytest.raises(JobConflictError, match="spend limit"):
-        rejected.start(7, "azure_profile")
+        await rejected.start(7, "azure_profile")
     assert requested == []
 
     jobs = SimulationJobs(settings, azure_transport=httpx.MockTransport(handler))
-    failed = await finished(jobs, jobs.start(7, "azure_profile"))
+    failed = await finished(jobs, await jobs.start(7, "azure_profile"))
     assert failed.status == "failed"
     assert failed.error == "The Azure request failed."
     assert failed.investigations == 0
@@ -94,7 +146,8 @@ async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert
 
     restarted = SimulationJobs(settings, azure_transport=httpx.MockTransport(handler))
     restarted.recover()
-    resumed = await finished(restarted, restarted.start(7, "azure_profile"))
+    sent_before_resume = len(requested)
+    resumed = await finished(restarted, await restarted.start(7, resume_system))
     assert resumed.status == "done"
     with world_db.owner() as conn:
         assert conn.execute(
@@ -106,12 +159,42 @@ async def test_azure_budget_accounts_for_both_kinds_and_skips_an_uncertain_alert
             "SELECT count(*) FROM sim.azure_spend WHERE generation = %s AND account_id = %s AND alert_date = %s",
             (generation, account, alert_date),
         ).fetchone() == (2,)
-        assert conn.execute(
-            "SELECT EXISTS (SELECT 1 FROM sim.azure_spend WHERE kind = 'embedding' AND settled_usd = 0.00000009)"
-        ).fetchone() == (True,)
+        if resume_system == "azure_profile":
+            assert conn.execute(
+                "SELECT EXISTS (SELECT 1 FROM sim.azure_spend WHERE kind = 'embedding' AND settled_usd = 0.00000009)"
+            ).fetchone() == (True,)
+    if resume_system == "b4":
+        assert len(requested) == sent_before_resume
 
     spent = restarted.spent()
     await restarted.create(51, {})
     assert restarted.spent() == spent
     with world_db.owner() as conn:
         assert conn.execute("SELECT generation FROM sim.world").fetchone() != (generation,)
+
+
+@pytest.mark.anyio
+async def test_unverified_deployment_rejects_the_paid_job_before_any_send(
+    world_db: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, azure_deployments: list[dict[str, str | None]]
+) -> None:
+    prepare_workspace(tmp_path, "aml_sim_dev")
+    monkeypatch.chdir(tmp_path)
+    azure_deployments[1]["version"] = "unexpected-version"
+    requested: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requested.append(request)
+        return httpx.Response(500)
+
+    settings = settings_for(world_db).model_copy(update={"azure_openai_endpoint": ENDPOINT})
+    jobs = SimulationJobs(settings, azure_transport=httpx.MockTransport(handler))
+    await jobs.create(51, {})
+    try:
+        with pytest.raises(JobConflictError, match="deployment metadata"):
+            await jobs.start(7, "azure_profile")
+    finally:
+        await jobs.close()
+    assert requested == []
+    status = jobs.current()
+    assert status is not None
+    assert status.period_id == 0

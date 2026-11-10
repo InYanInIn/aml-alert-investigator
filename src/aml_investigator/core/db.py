@@ -4,12 +4,13 @@ from contextlib import AbstractAsyncContextManager, ExitStack, asynccontextmanag
 from types import TracebackType
 from typing import Literal, Self
 
-from psycopg import AsyncConnection, Connection, Cursor
+from psycopg import AsyncConnection, Connection, Cursor, Error
 from psycopg.abc import Params, QueryNoTemplate
 from psycopg.pq import TransactionStatus
 from psycopg.rows import DictRow, RowFactory, TupleRow, dict_row
 from psycopg_pool import AsyncConnectionPool
 
+from aml_investigator.core.errors import DomainError
 from aml_investigator.core.sql import load
 
 MIN_CONNECTIONS = 1
@@ -56,22 +57,38 @@ class RoleConnection:
         return cursor
 
 
+class ScopedDatabaseError(DomainError):
+    def __init__(self, cause: str) -> None:
+        super().__init__("A simulation database query failed.")
+        self.cause = cause
+
+
 class FixedRole:
     def __init__(self, conn: Connection[TupleRow], lock: asyncio.Lock, role: Literal["app", "mcp"]) -> None:
         self._conn = conn
         self._lock = lock
         self._role = role
+        self._failure_class: str | None = None
+
+    def raise_if_failed(self) -> None:
+        if self._failure_class is not None:
+            raise ScopedDatabaseError(self._failure_class)
 
     @asynccontextmanager
     async def connection(self) -> AsyncIterator[RoleConnection]:
         async with self._lock:
+            self.raise_if_failed()
             if self._conn.info.transaction_status != TransactionStatus.INTRANS:
                 raise RuntimeError("Role queries require an active owner transaction.")
-            with self._conn.transaction():
-                with self._conn.execute(SET_ROLE[self._role]), ExitStack() as cursors:
-                    yield RoleConnection(self._conn, cursors)
-                with self._conn.execute(RESET_ROLE):
-                    pass
+            try:
+                with self._conn.transaction():
+                    with self._conn.execute(SET_ROLE[self._role]), ExitStack() as cursors:
+                        yield RoleConnection(self._conn, cursors)
+                    with self._conn.execute(RESET_ROLE):
+                        pass
+            except Error as error:
+                self._failure_class = type(error).__name__
+                raise ScopedDatabaseError(self._failure_class) from None
 
 
 type QuerySource = Pool | FixedRole

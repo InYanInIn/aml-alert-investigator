@@ -3,6 +3,7 @@ from contextlib import nullcontext
 from dataclasses import replace
 from datetime import date, timedelta
 
+from aml_investigator.core.db import FixedRole
 from aml_investigator.core.errors import DomainError
 from aml_investigator.data.splits import DayRange
 from aml_investigator.evaluation.runner import final_recommendation
@@ -59,6 +60,7 @@ async def advance_day(
     system: System,
     remaining: int,
     spend: AzureSpendTransport | None,
+    mcp: FixedRole,
 ) -> int:
     with periods.conn.transaction():
         loop.days.generate(day)
@@ -68,7 +70,7 @@ async def advance_day(
         investigated = 0
         truncated = False
         for alert in alerts:
-            if spend is not None and spend.attempted(alert):
+            if periods.was_paid_attempted(alert):
                 periods.decision(alert.alert_id, None, "prior_paid_attempt")
                 truncated = True
                 continue
@@ -76,8 +78,11 @@ async def advance_day(
                 periods.decision(alert.alert_id, None, "investigation_cap")
                 truncated = True
                 continue
-            with spend.alert(alert) if spend is not None else nullcontext():
-                recommendation = final_recommendation(await system.decide(alert), None)
+            try:
+                with spend.alert(alert) if spend is not None else nullcontext():
+                    recommendation = final_recommendation(await system.decide(alert), None)
+            finally:
+                mcp.raise_if_failed()
             periods.decision(alert.alert_id, recommendation)
             loop.apply_recommendation(alert, recommendation, day)
             investigated += int(period.system == "azure_profile")

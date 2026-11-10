@@ -12,7 +12,7 @@ import psycopg
 from langchain_core.language_models import BaseChatModel
 from psycopg.rows import TupleRow
 
-from aml_investigator.core.db import FixedRole
+from aml_investigator.core.db import FixedRole, ScopedDatabaseError
 from aml_investigator.core.errors import DomainError
 from aml_investigator.core.settings import Settings
 from aml_investigator.corpus.embeddings import azure_embeddings
@@ -28,6 +28,7 @@ from aml_investigator.simulation.azure_spend import (
     AzureSpendTransport,
     DisabledSyncTransport,
     azure_origin,
+    verify_azure_deployments,
 )
 from aml_investigator.simulation.loop import WorldDays
 from aml_investigator.simulation.periods import (
@@ -168,7 +169,7 @@ class SimulationJobs:
         with conn:
             Periods(conn).finish(INTERRUPTED)
 
-    def start(self, days: int, system: UiSystem) -> int:
+    async def start(self, days: int, system: UiSystem) -> int:
         conn = self._locked_connection()
         try:
             periods = Periods(conn)
@@ -183,6 +184,7 @@ class SimulationJobs:
             if system == "azure_profile" and self._profile_model is None:
                 try:
                     endpoint = azure_origin(self.settings.azure_openai_endpoint)
+                    await asyncio.to_thread(verify_azure_deployments, endpoint)
                 except AzureGuardError as error:
                     raise JobConflictError(str(error)) from None
             period = periods.start(previous, days, system, estimate.cap)
@@ -204,16 +206,20 @@ class SimulationJobs:
         try:
             loop = restore_loop(periods, world, period)
             remaining = period.investigation_cap
-            async with self._system(periods, world, period, endpoint) as (system, spend):
+            lock = asyncio.Lock()
+            app, mcp = FixedRole(periods.conn, lock, "app"), FixedRole(periods.conn, lock, "mcp")
+            async with self._system(world, period, endpoint, (app, mcp)) as (system, spend):
                 for day in days_between(period.first_day, period.target_day):
-                    remaining -= await advance_day(periods, period, loop, day, system, remaining, spend)
+                    remaining -= await advance_day(periods, period, loop, day, system, remaining, spend, mcp)
                     await asyncio.sleep(0)
             periods.finish()
         except asyncio.CancelledError:
             periods.finish(INTERRUPTED)
             raise
         except Exception as error:
-            error_class = error.cause if isinstance(error, AzureGuardError) else type(error).__name__
+            error_class = (
+                error.cause if isinstance(error, (AzureGuardError, ScopedDatabaseError)) else type(error).__name__
+            )
             logger.error(
                 "simulation_period_failed",
                 extra={"fields": {"period_id": period.period_id, "day": day, "error_class": error_class}},
@@ -224,17 +230,18 @@ class SimulationJobs:
 
     @asynccontextmanager
     async def _system(
-        self, periods: Periods, world: StoredWorld, period: Period, endpoint: httpx.URL | None
+        self,
+        world: StoredWorld,
+        period: Period,
+        endpoint: httpx.URL | None,
+        roles: tuple[FixedRole, FixedRole],
     ) -> AsyncIterator[tuple[System, AzureSpendTransport | None]]:
-        lock = asyncio.Lock()
-        mcp = FixedRole(periods.conn, lock, "mcp")
         if period.system == "b4":
-            yield OwnMoneyRule(mcp), None
+            yield OwnMoneyRule(roles[1]), None
             return
-        app = FixedRole(periods.conn, lock, "app")
         runtime = replace(RuntimeSettings.of(self.settings), customer_profile=True, azure_endpoint=None)
         if self._profile_model is not None:
-            async with open_agent(runtime, self._profile_model, period.system, transaction_roles=(app, mcp)) as agent:
+            async with open_agent(runtime, self._profile_model, period.system, transaction_roles=roles) as agent:
                 yield agent, None
             return
         if endpoint is None:
@@ -255,7 +262,7 @@ class SimulationJobs:
                     runtime,
                     model,
                     period.system,
-                    transaction_roles=(app, mcp),
+                    transaction_roles=roles,
                     embed_query=spend.embedder(embeddings.aembed_query),
                 ) as agent:
                     yield agent, spend

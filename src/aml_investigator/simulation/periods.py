@@ -37,6 +37,7 @@ INSERT_DECISION = load(__package__, "insert_ui_decision")
 INSERT_BLOCKS = load(__package__, "insert_ui_blocks")
 COUNT_MONITORED = load(__package__, "count_ui_monitored")
 READ_SPEND = load(__package__, "read_azure_spend")
+READ_ATTEMPT = load(__package__, "read_azure_attempt")
 
 
 class StoredThresholds(TypedDict):
@@ -160,3 +161,7 @@ class Periods:
     def spent(self) -> Decimal:
         [(spent,)] = self.conn.execute(READ_SPEND).fetchall()
         return Decimal(spent)
+
+    def was_paid_attempted(self, alert: EvalAlert) -> bool:
+        [(attempted,)] = self.conn.execute(READ_ATTEMPT, (alert.account_id, alert.alert_date)).fetchall()
+        return bool(attempted)

@@ -1,5 +1,7 @@
 import json
 import re
+import shutil
+import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -23,10 +25,21 @@ from aml_investigator.investigation.models.azure import API_VERSION, AZURE_MODEL
 from aml_investigator.simulation.periods import Periods
 
 LOCK_SPEND = load(__package__, "lock_azure_spend")
-READ_ATTEMPT = load(__package__, "read_azure_attempt")
 RESERVE = load(__package__, "reserve_azure_spend")
 SETTLE = load(__package__, "settle_azure_spend")
 AZURE_HOST = re.compile(r"aml-investigator-[a-f0-9]{8}\.openai\.azure\.com")
+AZURE_ACCOUNT = "aml-investigator-openai"
+AZURE_RESOURCE_GROUP = "rg-aml-investigator"
+ACCOUNT_FIELDS = (
+    "{name:name,kind:kind,endpoint:properties.endpoint,"
+    "subdomain:properties.customSubDomainName,state:properties.provisioningState}"
+)
+DEPLOYMENT_FIELDS = (
+    "[].{deployment:name,format:properties.model.format,model:properties.model.name,version:properties.model.version,"
+    "sku:sku.name,state:properties.provisioningState,spillover:properties.spilloverDeploymentName}"
+)
+METADATA_REFUSED = "Azure deployment metadata does not match the supported AML deployments."
+METADATA_UNAVAILABLE = "Azure deployment metadata could not be verified."
 
 type RequestKind = Literal["chat", "embedding"]
 
@@ -35,6 +48,7 @@ type RequestKind = Literal["chat", "embedding"]
 class Tariff:
     model: str
     version: str
+    sku: str
     input_limit: int
     output_limit: int
     input_price: Decimal
@@ -50,11 +64,19 @@ class Tariff:
 
 
 CHAT = Tariff(
-    AZURE_MODEL, "2025-08-07", 272_000, UI_COMPLETION_LIMIT, Decimal("0.30"), Decimal("2.40"), MAX_TOOL_CALLS + 3
+    AZURE_MODEL,
+    "2025-08-07",
+    "GlobalStandard",
+    272_000,
+    UI_COMPLETION_LIMIT,
+    Decimal("0.30"),
+    Decimal("2.40"),
+    MAX_TOOL_CALLS + 3,
 )
 EMBEDDING = Tariff(
     EMBEDDING_MODEL,
     "1",
+    "DataZoneStandard",
     8_192,
     0,
     Decimal("0.030"),
@@ -89,6 +111,76 @@ def azure_origin(endpoint: str | None) -> httpx.URL:
     ):
         raise AzureGuardError("The Azure endpoint does not identify the supported AML deployments.")
     return url
+
+
+def verify_azure_deployments(endpoint: httpx.URL) -> None:
+    executable = shutil.which("az")
+    if executable is None:
+        raise AzureGuardError(METADATA_UNAVAILABLE)
+    account = _azure_metadata(executable, ("show",), ACCOUNT_FIELDS)
+    if not isinstance(account, dict):
+        raise AzureGuardError(METADATA_REFUSED)
+    reported = account.get("endpoint")
+    if (
+        account.get("name") != AZURE_ACCOUNT
+        or account.get("kind") != "OpenAI"
+        or account.get("state") != "Succeeded"
+        or account.get("subdomain") != endpoint.host.split(".", 1)[0]
+        or not isinstance(reported, str)
+        or reported.removesuffix("/") != str(endpoint).removesuffix("/")
+    ):
+        raise AzureGuardError(METADATA_REFUSED)
+    deployments = _azure_metadata(executable, ("deployment", "list"), DEPLOYMENT_FIELDS)
+    if not isinstance(deployments, list):
+        raise AzureGuardError(METADATA_REFUSED)
+    for tariff in TARIFFS.values():
+        matches = [item for item in deployments if isinstance(item, dict) and item.get("deployment") == tariff.model]
+        if matches != [
+            {
+                "deployment": tariff.model,
+                "format": "OpenAI",
+                "model": tariff.model,
+                "version": tariff.version,
+                "sku": tariff.sku,
+                "state": "Succeeded",
+                "spillover": None,
+            }
+        ]:
+            raise AzureGuardError(METADATA_REFUSED)
+
+
+def _azure_metadata(executable: str, command: tuple[str, ...], fields: str) -> object:
+    arguments = [
+        executable,
+        "cognitiveservices",
+        "account",
+        *command,
+        "--resource-group",
+        AZURE_RESOURCE_GROUP,
+        "--name",
+        AZURE_ACCOUNT,
+        "--only-show-errors",
+        "--output",
+        "json",
+        "--query",
+        fields,
+    ]
+    try:
+        result = subprocess.run(  # noqa: S603
+            arguments,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=True,
+            timeout=10,
+            text=True,
+        )
+        if len(result.stdout) > 65_536:
+            raise AzureGuardError(METADATA_UNAVAILABLE)
+        payload: object = json.loads(result.stdout)
+        return payload
+    except (OSError, subprocess.SubprocessError, ValueError) as error:
+        raise AzureGuardError(METADATA_UNAVAILABLE, cause=type(error).__name__) from None
 
 
 @dataclass
@@ -132,10 +224,6 @@ class AzureSpendTransport(httpx.AsyncBaseTransport):
         self._period_id = period_id
         self._transport = transport if transport is not None else httpx.AsyncHTTPTransport(retries=0, trust_env=False)
         self._active: AlertSpend | None = None
-
-    def attempted(self, alert: EvalAlert) -> bool:
-        [(attempted,)] = self._conn.execute(READ_ATTEMPT, self._identity(alert)).fetchall()
-        return bool(attempted)
 
     def embedder(self, embed: QueryEmbedder) -> QueryEmbedder:
         async def query(text: str) -> list[float]:

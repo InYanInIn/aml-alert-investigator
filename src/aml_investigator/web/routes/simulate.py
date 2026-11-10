@@ -31,7 +31,7 @@ def estimate(request: Request, days: int, system: UiSystem = "azure_profile") ->
 @router.post("/simulate", status_code=202)
 async def simulate(request: Request, run: SimulationRequest) -> dict[str, int]:
     try:
-        period_id = simulation_jobs(request).start(run.days, run.system)
+        period_id = await simulation_jobs(request).start(run.days, run.system)
     except JobConflictError as error:
         raise HTTPException(status_code=409, detail=str(error)) from None
     return {"period_id": period_id}

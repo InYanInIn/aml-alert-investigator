@@ -7,7 +7,8 @@ from typing import Any, Literal
 import psycopg
 import pytest
 
-from aml_investigator.core.db import FixedRole
+from aml_investigator.core.db import FixedRole, ScopedDatabaseError
+from aml_investigator.core.logging import JsonFormatter
 from aml_investigator.core.settings import Settings
 from aml_investigator.evaluation.baselines.agent import open_agent
 from aml_investigator.evaluation.baselines.runtime import RuntimeSettings
@@ -51,9 +52,9 @@ async def test_b4_jobs_publish_history_and_resume_without_duplicate_days(
     history = await finished(jobs, 0)
     assert (history.day, history.days_total, history.investigations) == (history_days()[-1], 21, 0)
 
-    first = jobs.start(7, "b4")
+    first = await jobs.start(7, "b4")
     with pytest.raises(JobConflictError, match="already running"):
-        jobs.start(1, "b4")
+        await jobs.start(1, "b4")
     completed = await finished(jobs, first)
     assert (completed.status, completed.day, completed.days_total, completed.cost_usd) == (
         "done",
@@ -69,7 +70,7 @@ async def test_b4_jobs_publish_history_and_resume_without_duplicate_days(
 
     restarted = SimulationJobs(ui_settings)
     restarted.recover()
-    second = await finished(restarted, restarted.start(1, "b4"))
+    second = await finished(restarted, await restarted.start(1, "b4"))
     assert second.status == "done"
     assert second.day == completed.day + timedelta(days=1)
     with world_db.owner() as conn:
@@ -96,7 +97,7 @@ async def test_prepared_day_rolls_back_before_restart(
             "EXECUTE FUNCTION sim.fail_publish()"
         )
     try:
-        period = jobs.start(1, "b4")
+        period = await jobs.start(1, "b4")
         failed = await finished(jobs, period)
         assert failed.status == "failed"
         assert failed.day == history_days()[-1]
@@ -118,7 +119,7 @@ async def test_prepared_day_rolls_back_before_restart(
 
     restart = SimulationJobs(ui_settings)
     restart.recover()
-    resumed = await finished(restart, restart.start(1, "b4"))
+    resumed = await finished(restart, await restart.start(1, "b4"))
     assert (resumed.status, resumed.day) == ("done", live_days()[0])
 
 
@@ -139,7 +140,7 @@ async def test_restart_marks_stale_period_failed_and_refuses_a_changed_hash(
     stale = jobs.current()
     assert stale is not None
     assert (stale.status, stale.day) == ("failed", history_days()[-1])
-    failed = await finished(jobs, jobs.start(1, "b4"))
+    failed = await finished(jobs, await jobs.start(1, "b4"))
     assert (failed.status, failed.day, failed.error) == ("failed", history_days()[-1], "World no longer reproducible.")
     with world_db.owner() as conn:
         assert conn.execute("SELECT count(*) FROM core.transactions WHERE ts >= %s", (live_days()[0],)).fetchone() == (
@@ -172,7 +173,7 @@ async def test_profile_case_rolls_back_and_matches_m9_after_resume(
             "CREATE TRIGGER fail_case BEFORE INSERT ON sim.decision FOR EACH ROW EXECUTE FUNCTION sim.fail_case()"
         )
     try:
-        failed = await finished(jobs, jobs.start(7, "azure_profile"))
+        failed = await finished(jobs, await jobs.start(7, "azure_profile"))
         assert failed.status == "failed"
         assert failed.investigations == 0
         [record] = [record for record in caplog.records if record.message == "simulation_period_failed"]
@@ -188,7 +189,7 @@ async def test_profile_case_rolls_back_and_matches_m9_after_resume(
             conn.execute("DROP FUNCTION sim.fail_case()")
 
     restarted = SimulationJobs(ui_settings, profile_model=model)
-    resumed = await finished(restarted, restarted.start(7, "azure_profile"))
+    resumed = await finished(restarted, await restarted.start(7, "azure_profile"))
     assert resumed.status == "done"
     assert resumed.investigations > 0
     with world_db.owner() as conn:
@@ -207,6 +208,42 @@ async def test_profile_case_rolls_back_and_matches_m9_after_resume(
             (alert_id,),
         ).fetchone()
     assert actual == (prompt, decision, verification)
+
+
+@pytest.mark.anyio
+async def test_mcp_database_error_rolls_back_even_when_the_tool_error_is_recoverable(
+    ui_settings: Settings, world_db: Database, caplog: pytest.LogCaptureFixture
+) -> None:
+    jobs = SimulationJobs(ui_settings, profile_model=RuleScoreChatModel(thresholds=THRESHOLDS, close_below=1.5))
+    await jobs.create(51, {})
+    with world_db.owner() as conn:
+        conn.execute(
+            "CREATE FUNCTION core.reject_profile_read() RETURNS boolean LANGUAGE plpgsql AS "
+            "$$ BEGIN RAISE EXCEPTION 'private profile database detail'; END $$"
+        )
+        conn.execute("ALTER TABLE core.customer_profiles ENABLE ROW LEVEL SECURITY")
+        conn.execute(
+            "CREATE POLICY reject_profile_read ON core.customer_profiles FOR SELECT TO aml_mcp_reader "
+            "USING (core.reject_profile_read())"
+        )
+    try:
+        result = await finished(jobs, await jobs.start(7, "azure_profile"))
+        assert result.status == "failed"
+        assert result.investigations == 0
+        assert result.error == "Simulation failed. The last completed day is available."
+        [record] = [record for record in caplog.records if record.message == "simulation_period_failed"]
+        assert vars(record)["fields"]["error_class"] == "RaiseException"
+        assert all("private profile database detail" not in JsonFormatter().format(item) for item in caplog.records)
+        with world_db.owner() as conn:
+            assert conn.execute("SELECT count(*) FROM review.investigations").fetchone() == (0,)
+            assert conn.execute(
+                "SELECT count(*) FROM core.transactions WHERE ts >= %s", (result.day + timedelta(days=1),)
+            ).fetchone() == (0,)
+    finally:
+        with world_db.owner() as conn:
+            conn.execute("DROP POLICY reject_profile_read ON core.customer_profiles")
+            conn.execute("ALTER TABLE core.customer_profiles DISABLE ROW LEVEL SECURITY")
+            conn.execute("DROP FUNCTION core.reject_profile_read()")
 
 
 @pytest.mark.parametrize(
@@ -240,6 +277,7 @@ async def test_day_role_restores_the_owner_after_a_forbidden_query(
 
         async with fixed.connection() as conn:
             assert await (await conn.execute("SELECT current_user AS username")).fetchone() == {"username": expected}
-        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+        with pytest.raises(ScopedDatabaseError) as failure:
             await forbidden()
+        assert failure.value.cause == "InsufficientPrivilege"
         assert owner.execute("SELECT count(*) FROM truth.sim_actors").fetchone() == (0,)
