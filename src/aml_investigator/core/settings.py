@@ -1,5 +1,7 @@
+from decimal import Decimal
+
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from aml_investigator.core.errors import DomainError
@@ -27,6 +29,7 @@ class Settings(BaseSettings):
     langfuse_secret_key: SecretStr | None = None
     langfuse_host: str | None = None
     azure_openai_endpoint: str | None = None
+    ui_spend_limit_usd: Decimal = Field(default=Decimal("39.00"), ge=0, allow_inf_nan=False)
 
     @property
     def owner_conninfo(self) -> str:

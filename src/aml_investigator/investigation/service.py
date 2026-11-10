@@ -1,7 +1,7 @@
 import logging
 import uuid
 from collections.abc import AsyncIterator, Sequence
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import date
 from typing import Literal
@@ -10,14 +10,17 @@ from langchain.mcp import MCPAdapter
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableConfig
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from langgraph.types import Command
 
-from aml_investigator.core.db import open_app_pool
+from aml_investigator.core.db import FixedRole, open_app_pool
 from aml_investigator.core.errors import NotFoundError
 from aml_investigator.core.logging import log_context, timed_event
 from aml_investigator.investigation.agent.conversation import STANDARD_PROMPT, AgentPrompt
 from aml_investigator.investigation.agent.graph import InvestigationGraph, build_graph, postgres_checkpointer
 from aml_investigator.investigation.agent.loop import MAX_TOOL_CALLS
+from aml_investigator.investigation.agent.state import CHECKPOINTED_TYPES
 from aml_investigator.investigation.decision import AnalystReview, QaReview
 from aml_investigator.investigation.routing import Route
 from aml_investigator.mcp_server.schemas import ReferenceVariant
@@ -53,7 +56,11 @@ class InvestigationService:
 
     async def investigate(self, alert_id: int) -> InvestigationOutcome:
         thread_id = f"{alert_id}:{uuid.uuid4().hex}"
-        with log_context(alert_id=alert_id, thread_id=thread_id), timed_event(logger, "investigate") as event:
+        include_error_detail = not isinstance(self.repository.pool, FixedRole)
+        with (
+            log_context(alert_id=alert_id, thread_id=thread_id),
+            timed_event(logger, "investigate", include_error_detail) as event,
+        ):
             await self.repository.alert_overview(alert_id)
             state = await self.graph.ainvoke({"alert_id": alert_id}, self.run_config(thread_id))
             outcome = InvestigationOutcome(
@@ -101,14 +108,20 @@ async def open_investigation_service(
     reference_variant: ReferenceVariant = "clean",
     max_tool_calls: int = MAX_TOOL_CALLS,
     prompt: AgentPrompt = STANDARD_PROMPT,
+    transaction_role: FixedRole | None = None,
 ) -> AsyncIterator[InvestigationService]:
-    async with open_app_pool(app_conninfo) as pool:
+    async with open_app_pool(app_conninfo) if transaction_role is None else nullcontext(transaction_role) as pool:
         repository = ReviewRepository(pool)
+        checkpointer = (
+            InMemorySaver(serde=JsonPlusSerializer(allowed_msgpack_modules=CHECKPOINTED_TYPES))
+            if isinstance(pool, FixedRole)
+            else await postgres_checkpointer(pool)
+        )
         graph = build_graph(
             mcp=mcp,
             model=model,
             repository=repository,
-            checkpointer=await postgres_checkpointer(pool),
+            checkpointer=checkpointer,
             reference_variant=reference_variant,
             max_tool_calls=max_tool_calls,
             prompt=prompt,

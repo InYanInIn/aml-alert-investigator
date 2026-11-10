@@ -4,7 +4,7 @@ from typing import Any, Literal
 from psycopg.rows import class_row
 from psycopg.types.json import Jsonb
 
-from aml_investigator.core.db import Pool
+from aml_investigator.core.db import QuerySource
 from aml_investigator.core.errors import NotFoundError
 from aml_investigator.core.sql import load
 from aml_investigator.investigation.decision import AnalystReview, Decision, QaReview
@@ -48,7 +48,7 @@ class InvestigationNotFoundError(NotFoundError):
 
 
 class ReviewRepository:
-    def __init__(self, pool: Pool) -> None:
+    def __init__(self, pool: QuerySource) -> None:
         self.pool = pool
 
     async def alerts(self) -> list[AlertSummary]:

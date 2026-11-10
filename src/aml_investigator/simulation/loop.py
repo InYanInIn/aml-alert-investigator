@@ -113,7 +113,12 @@ def monitoring_day(index: int, cadence: int) -> bool:
 
 
 def read_actors(conninfo: str) -> dict[str, Actor]:
-    with psycopg.connect(conninfo) as conn, conn.cursor(row_factory=class_row(Actor)) as cursor:
+    with psycopg.connect(conninfo) as conn:
+        return actors_on_connection(conn)
+
+
+def actors_on_connection(conn: psycopg.Connection[Any]) -> dict[str, Actor]:
+    with conn.cursor(row_factory=class_row(Actor)) as cursor:
         cursor.execute(ACTORS_SQL)
         return {actor.account_id: actor for actor in cursor.fetchall()}
 
@@ -122,6 +127,13 @@ def alerts_by_id(conn: psycopg.Connection[Any], alert_ids: Sequence[int]) -> lis
     with conn.cursor(row_factory=class_row(EvalAlert)) as cursor:
         cursor.execute(ALERTS_BY_ID_SQL, {"alert_ids": list(alert_ids)})
         return cursor.fetchall()
+
+
+def prepare_alerts(conn: psycopg.Connection[Any], days: DayRange, segments: SegmentThresholds) -> list[EvalAlert]:
+    regenerate_candidates(conn)
+    apply_segment_thresholds(conn, segments.thresholds)
+    ids = build_alerts_for_days(conn, ZERO_THRESHOLDS, days, suppression_days=segments.suppression_days)
+    return alerts_by_id(conn, ids)
 
 
 class WorldDays:
@@ -204,11 +216,7 @@ class DailyLoop:
                 return
 
     async def monitor(self, days: DayRange, system: System, shadow: System, point: OperatingPoint | None) -> None:
-        conn = self.days.conn
-        regenerate_candidates(conn)
-        apply_segment_thresholds(conn, self.segments.thresholds)
-        ids = build_alerts_for_days(conn, ZERO_THRESHOLDS, days, suppression_days=self.segments.suppression_days)
-        alerts = alerts_by_id(conn, ids)
+        alerts = prepare_alerts(self.days.conn, days, self.segments)
         is_agent = system.name in AGENT_SYSTEMS
         chosen = alerts[: self.limit - len(self.decided)] if is_agent else alerts
         self.undecided_alerts = len(alerts) - len(chosen)
@@ -242,8 +250,11 @@ class DailyLoop:
 
     def apply_analyst(self, today: Sequence[Decided]) -> None:
         for item in today:
-            if item.recommendation == "escalate":
-                self.days.block(self.actors[item.alert.account_id], item.decided_on)
+            self.apply_recommendation(item.alert, item.recommendation, item.decided_on)
+
+    def apply_recommendation(self, alert: EvalAlert, recommendation: Recommendation, day: date) -> None:
+        if recommendation == "escalate":
+            self.days.block(self.actors[alert.account_id], day)
 
 
 async def simulate(

@@ -25,6 +25,7 @@ dependencies = [
     { name = "azure-identity" },
     { name = "fastapi" },
     { name = "fastmcp" },
+    { name = "httpx" },
     { name = "jinja2" },
     { name = "langchain", extra = ["mcp"] },
     { name = "langchain-ollama" },
@@ -47,7 +48,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "httpx" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
@@ -59,6 +59,7 @@ requires-dist = [
     { name = "azure-identity", specifier = ">=1.19,<2" },
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "fastmcp", specifier = ">=4.0,<5" },
+    { name = "httpx", specifier = ">=0.27,<1" },
     { name = "jinja2", specifier = ">=3.1,<4" },
     { name = "langchain", extras = ["mcp"], specifier = ">=1.4,<2" },
     { name = "langchain-ollama", specifier = ">=1.1,<2" },
@@ -81,7 +82,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "httpx", specifier = ">=0.27,<1" },
     { name = "mypy", specifier = ">=2,<3" },
     { name = "pytest", specifier = ">=9,<10" },
     { name = "ruff", specifier = ">=0.17,<0.18" },

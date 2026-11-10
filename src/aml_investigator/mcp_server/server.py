@@ -1,12 +1,12 @@
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, nullcontext
 from typing import Any
 
 from fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from aml_investigator.core.db import open_read_only_pool
+from aml_investigator.core.db import FixedRole, open_read_only_pool
 from aml_investigator.core.health import liveness, readiness
 from aml_investigator.corpus.embeddings import QueryEmbedder
 from aml_investigator.mcp_server.schemas import ReferenceVariant
@@ -20,12 +20,13 @@ def build_server(
     reference_variant: ReferenceVariant = "clean",
     embed_query: QueryEmbedder | None = None,
     customer_profile: bool = False,
+    transaction_role: FixedRole | None = None,
 ) -> FastMCP[Any]:
     resources: dict[str, CaseStore] = {}
 
     @asynccontextmanager
     async def lifespan(_: FastMCP[Any]) -> AsyncIterator[dict[str, CaseStore]]:
-        async with open_read_only_pool(dsn) as pool:
+        async with open_read_only_pool(dsn) if transaction_role is None else nullcontext(transaction_role) as pool:
             resources["store"] = CaseStore(pool, reference_variant, embed_query)
             yield resources
 
