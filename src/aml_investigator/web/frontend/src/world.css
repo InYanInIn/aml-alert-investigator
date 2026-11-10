@@ -215,7 +215,7 @@ legend { font-size: 12px; font-weight: 600; margin-bottom: 6px; padding: 0; }
 .day-range::-webkit-slider-thumb { appearance: none; width: 10px; height: 10px; margin-top: -4px; border-radius: 50%; background: var(--chartreuse); }
 .day-range::-moz-range-track { height: 2px; background: #46545b; }
 .day-range::-moz-range-thumb { width: 10px; height: 10px; border: 0; border-radius: 50%; background: var(--chartreuse); }
-.weeks { display: grid; gap: 5px; overflow-x: auto; padding: 3px 2px; scrollbar-color: #46545b transparent; }
+.weeks { --week-width: 65px; display: grid; gap: 5px; overflow-x: auto; padding: 3px 2px; scrollbar-color: #46545b transparent; }
 .week { min-width: 0; text-align: left; padding: 0 4px 3px; color: var(--muted); }
 .week:hover, .week[aria-pressed="true"] { color: var(--ivory); }
 .week:focus-visible { outline-offset: -2px; }
@@ -256,6 +256,7 @@ legend { font-size: 12px; font-weight: 600; margin-bottom: 6px; padding: 0; }
   .external-node[data-edge] text[text-anchor="start"] { text-anchor: end; transform: translateX(-19px); }
   .external-node[data-edge] text[text-anchor="end"] { text-anchor: start; transform: translateX(19px); }
   .day-controls { gap: 5px; }
+  .weeks { --week-width: 49px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

@@ -21,7 +21,7 @@ export function Timeline({ weeks, day, latest, firstLive, pinned, selectDay }: {
     {latest > 0 ? <>
       <input id="published-day" className="day-range" type="range" min={1} max={latest} value={day}
         aria-valuetext={`Day ${day}, ${formatDate(dayDate(day))}`} onChange={(event) => selectDay(event.currentTarget.valueAsNumber)} />
-      <div className="weeks" style={{ gridTemplateColumns: `repeat(${Math.max(1, weeks.length)}, minmax(65px, 1fr))` }}>
+      <div className="weeks" style={{ gridTemplateColumns: `repeat(${Math.max(1, weeks.length)}, minmax(var(--week-width), 1fr))` }}>
         {weeks.map((week) => {
           const start = (week.week - 1) * 7 + 1;
           const end = Math.min(week.week * 7, latest);
