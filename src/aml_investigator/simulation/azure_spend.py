@@ -190,6 +190,7 @@ def _azure_metadata(executable: str, command: tuple[str, ...], fields: str) -> o
 class AlertSpend:
     alert: EvalAlert
     mcp: FixedRole
+    offset: int = 0
     chat: int = 0
     embedding: int = 0
     failure: AzureGuardError | None = None
@@ -203,7 +204,7 @@ class AlertSpend:
             count = self.embedding
         if count > TARIFFS[kind].max_requests:
             raise AzureGuardError("The Azure request limit for this alert was reached.")
-        return self.chat + self.embedding
+        return self.offset + self.chat + self.embedding
 
 
 class DisabledSyncTransport(httpx.BaseTransport):
@@ -243,10 +244,10 @@ class AzureSpendTransport(httpx.AsyncBaseTransport):
         return query
 
     @contextmanager
-    def alert(self, alert: EvalAlert, mcp: FixedRole) -> Iterator[None]:
+    def alert(self, alert: EvalAlert, mcp: FixedRole, *, offset: int = 0) -> Iterator[None]:
         if self._active is not None:
             raise AzureGuardError("Another Azure investigation is active.")
-        active = self._active = AlertSpend(alert, mcp)
+        active = self._active = AlertSpend(alert, mcp, offset)
         try:
             yield
         finally:

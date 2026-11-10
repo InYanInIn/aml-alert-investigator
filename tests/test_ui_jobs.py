@@ -7,11 +7,13 @@ from typing import Any, Literal
 
 import httpx
 import pytest
+from fastapi import FastAPI
 
 from aml_investigator.core.logging import JsonFormatter
 from aml_investigator.investigation.agent.nodes import NO_DECISION
 from aml_investigator.investigation.models import azure
 from aml_investigator.web.jobs import AlertProgress, JobConflictError, SimulationJobs
+from aml_investigator.web.routes.alerts import retry_router
 from tests.conftest import Database, load_regulations
 from tests.simulation_fixtures import prepare_workspace, settings_for
 from tests.test_azure_model import completion, tool_call_message
@@ -97,6 +99,64 @@ def fake_chat_response(body: dict[str, Any]) -> httpx.Response:
     tools = {tool["function"]["name"] for tool in body.get("tools", [])}
     message = tool_call_message(NO_DECISION.model_dump_json()) if "Decision" in tools else {"content": "Done."}
     return httpx.Response(200, json=completion(message))
+
+
+@pytest.mark.anyio
+@pytest.mark.usefixtures("azure_deployments", "azure_auth")
+async def test_retry_charges_new_requests_without_republishing_the_alert(
+    world_db: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    prepare_workspace(tmp_path, "aml_sim_dev")
+    monkeypatch.chdir(tmp_path)
+    load_regulations(world_db)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/embeddings"):
+            return fake_embedding_response()
+        return httpx.Response(200, json=completion({"content": "No decision."}))
+
+    settings = settings_for(world_db).model_copy(update={"azure_openai_endpoint": ENDPOINT})
+    jobs = SimulationJobs(settings, azure_transport=httpx.MockTransport(handler))
+    await jobs.create(51, {})
+    initial = await finished(jobs, await jobs.start(7, "azure_profile"))
+    assert initial.status == "done"
+
+    with world_db.owner() as conn:
+        rows = conn.execute("SELECT alert_id, investigation_id FROM review.investigations ORDER BY investigation_id")
+        candidate = rows.fetchone()
+        assert candidate is not None
+        alert_id, investigation_id = candidate
+        original_decisions = conn.execute("SELECT * FROM sim.decision ORDER BY alert_id").fetchall()
+        original_blocks = conn.execute("SELECT * FROM sim.block ORDER BY account_id").fetchall()
+        original_ordinals = conn.execute(
+            "SELECT * FROM sim.azure_spend ORDER BY account_id, alert_date, ordinal"
+        ).fetchall()
+    spent = jobs.spent()
+
+    app = FastAPI()
+    app.state.simulation_jobs = jobs
+    app.include_router(retry_router)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://testserver") as client:
+        endpoint = f"/alerts/{alert_id}/retry"
+        body = {"investigation_id": investigation_id}
+        assert (await client.post(endpoint, data=body)).status_code == 422
+        assert (await client.post(endpoint, json=body)).status_code == 204
+        assert (await client.post(endpoint, json=body)).status_code == 409
+
+    assert jobs.spent() > spent
+    assert jobs.current() == initial
+    with world_db.owner() as conn:
+        assert conn.execute("SELECT * FROM sim.decision ORDER BY alert_id").fetchall() == original_decisions
+        assert conn.execute("SELECT * FROM sim.block ORDER BY account_id").fetchall() == original_blocks
+        attempts = conn.execute(
+            "SELECT investigation_id FROM review.investigations WHERE alert_id = %s ORDER BY investigation_id",
+            (alert_id,),
+        ).fetchall()
+        assert len(attempts) == 2
+        assert attempts[0] == (investigation_id,)
+        ledger = conn.execute("SELECT * FROM sim.azure_spend ORDER BY account_id, alert_date, ordinal").fetchall()
+        assert len(ledger) > len(original_ordinals)
+        assert set(original_ordinals) <= set(ledger)
 
 
 @pytest.mark.anyio

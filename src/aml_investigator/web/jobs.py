@@ -1,11 +1,12 @@
 import asyncio
 import logging
 from collections.abc import AsyncIterator, Mapping
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager, nullcontext, suppress
 from dataclasses import dataclass, replace
 from datetime import date, timedelta
 from decimal import Decimal
 from math import ceil
+from typing import Literal
 
 import httpx
 import psycopg
@@ -200,13 +201,7 @@ class SimulationJobs:
             estimate = self._estimate(periods, days, system)
             if not estimate.within_limit:
                 raise JobConflictError("The Azure spend limit would be exceeded.")
-            endpoint = None
-            if system == "azure_profile" and self._profile_model is None:
-                try:
-                    endpoint = azure_origin(self.settings.azure_openai_endpoint)
-                    await asyncio.to_thread(verify_azure_deployments, endpoint)
-                except AzureGuardError as error:
-                    raise JobConflictError(str(error)) from None
+            endpoint = await self._verified_endpoint() if system == "azure_profile" else None
             period = periods.start(previous, days, system, estimate.cap)
             self._task = asyncio.create_task(self._run(periods, world, period, endpoint))
             self._task.add_done_callback(lambda _: conn.close())
@@ -214,6 +209,47 @@ class SimulationJobs:
             conn.close()
             raise
         return period.period_id
+
+    async def retry_investigation(self, alert_id: int, investigation_id: int) -> None:
+        with self._locked_connection() as conn:
+            periods = Periods(conn)
+            world = periods.world()
+            candidate = periods.retryable_alert(alert_id, investigation_id)
+            if world is None or candidate is None:
+                raise JobConflictError("Only the latest failed Azure investigation can be retried. Refresh the page.")
+            if periods.spent() + CHAT.bound > self.settings.ui_spend_limit_usd:
+                raise JobConflictError("The Azure spend limit would be exceeded.")
+            alert, period_id = candidate
+            endpoint = await self._verified_endpoint()
+            lock = asyncio.Lock()
+            app, mcp = FixedRole(conn, lock, "app"), FixedRole(conn, lock, "mcp")
+            try:
+                async with self._system(world, period_id, "azure_profile", endpoint, (app, mcp)) as (system, spend):
+                    with conn.transaction():
+                        offset = periods.paid_ordinal(alert)
+                        try:
+                            with spend.alert(alert, mcp, offset=offset) if spend is not None else nullcontext():
+                                await system.decide(alert)
+                        finally:
+                            mcp.raise_if_failed()
+            except AzureGuardError as error:
+                raise JobConflictError(str(error)) from None
+            except Exception as error:
+                error_class = error.cause if isinstance(error, ScopedDatabaseError) else type(error).__name__
+                logger.error(
+                    "investigation_retry_failed", extra={"fields": {"alert_id": alert_id, "error_class": error_class}}
+                )
+                raise JobConflictError("The investigation could not be retried.") from None
+
+    async def _verified_endpoint(self) -> httpx.URL | None:
+        if self._profile_model is not None:
+            return None
+        try:
+            endpoint = azure_origin(self.settings.azure_openai_endpoint)
+            await asyncio.to_thread(verify_azure_deployments, endpoint)
+        except AzureGuardError as error:
+            raise JobConflictError(str(error)) from None
+        return endpoint
 
     async def close(self) -> None:
         if self._task is not None:
@@ -232,7 +268,7 @@ class SimulationJobs:
             remaining = period.investigation_cap
             lock = asyncio.Lock()
             app, mcp = FixedRole(periods.conn, lock, "app"), FixedRole(periods.conn, lock, "mcp")
-            async with self._system(world, period, endpoint, (app, mcp)) as (system, spend):
+            async with self._system(world, period.period_id, period.system, endpoint, (app, mcp)) as (system, spend):
                 for day in days_between(period.first_day, period.target_day):
                     self._alert_progress = None
                     remaining -= await advance_day(
@@ -260,16 +296,17 @@ class SimulationJobs:
     async def _system(
         self,
         world: StoredWorld,
-        period: Period,
+        period_id: int,
+        system: UiSystem | Literal["history"],
         endpoint: httpx.URL | None,
         roles: tuple[FixedRole, FixedRole],
     ) -> AsyncIterator[tuple[System, AzureSpendTransport | None]]:
-        if period.system == "b4":
+        if system == "b4":
             yield OwnMoneyRule(roles[1]), None
             return
         runtime = replace(RuntimeSettings.of(self.settings), customer_profile=True, azure_endpoint=None)
         if self._profile_model is not None:
-            async with open_agent(runtime, self._profile_model, period.system, transaction_roles=roles) as agent:
+            async with open_agent(runtime, self._profile_model, system, transaction_roles=roles) as agent:
                 yield agent, None
             return
         if endpoint is None:
@@ -280,7 +317,7 @@ class SimulationJobs:
                 self.settings.ui_spend_limit_usd,
                 endpoint,
                 world.generation,
-                period.period_id,
+                period_id,
                 self._azure_transport,
             )
             async with httpx.AsyncClient(transport=spend, trust_env=False) as async_client:
@@ -289,7 +326,7 @@ class SimulationJobs:
                 async with open_agent(
                     runtime,
                     model,
-                    period.system,
+                    system,
                     transaction_roles=roles,
                     embed_query=spend.embedder(embeddings.aembed_query),
                 ) as agent:

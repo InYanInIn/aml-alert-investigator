@@ -3,6 +3,7 @@
 {% block content %}
 {% macro txn_links(txn_ids, anchor="txn") %}{% for txn_id in txn_ids %}<a href="#{{ anchor }}-{{ txn_id }}">{{ txn_id }}</a>{% if not loop.last %}, {% endif %}{% endfor %}{% endmacro %}
 {% macro txn_table(transactions, anchor) %}
+<div class="alert-table" tabindex="0">
 <table>
 <thead>
 <tr><th>Txn</th><th>Time</th><th>From</th><th>To</th><th>Paid</th><th>Received</th><th>Format</th></tr>
@@ -21,11 +22,13 @@
 {% endfor %}
 </tbody>
 </table>
+</div>
 {% endmacro %}
 {% macro passage_anchor(passage_id) %}passage-{{ passage_id|replace(" ", "_") }}{% endmacro %}
 {% set route_labels = {"auto_closed": "Auto-closed", "qa_sample": "QA sample", "escalated": "Escalated"} %}
 {% set loop_stops = {"skipped": "loop skipped", "model_done": "model finished", "tool_call_limit": "tool call limit reached", "token_budget": "token budget exhausted"} %}
 {% set investigation = page.investigation %}
+<a class="alert-back" href="/alerts">← All alerts</a>
 <h1>Alert {{ page.alert.alert_id }}{% if investigation %}<span class="badge {{ investigation.route }}">{{ route_labels[investigation.route] }}</span>{% endif %}</h1>
 
 <section>
@@ -45,6 +48,7 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 {% endif %}
 
 <h2>Rule hits</h2>
+<div class="alert-table" tabindex="0">
 <table>
 <thead><tr><th>Rule</th><th>Score</th><th>Evidence transactions</th></tr></thead>
 <tbody>
@@ -57,22 +61,64 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 {% endfor %}
 </tbody>
 </table>
+</div>
 
 <h2>Investigation</h2>
 {% if investigation %}
-<section>
+<section class="investigation-summary{% if investigation.verification.status == 'failed' %} investigation-failed{% endif %}">
+{% if investigation.verification.status == 'failed' %}
+<h3>No verified report</h3>
+<p class="muted">The alert was escalated for manual review.</p>
+{% if ui_mode %}
+<form id="retry-investigation" action="/alerts/{{ page.alert.alert_id }}/retry" method="post" data-investigation-id="{{ investigation.investigation_id }}">
+<button type="submit">Retry investigation</button>
+<small>Runs Azure again. Uses the current spend limit.</small>
+<p class="retry-status" role="status"></p>
+</form>
+<script>
+{
+  const form = document.getElementById("retry-investigation");
+  const button = form.querySelector("button");
+  const status = form.querySelector(".retry-status");
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    button.disabled = true;
+    status.textContent = "Investigation in progress. This can take several minutes.";
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ investigation_id: Number(form.dataset.investigationId) }),
+      });
+      if (response.ok) {
+        window.location.reload();
+        return;
+      }
+      const result = await response.json();
+      status.textContent = typeof result.detail === "string" ? result.detail : "The investigation could not be retried.";
+    } catch {
+      status.textContent = "The connection was interrupted. Refresh to check whether the retry completed.";
+    }
+    button.disabled = false;
+  });
+}
+</script>
+{% endif %}
+{% endif %}
 <dl>
 <dt>Recommendation</dt><dd><span class="badge {{ investigation.recommendation }}">{{ investigation.recommendation }}</span></dd>
 <dt>Verification <span class="hint" title="Checks that the agent made nothing up: every transaction it cites was really returned by the tools, and every amount, currency and date it states matches the data. It does not say whether the alert is suspicious; that is the recommendation above.">(?)</span></dt><dd><span class="badge {{ investigation.verification.status }}">{{ investigation.verification.status }}</span></dd>
-{% if investigation.verification.errors %}
-<dt>Errors</dt>
-<dd><ul>{% for error in investigation.verification.errors %}<li>{{ error }}</li>{% endfor %}</ul></dd>
-{% endif %}
-<dt>Created</dt><dd>{{ investigation.created_at }}</dd>
+<dt>Created</dt><dd>{{ investigation.created_at.strftime('%d %b %Y · %H:%M %Z') }}</dd>
 </dl>
+{% if investigation.verification.errors %}
+<details class="verification-details">
+<summary>Verification details</summary>
+<ul>{% for error in investigation.verification.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+</details>
+{% endif %}
 
-<h2>Typologies</h2>
 {% if investigation.decision.typologies %}
+<h2>Typologies</h2>
 <table>
 <thead><tr><th>Typology</th><th>Verdict</th><th>Transactions</th></tr></thead>
 <tbody>
@@ -85,13 +131,11 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 {% endfor %}
 </tbody>
 </table>
-{% else %}
-<p class="muted">No typology verdicts.</p>
 {% endif %}
 
 {% for field in ["who", "what", "when", "where", "why", "how"] %}
-<h2>{{ field|capitalize }}</h2>
 {% if investigation.decision|attr(field) %}
+<h2>{{ field|capitalize }}</h2>
 <ul class="claims">
 {% for claim in investigation.decision|attr(field) %}
 <li>{{ claim.text }}
@@ -101,8 +145,6 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 </li>
 {% endfor %}
 </ul>
-{% else %}
-<p class="muted">No claims.</p>
 {% endif %}
 {% endfor %}
 </section>
@@ -110,6 +152,7 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 {% if investigation.trace %}
 <details>
 <summary>Investigation trace: {{ investigation.trace.tool_calls|length }} tool calls, {{ loop_stops.get(investigation.trace.loop_stop, investigation.trace.loop_stop) }}, {{ investigation.trace.tokens }} tokens, {{ investigation.trace.repairs }} repairs</summary>
+<div class="alert-table" tabindex="0">
 <table>
 <thead><tr><th>Phase</th><th>Tool</th><th>Arguments</th><th>Result</th></tr></thead>
 <tbody>
@@ -123,6 +166,7 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 {% endfor %}
 </tbody>
 </table>
+</div>
 </details>
 {% else %}
 <p class="muted">No run trace was recorded for this investigation.</p>
@@ -189,14 +233,12 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 </form>
 {% endif %}
 
-{% if investigation %}
+{% if investigation and page.cited_transactions %}
 <h2>Cited transactions</h2>
-{% if page.cited_transactions %}
 {{ txn_table(page.cited_transactions, "txn") }}
-{% else %}
-<p class="muted">The decision cites no transactions.</p>
 {% endif %}
 
+{% if investigation and page.cited_passages %}
 <h2>Cited regulations</h2>
 <section>
 {% for passage in page.cited_passages %}
@@ -205,8 +247,6 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 <div class="muted">{{ passage.doc_id }}, art. {{ passage.article }}{% if passage.paragraph %}({{ passage.paragraph }}){% endif %}{% if passage.heading %}: {{ passage.heading }}{% endif %}</div>
 <p>{{ passage.text }}</p>
 </div>
-{% else %}
-<p class="muted">The decision cites no regulations.</p>
 {% endfor %}
 </section>
 {% endif %}

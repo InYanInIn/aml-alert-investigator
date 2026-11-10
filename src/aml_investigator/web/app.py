@@ -65,6 +65,7 @@ def create_app(
     app = FastAPI(lifespan=lifespan)
     app.include_router(alerts.router)
     if ui_mode:
+        app.include_router(alerts.retry_router)
         app.include_router(world.router)
         app.include_router(simulate.router)
         if evaluator:

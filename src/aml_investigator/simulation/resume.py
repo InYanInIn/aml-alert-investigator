@@ -91,7 +91,7 @@ async def advance_day(
         truncated = False
         for number, alert in enumerate(alerts, start=1):
             report_alert(number, len(alerts))
-            if periods.was_paid_attempted(alert):
+            if periods.paid_ordinal(alert):
                 periods.decision(alert.alert_id, None, "prior_paid_attempt")
                 truncated = True
                 continue
