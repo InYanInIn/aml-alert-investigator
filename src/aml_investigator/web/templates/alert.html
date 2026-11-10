@@ -138,7 +138,7 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 <dt>Decided</dt><dd>{{ investigation.review.decided_at }}</dd>
 </dl>
 </section>
-{% elif investigation.route == "escalated" %}
+{% elif investigation.route == "escalated" and not ui_mode %}
 <h2>Review</h2>
 <section>
 <form method="post" action="/investigations/{{ investigation.investigation_id }}/decision">
@@ -164,7 +164,7 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 <dt>Reviewed</dt><dd>{{ investigation.qa_review.reviewed_at }}</dd>
 </dl>
 </section>
-{% elif investigation.route == "qa_sample" %}
+{% elif investigation.route == "qa_sample" and not ui_mode %}
 <h2>QA review</h2>
 <section>
 <form method="post" action="/investigations/{{ investigation.investigation_id }}/qa-review">
@@ -180,12 +180,14 @@ Closed by <code>{{ investigation.review.analyst }}</code> at {{ investigation.re
 </section>
 {% endif %}
 {% else %}
-<p class="muted">Not investigated yet.</p>
+<p class="muted">{{ page.simulation_status if page.simulation_status else "Not investigated yet." }}</p>
 {% endif %}
 
+{% if not ui_mode %}
 <form method="post" action="/alerts/{{ page.alert.alert_id }}/investigate">
 <button type="submit">{% if investigation %}Investigate again{% else %}Investigate{% endif %}</button>
 </form>
+{% endif %}
 
 {% if investigation %}
 <h2>Cited transactions</h2>

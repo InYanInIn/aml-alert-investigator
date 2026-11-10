@@ -53,6 +53,7 @@ code { font-size: 12px; word-break: break-word; }
 <header>
 <a href="/">AML Alert Investigator</a>
 <nav>
+{% if ui_mode %}<a href="/world">World</a>{% endif %}
 {% for path, label in [("/", "Queue"), ("/auto-closed", "Auto-closed"), ("/alerts", "All alerts")] %}
 <a href="{{ path }}"{% if request.url.path == path %} aria-current="page"{% endif %}>{{ label }}</a>
 {% endfor %}

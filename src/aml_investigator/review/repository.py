@@ -29,6 +29,8 @@ AUTO_CLOSED_SQL = load(__package__, "auto_closed")
 UNINVESTIGATED_ALERTS_SQL = load(__package__, "uninvestigated_alerts")
 LATEST_INVESTIGATION_SQL = load(__package__, "latest_investigation")
 SAVE_INVESTIGATION_SQL = load(__package__, "save_investigation")
+SIMULATION_DECISION_SQL = load(__package__, "simulation_decision")
+PERIODS_SQL = load(__package__, "periods")
 
 ALERT_SQL = load(__package__, "alert")
 RULE_HITS_SQL = load(__package__, "alert_rule_hits")
@@ -51,15 +53,23 @@ class ReviewRepository:
     def __init__(self, pool: QuerySource) -> None:
         self.pool = pool
 
-    async def alerts(self) -> list[AlertSummary]:
+    async def alerts(self, period: int | None = None) -> list[AlertSummary]:
         async with self.pool.connection() as conn, conn.cursor(row_factory=class_row(AlertSummary)) as cursor:
-            await cursor.execute(ALERTS_SQL)
+            await cursor.execute(ALERTS_SQL, {"period": period})
             return await cursor.fetchall()
 
-    async def analyst_queue(self) -> list[QueueItem]:
+    async def analyst_queue(self, period: int | None = None) -> list[QueueItem]:
         async with self.pool.connection() as conn, conn.cursor(row_factory=class_row(QueueItem)) as cursor:
-            await cursor.execute(ANALYST_QUEUE_SQL)
+            await cursor.execute(ANALYST_QUEUE_SQL, {"period": period})
             return await cursor.fetchall()
+
+    async def periods(self) -> list[dict[str, Any]]:
+        async with self.pool.connection() as conn:
+            return await (await conn.execute(PERIODS_SQL)).fetchall()
+
+    async def simulation_decision(self, alert_id: int) -> dict[str, Any] | None:
+        async with self.pool.connection() as conn:
+            return await (await conn.execute(SIMULATION_DECISION_SQL, (alert_id,))).fetchone()
 
     async def auto_closed(self) -> list[AutoClosedAlert]:
         async with self.pool.connection() as conn, conn.cursor(row_factory=class_row(AutoClosedAlert)) as cursor:

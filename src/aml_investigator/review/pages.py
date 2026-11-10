@@ -19,6 +19,7 @@ from aml_investigator.review.records import (
     RuleHit,
 )
 from aml_investigator.review.repository import ReviewRepository
+from aml_investigator.simulation.world import FIRST_DAY
 
 logger = logging.getLogger(__name__)
 
@@ -31,16 +32,18 @@ class AlertPage:
     evidence: dict[str, Any]
     cited_transactions: list[dict[str, Any]]
     cited_passages: list[dict[str, Any]]
+    simulation_status: str | None = None
 
 
 class ReviewPages:
-    def __init__(self, repository: ReviewRepository, mcp: MCPAdapter) -> None:
+    def __init__(self, repository: ReviewRepository, mcp: MCPAdapter, *, ui_mode: bool = False) -> None:
         self.repository = repository
         self.mcp = mcp
+        self.ui_mode = ui_mode
 
-    async def analyst_queue(self) -> list[QueueItem]:
+    async def analyst_queue(self, period: int | None = None) -> list[QueueItem]:
         with timed_event(logger, "analyst_queue") as event:
-            items = await self.repository.analyst_queue()
+            items = await self.repository.analyst_queue(period)
             event["items"] = len(items)
         return items
 
@@ -50,11 +53,23 @@ class ReviewPages:
             event["alerts"] = len(alerts)
         return alerts
 
-    async def alerts(self) -> list[AlertSummary]:
+    async def alerts(self, period: int | None = None) -> list[AlertSummary]:
         with timed_event(logger, "alerts") as event:
-            alerts = await self.repository.alerts()
+            alerts = await self.repository.alerts(period)
             event["alerts"] = len(alerts)
         return alerts
+
+    async def periods(self) -> list[dict[str, Any]]:
+        if not self.ui_mode:
+            return []
+        return [
+            {
+                **period,
+                "first_day": (period["first_day"] - FIRST_DAY).days + 1,
+                "last_day": (period["last_day"] - FIRST_DAY).days + 1,
+            }
+            for period in await self.repository.periods()
+        ]
 
     async def alert_page(self, alert_id: int) -> AlertPage:
         with log_context(alert_id=alert_id), timed_event(logger, "alert_page"):
@@ -66,6 +81,12 @@ class ReviewPages:
                 {"alert_id": alert_id, "account_id": overview.alert.account_id, "direction": "both"},
             )
             decision = None if investigation is None else investigation.decision
+            simulation = await self.repository.simulation_decision(alert_id) if self.ui_mode else None
+            simulation_status = None
+            if simulation is not None:
+                simulation_status = (
+                    "rule B4, no prepared case" if simulation["recommendation"] is not None else "not investigated"
+                )
             return AlertPage(
                 alert=overview.alert,
                 rule_hits=overview.rule_hits,
@@ -73,6 +94,7 @@ class ReviewPages:
                 evidence=evidence,
                 cited_transactions=[] if decision is None else await self.cited_transactions(alert_id, decision),
                 cited_passages=[] if decision is None else await self.cited_passages(decision),
+                simulation_status=simulation_status,
             )
 
     async def cited_transactions(self, alert_id: int, decision: Decision) -> list[dict[str, Any]]:

@@ -2,6 +2,9 @@
 {% block title %}All alerts{% endblock %}
 {% block content %}
 <h1>All alerts</h1>
+{% if ui_mode %}
+<form method="get" action="/alerts"><label for="period">Simulation period</label><select id="period" name="period" onchange="this.form.submit()"><option value="">All periods</option>{% for period in periods %}<option value="{{ period.period_id }}"{% if selected_period == period.period_id %} selected{% endif %}>Day {{ period.first_day }}–{{ period.last_day }} ({{ period.system }})</option>{% endfor %}</select></form>
+{% endif %}
 {% if alerts %}
 <table>
 <thead>

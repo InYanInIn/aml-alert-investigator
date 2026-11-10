@@ -1,7 +1,10 @@
 import argparse
 import asyncio
+import webbrowser
 from collections import Counter
 from datetime import date
+
+import psycopg
 
 from aml_investigator.cli.context import Commands, settings_for
 from aml_investigator.core.settings import Settings
@@ -31,6 +34,45 @@ def run_api(args: argparse.Namespace) -> None:
         settings, mcp=args.mcp_url, model=chat_model(args.model, settings.database, settings.azure_openai_endpoint)
     )
     uvicorn.run(app, host=args.host, port=args.port, log_config=None)
+
+
+def run_ui(args: argparse.Namespace) -> None:
+    import uvicorn
+
+    from aml_investigator.core.migrate import ensure_database, migrate
+    from aml_investigator.investigation.models.rule_score import RuleScoreChatModel
+    from aml_investigator.mcp_server.server import build_server
+    from aml_investigator.simulation.world import COUNT_PASSAGES_SQL, copy_corpus
+    from aml_investigator.web.app import create_app
+
+    base = settings_for(args)
+    settings = base.with_database("aml_sim_ui")
+    ensure_database(base.owner_conninfo, settings.database)
+    migrate(settings.owner_conninfo, settings.role_dsns)
+    with psycopg.connect(settings.owner_conninfo) as target:
+        [(target_count,)] = target.execute(COUNT_PASSAGES_SQL).fetchall()
+        if not target_count:
+            for database in dict.fromkeys(("aml_sim_dev", base.database, "aml_hi_small")):
+                if database == settings.database:
+                    continue
+                try:
+                    with psycopg.connect(base.with_database(database).owner_conninfo) as source:
+                        [(source_count,)] = source.execute(COUNT_PASSAGES_SQL).fetchall()
+                        if source_count:
+                            copy_corpus(source, target)
+                            break
+                except (psycopg.errors.InvalidCatalogName, psycopg.errors.UndefinedTable):
+                    continue
+    app = create_app(
+        settings,
+        mcp=build_server(settings.mcp_conninfo, customer_profile=True),
+        model=RuleScoreChatModel(thresholds={}, close_below=0.0),
+        ui_mode=True,
+        evaluator=args.evaluator,
+    )
+    if not args.no_browser:
+        webbrowser.open(f"http://127.0.0.1:{args.port}/world")
+    uvicorn.run(app, host="127.0.0.1", port=args.port, log_config=None)
 
 
 def run_investigate(args: argparse.Namespace) -> None:
@@ -92,3 +134,9 @@ def register(commands: Commands) -> None:
     api.add_argument("--mcp-url", default="http://127.0.0.1:8100/mcp")
     api.add_argument("--model", choices=MODEL_NAMES, default="rule-score")
     api.set_defaults(handler=run_api)
+
+    ui = commands.add_parser("ui")
+    ui.add_argument("--port", type=int, default=8765)
+    ui.add_argument("--evaluator", action="store_true")
+    ui.add_argument("--no-browser", action="store_true")
+    ui.set_defaults(handler=run_ui)

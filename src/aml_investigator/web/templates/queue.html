@@ -2,6 +2,9 @@
 {% block title %}Analyst queue{% endblock %}
 {% block content %}
 <h1>Analyst queue</h1>
+{% if ui_mode %}
+<form method="get" action="/"><label for="period">Simulation period</label><select id="period" name="period" onchange="this.form.submit()"><option value="">All periods</option>{% for period in periods %}<option value="{{ period.period_id }}"{% if selected_period == period.period_id %} selected{% endif %}>Day {{ period.first_day }}–{{ period.last_day }} ({{ period.system }})</option>{% endfor %}</select></form>
+{% endif %}
 {% set escalations = items|selectattr("kind", "equalto", "escalation")|list %}
 <p class="muted">{{ items|length }} awaiting review: {{ escalations|length }} escalation{{ "" if escalations|length == 1 else "s" }}, {{ items|length - escalations|length }} QA sample{{ "" if items|length - escalations|length == 1 else "s" }}.</p>
 {% if items %}
