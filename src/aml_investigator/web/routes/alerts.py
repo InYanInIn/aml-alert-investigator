@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Body, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -13,6 +13,11 @@ templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates"
 router = APIRouter()
 write_router = APIRouter()
 rerun_router = APIRouter()
+ALERT_LISTS = {
+    "alerts": ("/alerts", "All alerts"),
+    "queue": ("/", "Queue"),
+    "auto-closed": ("/auto-closed", "Auto-closed"),
+}
 
 
 def see_alert(alert_id: int) -> RedirectResponse:
@@ -60,13 +65,24 @@ async def all_alerts(request: Request, pages: Pages, period: int | None = None) 
 
 
 @router.get("/alerts/{alert_id}", response_class=HTMLResponse)
-async def alert_detail(request: Request, alert_id: int, pages: Pages) -> HTMLResponse:
+async def alert_detail(
+    request: Request,
+    alert_id: int,
+    pages: Pages,
+    period: int | None = None,
+    source: Literal["alerts", "queue", "auto-closed"] = "alerts",
+) -> HTMLResponse:
+    back_url, back_label = ALERT_LISTS[source]
+    if pages.ui_mode and period is not None and source != "auto-closed":
+        back_url = f"{back_url}?period={period}"
     return templates.TemplateResponse(
         request,
         "alert.html",
         {
             "page": await pages.alert_page(alert_id),
             "ui_mode": pages.ui_mode,
+            "back_url": back_url,
+            "back_label": back_label,
         },
     )
 

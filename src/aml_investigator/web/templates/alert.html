@@ -28,7 +28,7 @@
 {% set route_labels = {"auto_closed": "Auto-closed", "qa_sample": "QA sample", "escalated": "Escalated"} %}
 {% set loop_stops = {"skipped": "loop skipped", "model_done": "model finished", "tool_call_limit": "tool call limit reached", "token_budget": "token budget exhausted"} %}
 {% set investigation = page.investigation %}
-<a class="alert-back" href="/alerts">← All alerts</a>
+<a class="alert-back" href="{{ back_url }}">← {{ back_label }}</a>
 <h1>Alert {{ page.alert.alert_id }}{% if investigation %}<span class="badge {{ investigation.route }}">{{ route_labels[investigation.route] }}</span>{% endif %}</h1>
 
 <section>

@@ -12,7 +12,7 @@
 <tbody>
 {% for alert in alerts %}
 <tr>
-<td><a href="/alerts/{{ alert.alert_id }}">{{ alert.alert_id }}</a></td>
+<td><a href="/alerts/{{ alert.alert_id }}{% if ui_mode %}?source=auto-closed{% endif %}">{{ alert.alert_id }}</a></td>
 <td>{{ alert.account_id }}</td>
 <td>{{ alert.alert_date }}</td>
 <td>{{ alert.closed_at.strftime("%Y-%m-%d %H:%M") }}</td>

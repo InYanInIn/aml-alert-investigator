@@ -147,6 +147,12 @@ def test_b4_period_filter_and_no_prepared_case(ui_client: tuple[TestClient, Data
     assert "Day 22\u201328 (1 week, b4)" in client.get(f"/?period={period_id}").text
     assert "rule B4, no prepared case" in page
     assert "not investigated" in page
-    assert "rule B4, no prepared case" in client.get(f"/alerts/{alert_ids[0]}").text
+    detail_url = f"/alerts/{alert_ids[0]}?period={period_id}"
+    assert f'href="{detail_url}"' in page
+    detail = client.get(detail_url).text
+    assert "rule B4, no prepared case" in detail
+    assert f'href="/alerts?period={period_id}">← All alerts' in detail
+    queue_detail = client.get(f"{detail_url}&source=queue").text
+    assert f'href="/?period={period_id}">← Queue' in queue_detail
     assert "not investigated" in client.get(f"/alerts/{alert_ids[1]}").text
     assert client.get("/alerts?period=99999").text.count("<td>") == 0

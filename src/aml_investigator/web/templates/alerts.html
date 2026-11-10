@@ -13,7 +13,7 @@
 <tbody>
 {% for alert in alerts %}
 <tr>
-<td><a href="/alerts/{{ alert.alert_id }}">{{ alert.alert_id }}</a></td>
+<td><a href="/alerts/{{ alert.alert_id }}{% if ui_mode and selected_period is not none %}?period={{ selected_period }}{% endif %}">{{ alert.alert_id }}</a></td>
 <td>{{ alert.account_id }}</td>
 <td>{{ alert.alert_date }}</td>
 <td>{{ alert.rule_hits }}</td>

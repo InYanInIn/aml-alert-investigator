@@ -15,7 +15,7 @@
 <tbody>
 {% for item in items %}
 <tr>
-<td><a href="/alerts/{{ item.alert_id }}">{{ item.alert_id }}</a></td>
+<td><a href="/alerts/{{ item.alert_id }}{% if ui_mode %}?source=queue{% if selected_period is not none %}&amp;period={{ selected_period }}{% endif %}{% endif %}">{{ item.alert_id }}</a></td>
 <td>{{ item.account_id }}</td>
 <td>{{ item.alert_date }}</td>
 <td>{{ item.rule_hits }}</td>
