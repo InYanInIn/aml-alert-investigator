@@ -75,7 +75,7 @@ spec:
       initContainers:
         - name: wait-for-postgres
           image: "{{ .Values.postgres.image }}"
-          command: [sh, -c, "until pg_isready -h postgres -p 5432; do sleep 2; done"]
+          command: [sh, -c, "until pg_isready -h postgres -p 5432 -U postgres; do sleep 2; done"]
           securityContext:
             {{- include "aml.securityContext" . | nindent 12 }}
           resources:
